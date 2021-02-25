@@ -1,8 +1,8 @@
 Mock-up input files are created for carrier operation, which includes outputs from shipment assignment to carrier. 
 Each carrier has a list of jobs (pickup, delivery, or pickup and delivery) that has to be completed within a day.
 
-dictionary.csv: description of variables for each file 
-carrier_mock_up.csv: carrier(fleet) identifier
+dictionary.csv: description of variables for each file\n 
+carrier_mock_up.csv: carrier(fleet) identifier\n
 vehicle_type_mock_up.csv: vehicle charateristics in the freight system
 
 freight_vehicles_mock_up.csv: population of vehicles in the freight system
