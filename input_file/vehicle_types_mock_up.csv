@@ -1,0 +1,10 @@
+﻿veh_type_id,veh_category,veh_class,body_type,commodities,weight ,length,payload_capacity_weight,payload_capacity_cbf,max_speed,primary_fuel_type,secondary_fuel_type,primary_fuel_rate,secondary_fuel_rate,Automation level,monetary cost
+1,MD,3,van,(1),12000,6,10000,,80,diesel,,10,,0,
+2,MD,5,van,(1),17000,8,12000,,80,diesel,,9,,0,
+3,MD,6,box_van,"(1,2)",22000,8,15000,,65,diesel,,8,,0,
+4,HD,7,construction,(3),33000,10,30000,,60,diesel,,7,,0,
+5,HD,7,beverage,(4),30000,10,20000,,60,diesel,,7,,0,
+6,HD,7,box_van,"(1,2,3,4)",30000,10,20000,,60,diesel,,7,,0,
+7,HD,8,box_van,"(1,2,3,4)",35000,15,20000,,55,diesel,,6,,0,
+8,HD,8,container,"(1,2,3,4)",35000,15,25000,,55,diesel,,6,,0,
+9,HD,11,box_van,"(1,2,3,4)",60000,20,50000,,55,diesel,,5,,0,
