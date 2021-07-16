@@ -1,5 +1,7 @@
 input_file/vehicles_by_carrier.csv
-input_file/TAZ
+input_file/TAZs/
+input_file/
+input_file/15.skims.csv
 *~
 .DS_Store
 
