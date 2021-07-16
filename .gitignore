@@ -1,5 +1,12 @@
+input_file/vehicles_by_carrier.csv
+input_file/TAZ
 *~
 .DS_Store
 
 .ipynb_checkpoints/
 .ipynb_checkpoints
+
+Saved_VRP_Code.ipynb
+vrp_prob_comm_4.xml
+*.lp
+input_file/payload_mock_up_1.csv
