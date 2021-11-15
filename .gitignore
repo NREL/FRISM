@@ -12,3 +12,8 @@ Saved_VRP_Code.ipynb
 vrp_prob_comm_4.xml
 *.lp
 input_file/payload_mock_up_1.csv
+
+*.csv
+
+*.lp
+*.xml
