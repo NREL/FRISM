@@ -15,5 +15,8 @@ input_file/payload_mock_up_1.csv
 
 *.csv
 
+output/
+output/*
+
 *.lp
 *.xml
