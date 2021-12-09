@@ -1,116 +1,47 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
-
-
-# In[2]:
-
-
 import geopandas as gp
-
-
-# In[3]:
-
-
 import numpy as np
-
-
-# In[4]:
-
-
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
-# from lxml import etree
 from copy import copy
 import os
 import inspect
 from xml.dom import minidom
-
-
-# In[5]:
-
-
 import math
-
-
-# In[6]:
-
-
 import networkx as nx
-
-
-# In[7]:
-
-
 from networkx import DiGraph
-
-
-# In[8]:
-
-
 from vrpy import VehicleRoutingProblem
-
-
-# In[9]:
-
-
 import matplotlib.pyplot as plt
-
-
-# In[10]:
-
-
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
-
-
-# In[11]:
-
-
 from time import time
+import numpy as np
+from argparse import ArgumentParser
 
 
-# In[12]:
 
+# Global Variables
+tour_id = 0
+payload_i = 0
 
-import gc
-
-
-# In[13]:
-
-
-# TODO: What if source and destination block zone are in the same TAZ?
-# Handle case when block-level zone cannot be mapped to correct TAZ
-# TODO: Handle multiple shipments/routes per carrier, having multiple sequence ids
-
-
-# In[14]:
 
 
 # Function to get travel time using mesozone ID refering CBGID in tt_df
-def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID):
+def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID, sel_tt, sel_dist):
     #Added sel_tt_df for selected tt_df data frame and sel_dist_df for selected dist_df
-    travel_time = 0
+    travel_time = -1
     try:
-#         org_geoID= int(CBGzone_df[CBGzone_df['MESOZONE']==org_meso].GEOID.values[0])
-#         dest_geoID= int(CBGzone_df[CBGzone_df['MESOZONE']==dest_meso].GEOID.values[0])
-#         print('using tt_df')
-        print('tt info: ', tt_df.info(memory_usage="deep"))
-        travel_time = tt_df[(tt_df['origin']==org_geoID) & (tt_df['destination']==dest_geoID)].TIME_minutes.values[0]
+        travel_time = sel_tt['TIME_minutes'].to_numpy()[(sel_tt['origin'].to_numpy() == org_geoID)
+                                              &(sel_tt['destination'].to_numpy() == dest_geoID)].item()
     except:
         try:
-            print( 'dist info: ', dist_df.info(memory_usage="deep"))
-            dist = dist_df[(dist_df['Origin']==org_meso) &
-                           (dist_df['Destination']==dest_meso)].dist.values[0]
+            dist = sel_dist['dist'].to_numpy()[(sel_dist['Origin'].to_numpy() == org_meso)
+                                              &(sel_dist['Destination'].to_numpy() == dest_meso)].item()
             travel_time= dist/40*60
-#             print('using dist_df')
         except:
             travel_time = 60*3
     return travel_time
+
 # Function to create coorinate info after having the results
 def x_y_finder(meso):
     try:
@@ -122,237 +53,6 @@ def x_y_finder(meso):
         return "NA", "NA"
 
 
-# ### Running the VRP Problems
-
-# In[15]:
-
-
-# KJ: read travel time, distance, zonal file as inputs  # Slow step
-tt_df = pd.read_csv('input_file/tt_df_cbg.csv.gz', compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
-dist_df = pd.read_csv('input_file/od_distance.csv')  # Slow step
-
-
-# In[16]:
-
-
-#zone 20117  and  305 geo  500  and  60014096003
-# travel_time = 0
-# try:
-#     travel_time = tt_df[(tt_df['origin']==500) &
-#                      (tt_df['destination']==60014096003)].TIME_minutes.values[0]
-#     print('using tt')
-# except:
-#     try:
-#         dist = dist_df[(dist_df['Origin']==20117) &
-#                        (dist_df['Destination']==305)].dist.values[0]
-#         travel_time= dist/40*60
-#         print('using dist ', dist)
-#     except:
-#         travel_time = 60*3
-#         print('did not find anything')
-# print(travel_time)
-
-# print(tt_cal(20117,305,500,60014096003))
-
-
-# In[17]:
-
-
-len(tt_df)
-
-
-# In[18]:
-
-
-len(dist_df)
-
-
-# In[19]:
-
-
-CBGzone_df = gp.read_file('input_file/freight_centroids.geojson')
-
-
-# In[20]:
-
-
-# We need to know the depot using the carrier file
-c_df = pd.read_csv('input_file/carriers.csv')
-### KJ: TO DO: 1 need to add lower and upper timewindow and servicetime in the carrier file:
-###            'depot_lower', "depot_upper", "depot_time_before", "depot_time_after"
-### KJ: lower will be used for Source's departure time, and upper will be used for sink's arrival time
-### KJ: need to include service time at depot? How to define the service time? Based on commodity and load?
-c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
-
-# reading payload definition
-p_df = pd.read_csv('input_file/payloads.csv')
-p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
-
-
-# In[21]:
-
-
-# # Example files to test time limit and search limit
-# c_df = pd.read_csv('input_file/carriers_B2C_V2.csv')
-# p_df = pd.read_csv('input_file/payloads_B2C_V2.csv')
-# c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
-# p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
-
-
-# In[22]:
-
-
-# just relax upper time window because of outside of region destination
-c_df['depot_upper']=50000
-p_df['del_tw_upper']=50000
-
-
-# In[23]:
-
-
-c_df.head()
-
-
-# In[24]:
-
-
-# Adding in additional colums for vehicle tours
-
-
-# In[25]:
-
-
-p_df['carrier_id'] = p_df['carrier_id'].astype(int)
-
-
-# In[26]:
-
-
-p_df['sequence_id'] = np.nan
-
-
-# In[27]:
-
-
-p_df['tour_id'] = np.nan
-
-
-# In[28]:
-
-
-p_df['pu_arrival_time'] = np.nan
-
-
-# In[29]:
-
-
-p_df['del_arrival_time'] = np.nan
-
-
-# In[30]:
-
-
-p_df = p_df.fillna(int(0));
-
-
-# In[31]:
-
-
-p_df.head()
-
-
-# In[32]:
-
-
-# Changing tour id and sequence id into ints
-p_df['tour_id'] = p_df['tour_id'].astype(int)
-p_df['sequence_id'] = p_df['sequence_id'].astype(int)
-
-
-# In[33]:
-
-
-p_df.head()
-
-
-# In[34]:
-
-
-x = p_df[(p_df['job'] == 'pickup_delivery')]
-
-
-# In[35]:
-
-
-# Reading in vehicle information
-v_df = pd.read_csv('input_file/vehicle_types.csv')
-v_df = v_df.dropna(axis=1, how='all')   # Removing all nan
-
-
-# In[36]:
-
-
-v_df.head()
-
-
-# In[37]:
-
-
-# Create vehicle sequence vehicle ID
-vc_df = c_df[['carrier_id', 'num_veh_type_1','num_veh_type_2']]
-vc_df.columns= ['carrier_id', 'md_veh', 'hd_veh']
-vc_df['md_start_id']=0
-vc_df['hd_start_id']=0
-
-n=0
-for i in range (0, vc_df.shape[0]):
-
-    vc_df['md_start_id'][i] =  n
-    vc_df['hd_start_id'][i] =  n+vc_df['md_veh'][i]
-    n=vc_df['hd_start_id'][i]+vc_df['hd_veh'][i]
-
-
-# In[38]:
-
-
-vc_df = pd.read_csv('input_file/vehicles_by_carrier.csv')
-
-
-# In[39]:
-
-
-vc_df.head()
-
-
-# In[40]:
-
-
-vc_df.columns
-
-
-# In[41]:
-
-
-c_df = c_df.fillna(0); # Fill all nan with zeros
-
-
-# In[42]:
-
-
-# p_df['carrier_id'].unique()
-
-
-# ### Creating the output dataframe to save as csv
-
-# In[43]:
-
-
-## Allowign Duplication of zone ids is easier
-
-
-# In[44]:
-
-
 def get_geoId(zone, CBGzone_df):
     try:
         org_geoID= int(CBGzone_df[CBGzone_df['MESOZONE']==zone].GEOID.values[0])
@@ -361,13 +61,10 @@ def get_geoId(zone, CBGzone_df):
     return int(org_geoID)
 
 
-# In[45]:
-
-
 # Receives a data frame for a problem for a particular carrier id
 # To account for service time, we add service time of destination to regular travel time
 def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carrier_id,
-                     md_start_id, hd_start_id, CBGzone_df):
+                     md_start_id, hd_start_id, CBGzone_df, tt_df, dist_df):
     """Stores the data for the problem."""
     data = {}
     data['time_matrix'] = []
@@ -382,20 +79,20 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     # Adding time 0 for the depot and location for depot
     time_l.append(0)
     data['loc_zones'].append(depot_loc)
-    depot_service_time = float(c_prob.loc[c_prob['carrier_id'] == carr_id]['depot_time_before'].values[0])
+    depot_service_time = float(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_time_before'].values[0])
     data['stop_durations'].append(depot_service_time)
 
     data['time_windows'] = []
     # Add time window for depot
-    data['time_windows'].append((int(c_prob.loc[c_prob['carrier_id'] == carr_id]['depot_lower'].values[0]),
-                                int(c_prob.loc[c_prob['carrier_id'] == carr_id]['depot_upper'].values[0])))
+    data['time_windows'].append((int(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_lower'].values[0]),
+                                int(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_upper'].values[0])))
     data['demands'] = []
     data['demands'].append(0.0) # Adding demand for depot
 
     data['geo_ids'] = []
     data['geo_ids'].append(get_geoId(depot_loc, CBGzone_df))
 
-    index = 0
+    index = 1
     for i in df_prob['payload_id'].unique():
         if prob_type == 'delivery':
             temp_zone = (int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0])) # find zone
@@ -405,8 +102,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             # Adding time window
             data['time_windows'].append((int(df_prob.loc[df_prob['payload_id'] == i]['del_tw_lower'].values[0]),
                                 int(df_prob.loc[df_prob['payload_id'] == i]['del_tw_upper'].values[0])))
-#             # Adding travel time from depot
-#             time_l.append(int(tt_cal(depot_loc, temp_zone)))
 
             data['payload_ids'].append(copy(i))
 
@@ -416,7 +111,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             service_time = float(df_prob.loc[df_prob['payload_id'] == i]['del_stop_duration'].values[0])
             data['stop_durations'].append(copy(service_time))
 
-            index += 1
 
         elif prob_type =='pickup':
             temp_zone = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find zone
@@ -437,8 +131,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             service_time = float(df_prob.loc[df_prob['payload_id'] == i]['pu_stop_duration'].values[0])
             data['stop_durations'].append(copy(service_time))
 
-            index += 1
-
         elif prob_type == 'pickup_delivery':
             temp_zone_d = int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0]) # find delivery zone
             temp_zone_p = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find pickup zone
@@ -454,10 +146,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             data['time_windows'].append((int(df_prob.loc[df_prob['payload_id'] == i]['del_tw_lower'].values[0]),
                                 int(df_prob.loc[df_prob['payload_id'] == i]['del_tw_upper'].values[0])))
 
-#             # Adding travel time from depot to pickup
-#             time_l.append(int(tt_cal(depot_loc, temp_zone_p)))
-#             # Adding travel time from depot to delivery
-#             time_l.append(int(tt_cal(depot_loc, temp_zone_d)))
 
             data['payload_ids'].append(copy(i))
             data['payload_ids'].append(copy(i))
@@ -476,79 +164,26 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             data['pickups_deliveries'].append([index, index+1])
             index += 2
 
-#     print('length of zones : ', len(data['loc_zones']))
-    print(data['loc_zones'])
-
     # Adding travel time for rest of locations
     print("Beginning to get time matrix")
 
-#     tt_chunks = pd.read_csv('input_file/tt_df_cbg.csv.gz', compression='gzip', chunksize=100000, header=0, sep=',', quotechar='"', error_bad_lines=False)
-#     dist_chunks = pd.read_csv('input_file/od_distance.csv', chunksize=100000)  # Slow step
-
-#     cols = ['origin', 'destination', 'TIME_minutes']
-#     sel_tt_df = pd.DataFrame(columns = cols)
-#     for tt_df in tt_chunks:
-#         temp = tt_df[(tt_df['origin'].isin(data['geo_ids'])) &
-#                      (tt_df['destination'].isin(data['geo_ids']))][cols]
-# #         print(len(temp))
-#         if len(temp) > 0:
-#             sel_tt_df = sel_tt_df.append(temp, ignore_index=True)
-#         del temp
-#         del tt_df
-#         gc.collect()
-#     print('length of tt: ', len(sel_tt_df))
-#     del tt_chunks
-#     gc.collect()
-
-
-#     cols = ['Origin', 'Destination', 'dist']
-#     sel_dist_df = pd.DataFrame(columns = cols)
-#     for dist_df in dist_chunks:
-#         temp = dist_df[(dist_df['Origin'].isin(data['loc_zones'])) &
-#                        (dist_df['Destination'].isin(data['loc_zones']))][cols]
-# #         print(len(temp))
-#         if len(temp) > 0:
-#             sel_dist_df = sel_dist_df.append(temp, ignore_index=True)
-#         del temp
-#         del dist_df
-#         gc.collect()
-#     del dist_chunks
-#     gc.collect()
-
-#     print("length of dist ", len(sel_dist_df), " len of tt ", len(sel_tt_df))
-
     b_timing = time()
+    sel_tt= tt_df[(tt_df['origin'].isin(data['geo_ids'])) &
+                     (tt_df['destination'].isin(data['geo_ids']))]
+    sel_dist = dist_df[(dist_df['Origin'].isin(data['loc_zones'])) &
+                       (dist_df['Destination'].isin(data['loc_zones']))]
+    print('len of tt ', len(sel_tt), ' len of dist ', len(sel_dist))
 
     for i in range(len(data['loc_zones'])):
         time_l = []
         travel_time = 0
 
-#         if prob_type == 'delivery':
-#             i_zone = (int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0]))
-#             service_time = float(df_prob.loc[df_prob['payload_id'] == i]['del_stop_duration'].values[0])
-#         elif prob_type =='pickup':
-#             i_zone = (int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]))
-#             service_time = float(df_prob.loc[df_prob['payload_id'] == i]['pu_stop_duration'].values[0])
-#         # saving service times
-#         data['stop_durations'].append(copy(service_time))
-
-#         # TO DO : need to handle pickup_delivery service time
-
-#         time_l.append(int(tt_cal(i_zone, depot_loc)))
-
         for j in range(len(data['loc_zones'])):
             if i == j or data['loc_zones'][i] == data['loc_zones'][j]:
                 time_l.append(0)
             else:
-                try:
-                    print('zone', data['loc_zones'][i], ' and ', data['loc_zones'][j], 'geo ',
-                          data['geo_ids'][i], ' and ', data['geo_ids'][j])
-                    travel_time = tt_cal(data['loc_zones'][i], data['loc_zones'][j],
-                                     data['geo_ids'][i], data['geo_ids'][j])
-                except:
-                    print('I get here')
-
-#                 print('found travel time')
+                travel_time = tt_cal(data['loc_zones'][i], data['loc_zones'][j],
+                                     data['geo_ids'][i], data['geo_ids'][j], sel_tt, sel_dist)
                 time_l.append(int(travel_time))
 
         data['time_matrix'].append(copy(time_l))
@@ -585,33 +220,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     return data
 
 
-
-# In[46]:
-
-
-# Create and register a transit callback.
-def time_callback(from_index, to_index):
-    """Returns the travel time between the two nodes."""
-    # Convert from routing variable Index to time matrix NodeIndex.
-    from_node = manager.IndexToNode(from_index)
-    to_node = manager.IndexToNode(to_index)
-    return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
-
-
-# In[47]:
-
-
-# Add Capacity constraint.
-def demand_callback(from_index):
-    """Returns the demand of the node."""
-    # Convert from routing variable Index to demands NodeIndex.
-    from_node = manager.IndexToNode(from_index)
-    return data['demands'][from_node]
-
-
-# In[48]:
-
-
 def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df):
     """Prints solution on console."""
     global tour_id
@@ -646,10 +254,6 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                     manager.IndexToNode(index), solution.Min(time_var),
                     solution.Max(time_var))
 
-                #'payloadId','sequenceRank','tourId','payloadType','weightInlb','requestType',
-                #'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
-                #'arrivalTimeWindowInSec_upper','operationDurationInSec'])
-#                 print('node index is now ', node_index)
                 if(node_index != 0): # Only add the payload info if this is not the depot
                     payload_df.loc[payload_i] = [int(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
                                                  data['demands'][node_index], 1, int(data['loc_zones'][node_index]),
@@ -680,263 +284,254 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
             tour_id += 1 # Incrementing for the tour id
     print('Total time of all routes: {}min'.format(total_time))
 
+def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, payload_file, vehicleType_file,
+                         vehicleCarrier_file):
+    # KJ: read travel time, distance, zonal file as inputs  # Slow step
+    tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
+    dist_df = pd.read_csv(dist_file)  # Slow step
+    CBGzone_df = gp.read_file(CBGzone_file)
 
-# In[49]:
+    # We need to know the depot using the carrier file
+    c_df = pd.read_csv(carrier_file)
+    c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
+
+    # reading payload definition
+    p_df = pd.read_csv(payload_file)
+    p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
+
+    # just relax upper time window because of outside of region destination
+    c_df['depot_upper']=50000
+    p_df['del_tw_upper']=50000
+    # Removing nans
+    c_df = c_df.fillna(0); # Fill all nan with zeros
+
+    # Removing nans
+    p_df['carrier_id'] = p_df['carrier_id'].astype(int)
+    p_df['sequence_id'] = np.nan
+    p_df['tour_id'] = np.nan
+    p_df['pu_arrival_time'] = np.nan
+    p_df['del_arrival_time'] = np.nan
+    p_df = p_df.fillna(int(0));
+
+    # Adding in additional colums for vehicle tours
+    # Changing tour id and sequence id into ints
+    p_df['tour_id'] = p_df['tour_id'].astype(int)
+    p_df['sequence_id'] = p_df['sequence_id'].astype(int)
+
+    # Reading in vehicle information
+    v_df = pd.read_csv(vehicleType_file)
+    v_df = v_df.dropna(axis=1, how='all')   # Removing all nan
+
+    # Create vehicle sequence vehicle ID
+    vc_df = c_df[['carrier_id', 'num_veh_type_1','num_veh_type_2']]
+    vc_df.columns= ['carrier_id', 'md_veh', 'hd_veh']
+    vc_df['md_start_id']=0
+    vc_df['hd_start_id']=0
+
+    n=0
+    for i in range (0, vc_df.shape[0]):
+        vc_df['md_start_id'][i] =  n
+        vc_df['hd_start_id'][i] =  n+vc_df['md_veh'][i]
+        n=vc_df['hd_start_id'][i]+vc_df['hd_veh'][i]
+
+    # Reading vehicles by carrier
+    vc_df = pd.read_csv(vehicleCarrier_file)
+
+    return tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df
 
 
-# p_df.head()
+def main(args=None):
+    parser = ArgumentParser()
+    parser.add_argument("-t", "--travel_time_file", dest="travel_file",
+                        help="travel time file in gz format", required=True, type=str)
+    parser.add_argument("-d", "--distance_file", dest="dist_file",
+                        help="distance file in csv format", required=True, type=str)
+    parser.add_argument("-ct", "--freigh_centroid_file", dest="CBGzone_file",
+                        help="travel time file in geojson format", required=True, type=str)
+    parser.add_argument("-cr", "--carrier_file", dest="carrier_file",
+                        help="carrier file in csv format", required=True, type=str)
+    parser.add_argument("-pl", "--payload_file", dest="payload_file",
+                        help="payload file in csv format", required=True, type=str)
+    parser.add_argument("-vt", "--vehicle_type_file", dest="vehicleType_file",
+                        help="vehicle type file in csv format", required=True, type=str)
+    parser.add_argument("-vc", "--vehicle_by_carrier_file", dest="vehicleCarrier_file",
+                        help="vehicle by carrier file in csv format", required=True, type=str)
 
+    args = parser.parse_args()
 
-# In[50]:
+    # travel_file = input_file/tt_df_cbg.csv.gz
+    # dist_file = 'input_file/od_distance.csv'
+    # CBGzone_file = 'input_file/freight_centroids.geojson'
+    # carrier_file = 'input_file/carriers.csv'
+    # payload_file = 'input_file/payloads.csv'
+    # vehicleType_file = 'input_file/vehicle_types.csv'
+    # vehicleCarrier_file = 'input_file/vehicles_by_carrier.csv'
 
+    tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(args.travel_file, args.dist_file,
+                                                    args.CBGzone_file, args.carrier_file, args.payload_file,
+                                                    args.vehicleType_file, args.vehicleCarrier_file)
 
-pick_del_df = p_df[(p_df['job'] == 'pickup_delivery')]
+    b_time = time()
+    # data frames for the tour, carrier and payload
+    tour_df = pd.DataFrame(columns = ['tour_id', 'departureTimeInSec', 'departureLocation_zone', 'maxTourDurationInSec'])
+    # Format for carrier data frame: carrierId,tourId, vehicleId,vehicleTypeId,depot_zone
+    carrier_df = pd.DataFrame(columns = ['carrierId','tourId', 'vehicleId', 'vehicleTypeId','depot_zone'])
+    # format for payload format
+    # payloadId, sequenceRank, tourId, payloadType, weightInlb, requestType,locationZone,
+    # estimatedTimeOfArrivalInSec, arrivalTimeWindowInSec_lower, arrivalTimeWindowInSec_upper,operationDurationInSec
+    payload_df = pd.DataFrame(columns = ['payloadId','sequenceRank','tourId','payloadType','weightInlb','requestType',
+                                         'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
+                                         'arrivalTimeWindowInSec_upper','operationDurationInSec'])
 
+    # for carr_id in [6541910]:
+#     for carr_id in [6670611]:
+    for carr_id in c_df['carrier_id'].unique()[0:5]:
+        # Initialize parameters used for probelm setting
+        veh_capacity = 0
+        fleet_type = 'homo'
+        num_veh = 0
+        fleet_miz = False
 
-# In[52]:
+        # Depot location
+        depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
+        # To simplify the problem, look at a small problem with same carrier and same commodity id
+        df_prob = p_df[(p_df['carrier_id'] == carr_id)]
+        f_prob = vc_df[vc_df['carrier_id'] == carr_id]
+        c_prob = c_df[c_df['carrier_id'] == carr_id]
+        vc_prob = vc_df[vc_df['carrier_id']== carr_id]
 
-# pick_del_df['carrier_id'].unique()
+        if len(vc_prob) > 0:
+            md_start_id = int(vc_prob['md_start_id'].values[0])
+            hd_start_id = int(vc_prob['hd_start_id'].values[0])
+            #print(df_prob)
 
+        if len(df_prob) > 0:
+            prob_type = str(df_prob.iloc[0]['job'])
+            print('problem type is: ', prob_type, " len main ", len(df_prob), " len freight ", len(f_prob)
+                 , " len carrier ", len(c_prob), " len vc ", len(vc_prob))
 
-# In[55]:
-
-
-for i in pick_del_df['carrier_id'].unique():
-    if len(p_df[(p_df['carrier_id'] == i)]) == 1:
-        print( 'carrier ', i)
-
-
-# In[53]:
-
-
-# pick_del_df.head()
-
-
-# In[54]:
-
-
-p_df[(p_df['carrier_id'] == 2248404)]
-
-
-# ## To run the code start from here
-
-# In[49]:
-print('About to start solving problem')
-
-b_time = time()
-tour_id = 0
-tour_df = pd.DataFrame(columns = ['tour_id', 'departureTimeInSec', 'departureLocation_zone', 'maxTourDurationInSec'])
-# Format for carrier data frame: carrierId,tourId, vehicleId,vehicleTypeId,depot_zone
-carrier_df = pd.DataFrame(columns = ['carrierId','tourId', 'vehicleId', 'vehicleTypeId','depot_zone'])
-# format for payload format
-# payloadId, sequenceRank, tourId, payloadType, weightInlb, requestType,locationZone,
-# estimatedTimeOfArrivalInSec, arrivalTimeWindowInSec_lower, arrivalTimeWindowInSec_upper,operationDurationInSec
-payload_df = pd.DataFrame(columns = ['payloadId','sequenceRank','tourId','payloadType','weightInlb','requestType',
-                                     'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
-                                     'arrivalTimeWindowInSec_upper','operationDurationInSec'])
-payload_i = 0
-
-# for carr_id in [6541910]:
-for carr_id in [2248484]:
-# for carr_id in c_df['carrier_id'].unique():
-    # Initialize parameters used for probelm setting
-    veh_capacity = 0
-    fleet_type = 'homo'
-    num_veh = 0
-    fleet_miz = False
-
-    # Depot location
-    depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
-
-    # To simplify the problem, look at a small problem with same carrier and same commodity id
-    df_prob = p_df[(p_df['carrier_id'] == carr_id)]
-    f_prob = vc_df[vc_df['carrier_id'] == carr_id]
-    c_prob = c_df[c_df['carrier_id'] == carr_id]
-    vc_prob = vc_df[vc_df['carrier_id']== carr_id]
-
-    if len(vc_prob) > 0:
-        md_start_id = int(vc_prob['md_start_id'].values[0])
-        hd_start_id = int(vc_prob['hd_start_id'].values[0])
-        #print(df_prob)
-
-    if len(df_prob) > 0:
-        prob_type = str(df_prob.iloc[0]['job'])
-        print('problem type is: ', prob_type, " len main ", len(df_prob), " len freight ", len(f_prob)
-             , " len carrier ", len(c_prob), " len vc ", len(vc_prob))
-
-    # for now pickup and delivery works
-    # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
-    if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
-        s_time = time()
-        try:
+        # for now pickup and delivery works
+        # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
+        if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
+            print('carr_id is ', carr_id)
             data = create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carr_id,
-                                md_start_id, hd_start_id, CBGzone_df)
-        except Exception as e:
-                print(e)
-        data_time = time() - s_time
-        print('Time to create data is: ', data_time)
+                                    md_start_id, hd_start_id, CBGzone_df, tt_df, dist_df)
 
-        # Create the routing index manager.
-        manager = pywrapcp.RoutingIndexManager(len(data['time_matrix']),
-                                               data['num_vehicles'], data['depot'])
+            # Create the routing index manager.
+            manager = pywrapcp.RoutingIndexManager(len(data['time_matrix']),
+                                                   data['num_vehicles'], data['depot'])
 
-        # Create Routing Model.
-        routing = pywrapcp.RoutingModel(manager)
+            # Create Routing Model.
+            routing = pywrapcp.RoutingModel(manager)
 
-        transit_callback_index = routing.RegisterTransitCallback(time_callback)
+            # Create and register a transit callback.
+            def time_callback(from_index, to_index):
+                """Returns the travel time between the two nodes."""
+                # Convert from routing variable Index to time matrix NodeIndex.
+                from_node = manager.IndexToNode(from_index)
+                to_node = manager.IndexToNode(to_index)
+                return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
 
-        # Define cost of each arc.
-        routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+            # Add Capacity constraint.
+            def demand_callback(from_index):
+                """Returns the demand of the node."""
+                # Convert from routing variable Index to demands NodeIndex.
+                from_node = manager.IndexToNode(from_index)
+                return data['demands'][from_node]
 
-        # Add Time Windows constraint.
-        time_dim = 'Time'
-        routing.AddDimension(
-            transit_callback_index,
-            30,  # allow waiting time
-            86400,  # maximum time per vehicle, JU: set to minutes in a day assuming no trip goes beyod a day
-            False,  # Don't force start cumul to zero.
-            time_dim)
-        time_dimension = routing.GetDimensionOrDie(time_dim)
+            transit_callback_index = routing.RegisterTransitCallback(time_callback)
 
-        # Add time window constraints for each location except depot.
-        for location_idx, time_window in enumerate(data['time_windows']):
-            if location_idx == data['depot']:
-                continue
-            index = manager.NodeToIndex(location_idx)
-            time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
+            # Define cost of each arc.
+            routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-        # Add time window constraints for each vehicle start node.
-        depot_idx = data['depot']
-        for vehicle_id in range(data['num_vehicles']):
-            index = routing.Start(vehicle_id)
-            time_dimension.CumulVar(index).SetRange(
-                data['time_windows'][depot_idx][0],
-                data['time_windows'][depot_idx][1])
+            # Add Time Windows constraint.
+            time_dim = 'Time'
+            routing.AddDimension(
+                transit_callback_index,
+                30,  # allow waiting time
+                86400,  # maximum time per vehicle, JU: set to minutes in a day assuming no trip goes beyod a day
+                False,  # Don't force start cumul to zero.
+                time_dim)
+            time_dimension = routing.GetDimensionOrDie(time_dim)
 
-        if prob_type == 'pickup_delivery':
-            # Define Transportation Requests.
-            for request in data['pickups_deliveries']:
-                pickup_index = manager.NodeToIndex(request[0])
-                delivery_index = manager.NodeToIndex(request[1])
-                routing.AddPickupAndDelivery(pickup_index, delivery_index)
-                routing.solver().Add(
-                    routing.VehicleVar(pickup_index) == routing.VehicleVar(
-                        delivery_index))
-                routing.solver().Add(
-                    time_dimension.CumulVar(pickup_index) <=
-                    time_dimension.CumulVar(delivery_index))
+            # Add time window constraints for each location except depot.
+            for location_idx, time_window in enumerate(data['time_windows']):
+                if location_idx == data['depot']:
+                    continue
+                index = manager.NodeToIndex(location_idx)
+                time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
 
-        demand_callback_index = routing.RegisterUnaryTransitCallback(
-                demand_callback)
-        routing.AddDimensionWithVehicleCapacity(
-            demand_callback_index,
-            0,  # null capacity slack
-            data['vehicle_capacities'],  # vehicle maximum capacities
-            True,  # start cumul to zero
-            'Capacity')
+            # Add time window constraints for each vehicle start node.
+            depot_idx = data['depot']
+            for vehicle_id in range(data['num_vehicles']):
+                index = routing.Start(vehicle_id)
+                time_dimension.CumulVar(index).SetRange(
+                    data['time_windows'][depot_idx][0],
+                    data['time_windows'][depot_idx][1])
 
-        # Instantiate route start and end times to produce feasible times.
-        for i in range(data['num_vehicles']):
-            routing.AddVariableMinimizedByFinalizer(
-                time_dimension.CumulVar(routing.Start(i)))
-            routing.AddVariableMinimizedByFinalizer(
-                time_dimension.CumulVar(routing.End(i)))
+            if prob_type == 'pickup_delivery':
+                # Define Transportation Requests.
+                for request in data['pickups_deliveries']:
+                    pickup_index = manager.NodeToIndex(request[0])
+                    delivery_index = manager.NodeToIndex(request[1])
+                    routing.AddPickupAndDelivery(pickup_index, delivery_index)
+                    routing.solver().Add(
+                        routing.VehicleVar(pickup_index) == routing.VehicleVar(
+                            delivery_index))
+                    routing.solver().Add(
+                        time_dimension.CumulVar(pickup_index) <=
+                        time_dimension.CumulVar(delivery_index))
 
-        # Setting first solution heuristic.
-        search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-        search_parameters.time_limit.seconds = 2   #set a time limit of 2 seconds for a search
-        search_parameters.solution_limit = 10     #set a solution limit of 10 for a search
+            demand_callback_index = routing.RegisterUnaryTransitCallback(
+                    demand_callback)
+            routing.AddDimensionWithVehicleCapacity(
+                demand_callback_index,
+                0,  # null capacity slack
+                data['vehicle_capacities'],  # vehicle maximum capacities
+                True,  # start cumul to zero
+                'Capacity')
 
-        s_time = time()
-        search_parameters.first_solution_strategy = (
-            routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+            # Instantiate route start and end times to produce feasible times.
+            for i in range(data['num_vehicles']):
+                routing.AddVariableMinimizedByFinalizer(
+                    time_dimension.CumulVar(routing.Start(i)))
+                routing.AddVariableMinimizedByFinalizer(
+                    time_dimension.CumulVar(routing.End(i)))
 
-        # Solve the problem.
-        solution = routing.SolveWithParameters(search_parameters)
+            # Setting first solution heuristic.
+            search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+            search_parameters.time_limit.seconds = 2   #set a time limit of 2 seconds for a search
+            search_parameters.solution_limit = 10     #set a solution limit of 10 for a search
 
-        solve_time = time() - s_time
-        print('Time to solve is: ', solve_time)
+            s_time = time()
+            search_parameters.first_solution_strategy = (
+                routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
 
-        # Print solution on console.
-        if solution:
-            print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                           payload_df)
-            print('\n')
+            # Solve the problem.
+            solution = routing.SolveWithParameters(search_parameters)
 
-        print(tour_id)
+            solve_time = time() - s_time
+            print('Time to solve is: ', solve_time)
 
-run_time = time() - b_time
-print('Time for the run: ', run_time)
-
-
-# In[ ]:
-
-
-[9045, 305, 20117]
-
-
-# In[54]:
+            # Print solution on console.
+            if solution:
+                print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
+                               payload_df)
+                print('\n')
 
 
-data
+    run_time = time() - b_time
+    print('Time for the run: ', run_time)
+    print('\n')
+
+    # Saving the created data frames
+    tour_df.to_csv("output/freight_tours.csv", index=False)
+    carrier_df.to_csv("output/carrier.csv", index=False)
+    payload_df.to_csv("output/payload.csv", index=False)
 
 
-# In[193]:
 
 
-# df_prob
-
-
-# In[194]:
-
-
-# tour_df
-
-
-# In[ ]:
-
-
-# Remove service time from arrival time
-
-
-# In[168]:
-
-
-# tour_df.head()
-
-
-# In[169]:
-
-
-# carrier_df.head()
-
-
-# In[232]:
-
-
-# payload_df[payload_df['tourId'] == 56]
-
-
-# In[230]:
-
-
-# payload_df.tail()
-
-
-# In[171]:
-
-
-# Saving the files to csv
-# tour_df.to_csv("freight-tours_F.csv.csv", index=False)
-# carrier_df.to_csv("freight-carriers_F.csv", index=False)
-# payload_df.to_csv("payload-plans_F.csv", index=False)
-
-
-# In[172]:
-
-
-# df_prob
-
-
-# In[ ]:
+if __name__ == "__main__":
+    main()
