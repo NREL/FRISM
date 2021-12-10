@@ -17,7 +17,7 @@ conda activate frism
 ## Generating freight routes
 Run Generalized_VRP.ipynb for generating freight routes
 
-## Running the Vehicle Routing Problem
+## Generating Freigt Tours
 To generate freight tours, solve the vehicle routing problem as bellow:
 <br>
 ```
