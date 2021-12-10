@@ -10,6 +10,7 @@ Run Generalized_VRP.ipynb for generating freight routes
 
 ## Running the Vehicle Routing Problem
 To generate freight tours, solve the vehicle routing problem as bellow:
+<br>
 python VRP-OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <freight centroid csv file> -cr <carrier csv file> -pl <payload csv file> -vt <vehicle type csv file> -vc < vehicle by carrier csv file>
 
 This will output three files:
