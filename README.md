@@ -16,6 +16,7 @@ python VRP-OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <frei
 ```
 
 This will output three files:
+<br>
 payload.csv: csv file with payload information, when and where they were delivered
 <br>
 carrier.csv: csv file with tour information for each carrier and its vehicles
