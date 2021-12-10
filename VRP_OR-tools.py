@@ -298,8 +298,8 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
 
     # just relax upper time window because of outside of region destination
-    c_df['depot_upper']=50000
-    p_df['del_tw_upper']=50000
+    #c_df['depot_upper']=50000
+    #p_df['del_tw_upper']=50000
     # Removing nans
     c_df = c_df.fillna(0); # Fill all nan with zeros
 
