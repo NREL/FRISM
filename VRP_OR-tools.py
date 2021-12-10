@@ -120,8 +120,6 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             # Adding time window
             data['time_windows'].append((int(df_prob.loc[df_prob['payload_id'] == i]['pu_tw_lower'].values[0]),
                                 int(df_prob.loc[df_prob['payload_id'] == i]['pu_tw_upper'].values[0])))
-#             # Adding travel time from depot
-#             time_l.append(int(tt_cal(depot_loc, temp_zone)))
 
             data['payload_ids'].append(copy(i))
 
@@ -359,13 +357,6 @@ def main(args=None):
 
     args = parser.parse_args()
 
-    # travel_file = input_file/tt_df_cbg.csv.gz
-    # dist_file = 'input_file/od_distance.csv'
-    # CBGzone_file = 'input_file/freight_centroids.geojson'
-    # carrier_file = 'input_file/carriers.csv'
-    # payload_file = 'input_file/payloads.csv'
-    # vehicleType_file = 'input_file/vehicle_types.csv'
-    # vehicleCarrier_file = 'input_file/vehicles_by_carrier.csv'
 
     tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(args.travel_file, args.dist_file,
                                                     args.CBGzone_file, args.carrier_file, args.payload_file,
