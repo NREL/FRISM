@@ -1,8 +1,8 @@
 # FRISM
 ### Contributors
-Kyungsoo Jeong <Kyungsoo.Jeong@nrel.gov>
+Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 <br>
-Juliette Ugirumurera <jugirumu@nrel.gov>
+Juliette Ugirumurera: <jugirumu@nrel.gov>
 <br>
 
 ## Generating freight routes
@@ -17,5 +17,7 @@ python VRP-OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <frei
 
 This will output three files:
 payload.csv: csv file with payload information, when and where they were delivered
+<br>
 carrier.csv: csv file with tour information for each carrier and its vehicles
+<br>
 freight_tours.csv: csv file with freight tour information including departure location, departure time and maximum duration.
