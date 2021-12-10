@@ -374,9 +374,8 @@ def main(args=None):
                                          'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
                                          'arrivalTimeWindowInSec_upper','operationDurationInSec'])
 
-    # for carr_id in [6541910]:
-#     for carr_id in [6670611]:
-    for carr_id in c_df['carrier_id'].unique()[0:5]:
+
+    for carr_id in c_df['carrier_id'].unique():
         # Initialize parameters used for probelm setting
         veh_capacity = 0
         fleet_type = 'homo'
