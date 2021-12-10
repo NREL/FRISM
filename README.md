@@ -5,6 +5,15 @@ Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 Juliette Ugirumurera: <jugirumu@nrel.gov>
 <br>
 
+## Setup python environment
+```linux
+conda env create -f environment.yml
+```
+Activate conda environment to run the code:
+```linux
+conda activate frism
+```
+
 ## Generating freight routes
 Run Generalized_VRP.ipynb for generating freight routes
 
