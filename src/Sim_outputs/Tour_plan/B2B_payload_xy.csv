@@ -1,0 +1,2 @@
+payloadId,sequenceRank,tourId,payloadType,weightInlb,requestType,locationZone,estimatedTimeOfArrivalInSec,arrivalTimeWindowInSec_lower,arrivalTimeWindowInSec_upper,operationDurationInSec,locationZone_x,locationZone_y
+0,1,0,1,127,1,7072,180180,18000,1728000,300,-122.275912050495,37.54846554138041
