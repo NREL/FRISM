@@ -292,6 +292,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     # We need to know the depot using the carrier file
     c_df = pd.read_csv(carrier_file)
     c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
+    c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code 
 
     # reading payload definition
     p_df = pd.read_csv(payload_file)
