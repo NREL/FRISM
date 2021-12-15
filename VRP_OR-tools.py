@@ -43,14 +43,14 @@ def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID, sel_tt, sel_dist):
     return travel_time
 
 # Function to create coorinate info after having the results
-def x_y_finder(meso):
-    try:
-        find_index=CBGzone_df.index[CBGzone_df['MESOZONE']==meso]
-        x_cord= CBGzone_df.iloc[find_index].X_cord.values[0]
-        y_cord= CBGzone_df.iloc[find_index].Y_cord.values[0]
-        return x_cord, y_cord
-    except:
-        return "NA", "NA"
+# def x_y_finder(CBGzone_df,meso):
+#     try:
+#         find_index=CBGzone_df.index[CBGzone_df['MESOZONE']==meso]
+#         x_cord= CBGzone_df.iloc[find_index].X_cord.values[0]
+#         y_cord= CBGzone_df.iloc[find_index].Y_cord.values[0]
+#         return x_cord, y_cord
+#     except:
+#         return "NA", "NA"
 
 
 def get_geoId(zone, CBGzone_df):
