@@ -292,7 +292,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     # We need to know the depot using the carrier file
     c_df = pd.read_csv(carrier_file)
     c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
-    c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code 
+    c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
 
     # reading payload definition
     p_df = pd.read_csv(payload_file)
@@ -327,10 +327,12 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     vc_df['md_start_id']=0
     vc_df['hd_start_id']=0
 
+    print('md_veh len is ', len(vc_df['md_veh']))
+
     n=0
     for i in range (0, vc_df.shape[0]):
         vc_df['md_start_id'][i] =  n
-        vc_df['hd_start_id'][i] =  n+vc_df['md_veh'][i]
+        vc_df['hd_start_id'][i] =  n + vc_df['md_veh'][i]
         n=vc_df['hd_start_id'][i]+vc_df['hd_veh'][i]
 
     # Reading vehicles by carrier
@@ -373,7 +375,7 @@ def random_loc (t_df,c_df,p_df,SFBay_CBG):
         point=random_points_in_polygon(SFBay_CBG.geometry[SFBay_CBG.MESOZONE==p_df['locationZone'][i]])
         p_df.loc[i,'locationZone_x']=point.x
         p_df.loc[i,'locationZone_y']=point.y
-        
+
     return c_df, t_df, p_df
 
 def external_zone (t_df,c_df,p_df,ex_zone):
@@ -593,6 +595,13 @@ def main(args=None):
                 print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
                                payload_df)
                 print('\n')
+            else:
+                print('No solution was found. Review problem constraints')
+                print('paylaods ', data['payload_ids'])
+                print('stop_durations ', data['stop_durations'])
+                print('demands ', data['demands'])
+                print('time_windows ', data['time_windows'])
+
 
 
     run_time = time() - b_time
@@ -611,14 +620,14 @@ def main(args=None):
 
     print ('Complete saveing tour-plan files for %s' %ship_type)
     dir_geo='../Sim_inputs/Geo_data/'
-    polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US 
-    ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones  
+    polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
+    ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones
     if (ship_type =='B2B') :
         print ("Starting external zone processing for B2B")
         tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match)
 
     print ("Assigning x_y coordinate into depots and delivery locations")
-    tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)        
+    tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
     tour_df.to_csv("../Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
     carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
     payload_df.to_csv("../Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)

@@ -5,6 +5,9 @@ Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 Juliette Ugirumurera: <jugirumu@nrel.gov>
 <br>
 
+## Description
+FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel.
+
 ## Setup python environment
 ```linux
 conda env create -f environment.yml
@@ -21,7 +24,7 @@ Run Generalized_VRP.ipynb for generating freight routes
 To generate freight tours, solve the vehicle routing problem as bellow:
 <br>
 ```
-python VRP_OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <freight centroid csv file> -cr <carrier csv file> -pl <payload csv file> -vt <vehicle type csv file> 
+python VRP_OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <freight centroid csv file> -cr <carrier csv file> -pl <payload csv file> -vt <vehicle type csv file>
 ```
 
 This will output three files:
