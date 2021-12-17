@@ -383,8 +383,8 @@ def external_zone (t_df,c_df,p_df,ex_zone):
     p_df.BoundaryZONE.fillna('no', inplace=True)
 
     p_df_update=pd.DataFrame()
-    #for tour_id in p_df['tourId'].unique():
-    for tour_id in [0,1]:
+    for tour_id in p_df['tourId'].unique():
+    #for tour_id in [0,1]:
         temp_payload = p_df[p_df['tourId']==tour_id].reset_index()
         if temp_payload.loc[0,'BoundaryZONE'] == 'no':
             index_tour= "out_bound"
