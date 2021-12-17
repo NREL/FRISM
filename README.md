@@ -1,4 +1,4 @@
-# FRISM: Freight Integrated Simulation Model
+# FRISM: FReight Integrated Simulation Model
 ### Contributors
 Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 <br>
