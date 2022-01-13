@@ -327,6 +327,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     vc_df['md_start_id']=np.nan
     vc_df['hd_start_id']=np.nan
     vc_df = vc_df.fillna(int(0));
+    vc_df = vc_df.reset_index()
 
     n=0
     for i in range (0, vc_df.shape[0]):
