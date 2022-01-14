@@ -17,20 +17,18 @@ Activate conda environment to run the code:
 conda activate frism
 ```
 
-## Generating freight routes
-Run Generalized_VRP.ipynb for generating freight routes
-
-## Generating Freigt Tours
+## Generating Freight Tours
 To generate freight tours, solve the vehicle routing problem as bellow:
 <br>
 ```
+cd src/Simulation/
 python VRP_OR-tools.py -t <travel time gz file> -d <distance csv file> -ct <freight centroid csv file> -cr <carrier csv file> -pl <payload csv file> -vt <vehicle type csv file>
 ```
 
-This will output three files:
+This will output three files in the src/Sim_outputs/Tour_plan folder:
 <br>
-**payload.csv**: csv file with payload information, when and where they were delivered.
+**_payload.csv**: csv file with payload information, when and where they were delivered.
 <br>
-**carrier.csv**: csv file with tour information for each carrier and its vehicles.
+**_carrier.csv**: csv file with tour information for each carrier and its vehicles.
 <br>
-**freight_tours.csv**: csv file with freight tour information including departure location, departure time and maximum duration.
+**_freight_tours.csv**: csv file with freight tour information including departure location, departure time and maximum duration.

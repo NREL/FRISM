@@ -750,6 +750,7 @@ def main(args=None):
     elif "B2C" in args.payload_file:
         ship_type="B2C"
 
+    #  Saving the carrier ids with errors
     with open("../Sim_outputs/error.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(error_list)
