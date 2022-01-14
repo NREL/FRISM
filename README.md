@@ -34,4 +34,4 @@ This will output three files in the src/Sim_outputs/Tour_plan folder:
 **_freight_tours.csv**: csv file with freight tour information including departure location, departure time and maximum duration.
 
 ## Error Catching
-If there are carriers for which tours could not be generated for some reason, they can be found in **error.csv** under src/Sim_outputs folder. This file has two columns: a 'carrier' column that indicates the carrier id, and a 'reason' that indicates why a solution could not be calculated. 
+If there are carriers for which tours could not be generated for some reason, they can be found in **error.csv** under src/Sim_outputs folder. This file has two columns: a **carrier** column that indicates the carrier id, and a **reason** column that indicates why a solution could not be calculated. 
