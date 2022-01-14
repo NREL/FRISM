@@ -1,6 +1,5 @@
 import pandas as pd
 import geopandas as gp
-import csv
 import numpy as np
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
@@ -9,6 +8,10 @@ import os
 import inspect
 from xml.dom import minidom
 import math
+import networkx as nx
+from networkx import DiGraph
+from vrpy import VehicleRoutingProblem
+import matplotlib.pyplot as plt
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from time import time
@@ -324,7 +327,6 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     vc_df['md_start_id']=np.nan
     vc_df['hd_start_id']=np.nan
     vc_df = vc_df.fillna(int(0));
-    vc_df = vc_df.reset_index()
 
     n=0
     for i in range (0, vc_df.shape[0]):
@@ -573,172 +575,145 @@ def main(args=None):
                                          'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
                                          'arrivalTimeWindowInSec_upper','operationDurationInSec'])
 
-    error_list = []
-    error_list.append(['carrier', 'reason'])
 
-    for carr_id in [7254190.0]: #c_df['carrier_id'].unique():
-        try:
-            # Initialize parameters used for probelm setting
-            veh_capacity = 0
-            fleet_type = 'homo'
-            num_veh = 0
-            fleet_miz = False
+    for carr_id in c_df['carrier_id'].unique():
+        # Initialize parameters used for probelm setting
+        veh_capacity = 0
+        fleet_type = 'homo'
+        num_veh = 0
+        fleet_miz = False
 
-            # Depot location
-            depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
+        # Depot location
+        depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
-            # To simplify the problem, look at a small problem with same carrier and same commodity id
-            df_prob = p_df[(p_df['carrier_id'] == carr_id)]
-            df_prob = df_prob.dropna()
-            f_prob = vc_df[vc_df['carrier_id'] == carr_id]
-            f_prob = f_prob.dropna()
-            c_prob = c_df[c_df['carrier_id'] == carr_id]
-            c_prob = c_prob.dropna()
-            vc_prob = vc_df[vc_df['carrier_id']== carr_id]
-            vc_prob = vc_prob.dropna()
+        # To simplify the problem, look at a small problem with same carrier and same commodity id
+        df_prob = p_df[(p_df['carrier_id'] == carr_id)]
+        f_prob = vc_df[vc_df['carrier_id'] == carr_id]
+        c_prob = c_df[c_df['carrier_id'] == carr_id]
+        vc_prob = vc_df[vc_df['carrier_id']== carr_id]
 
-            if len(df_prob) == 0:
-                print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
+        # drop nans rows
+        vc_prob.dropna()
+
+        if len(vc_prob) > 0:
+            md_start_id = int(vc_prob['md_start_id'].values[0])
+            hd_start_id = int(vc_prob['hd_start_id'].values[0])
+            #print(df_prob)
+
+        if len(df_prob) > 0:
+            prob_type = str(df_prob.iloc[0]['job'])
+            print('problem type is: ', prob_type, " len main ", len(df_prob), " len freight ", len(f_prob)
+                 , " len carrier ", len(c_prob), " len vc ", len(vc_prob))
+
+        # for now pickup and delivery works
+        # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
+        if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
+            print('carr_id is ', carr_id)
+            data = create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carr_id,
+                                    md_start_id, hd_start_id, CBGzone_df, tt_df, dist_df)
+
+            # Create the routing index manager.
+            manager = pywrapcp.RoutingIndexManager(len(data['time_matrix']),
+                                                   data['num_vehicles'], data['depot'])
+
+            # Create Routing Model.
+            routing = pywrapcp.RoutingModel(manager)
+
+            # Create and register a transit callback.
+            def time_callback(from_index, to_index):
+                """Returns the travel time between the two nodes."""
+                # Convert from routing variable Index to time matrix NodeIndex.
+                from_node = manager.IndexToNode(from_index)
+                to_node = manager.IndexToNode(to_index)
+                return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
+
+            # Add Capacity constraint.
+            def demand_callback(from_index):
+                """Returns the demand of the node."""
+                # Convert from routing variable Index to demands NodeIndex.
+                from_node = manager.IndexToNode(from_index)
+                return data['demands'][from_node]
+
+            transit_callback_index = routing.RegisterTransitCallback(time_callback)
+
+            # Define cost of each arc.
+            routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+            # Add Time Windows constraint.
+            time_dim = 'Time'
+            routing.AddDimension(
+                transit_callback_index,
+                30,  # allow waiting time
+                86400,  # maximum time per vehicle, JU: set to minutes in a day assuming no trip goes beyod a day
+                False,  # Don't force start cumul to zero.
+                time_dim)
+            time_dimension = routing.GetDimensionOrDie(time_dim)
+
+            # Add time window constraints for each location except depot.
+            for location_idx, time_window in enumerate(data['time_windows']):
+                if location_idx == data['depot']:
+                    continue
+                index = manager.NodeToIndex(location_idx)
+                time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
+
+            # Add time window constraints for each vehicle start node.
+            depot_idx = data['depot']
+            for vehicle_id in range(data['num_vehicles']):
+                index = routing.Start(vehicle_id)
+                time_dimension.CumulVar(index).SetRange(
+                    data['time_windows'][depot_idx][0],
+                    data['time_windows'][depot_idx][1])
+
+            if prob_type == 'pickup_delivery':
+                # Define Transportation Requests.
+                for request in data['pickups_deliveries']:
+                    pickup_index = manager.NodeToIndex(request[0])
+                    delivery_index = manager.NodeToIndex(request[1])
+                    routing.AddPickupAndDelivery(pickup_index, delivery_index)
+                    routing.solver().Add(
+                        routing.VehicleVar(pickup_index) == routing.VehicleVar(
+                            delivery_index))
+                    routing.solver().Add(
+                        time_dimension.CumulVar(pickup_index) <=
+                        time_dimension.CumulVar(delivery_index))
+
+            demand_callback_index = routing.RegisterUnaryTransitCallback(
+                    demand_callback)
+            routing.AddDimensionWithVehicleCapacity(
+                demand_callback_index,
+                0,  # null capacity slack
+                data['vehicle_capacities'],  # vehicle maximum capacities
+                True,  # start cumul to zero
+                'Capacity')
+
+            # Instantiate route start and end times to produce feasible times.
+            for i in range(data['num_vehicles']):
+                routing.AddVariableMinimizedByFinalizer(
+                    time_dimension.CumulVar(routing.Start(i)))
+                routing.AddVariableMinimizedByFinalizer(
+                    time_dimension.CumulVar(routing.End(i)))
+
+            # Setting first solution heuristic.
+            search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+            search_parameters.time_limit.seconds = 2   #set a time limit of 2 seconds for a search
+            search_parameters.solution_limit = 10     #set a solution limit of 10 for a search
+
+            s_time = time()
+            search_parameters.first_solution_strategy = (
+                routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+
+            # Solve the problem.
+            solution = routing.SolveWithParameters(search_parameters)
+
+            solve_time = time() - s_time
+            print('Time to solve is: ', solve_time)
+
+            # Print solution on console.
+            if solution:
+                print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
+                               payload_df)
                 print('\n')
-                error_list.append([carr_id, 'NO PAYLOAD INFO'])
 
-            elif len(f_prob) == 0 or len(vc_prob) == 0:
-                print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
-                print('\n')
-                error_list.append([carr_id, 'NO VEHICLE TYPE INFO'])
-
-            elif len(c_prob) == 0:
-                print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
-                print('\n')
-                error_list.append([carr_id, 'NO CARRIER INFO'])
-
-            else:
-
-                md_start_id = int(vc_prob['md_start_id'].values[0])
-                hd_start_id = int(vc_prob['hd_start_id'].values[0])
-                prob_type = str(df_prob.iloc[0]['job'])
-
-            # for now pickup and delivery works
-            # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
-            # if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
-                print('Solvign problem for carrier ', carr_id)
-                data = create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carr_id,
-                                        md_start_id, hd_start_id, CBGzone_df, tt_df, dist_df)
-
-                # Create the routing index manager.
-                manager = pywrapcp.RoutingIndexManager(len(data['time_matrix']),
-                                                       data['num_vehicles'], data['depot'])
-
-                # Create Routing Model.
-                routing = pywrapcp.RoutingModel(manager)
-
-                # Create and register a transit callback.
-                def time_callback(from_index, to_index):
-                    """Returns the travel time between the two nodes."""
-                    # Convert from routing variable Index to time matrix NodeIndex.
-                    from_node = manager.IndexToNode(from_index)
-                    to_node = manager.IndexToNode(to_index)
-                    return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
-
-                # Add Capacity constraint.
-                def demand_callback(from_index):
-                    """Returns the demand of the node."""
-                    # Convert from routing variable Index to demands NodeIndex.
-                    from_node = manager.IndexToNode(from_index)
-                    return data['demands'][from_node]
-
-                transit_callback_index = routing.RegisterTransitCallback(time_callback)
-
-                # Define cost of each arc.
-                routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
-
-                # Add Time Windows constraint.
-                time_dim = 'Time'
-                routing.AddDimension(
-                    transit_callback_index,
-                    30,  # allow waiting time
-                    86400,  # maximum time per vehicle, JU: set to minutes in a day assuming no trip goes beyod a day
-                    False,  # Don't force start cumul to zero.
-                    time_dim)
-                time_dimension = routing.GetDimensionOrDie(time_dim)
-
-                # Add time window constraints for each location except depot.
-                for location_idx, time_window in enumerate(data['time_windows']):
-                    if location_idx == data['depot']:
-                        continue
-                    index = manager.NodeToIndex(location_idx)
-                    if carr_id == 7252990.0:
-                        print('time: ', data['time_windows'])
-                    time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
-
-                # Add time window constraints for each vehicle start node.
-                depot_idx = data['depot']
-                for vehicle_id in range(data['num_vehicles']):
-                    index = routing.Start(vehicle_id)
-                    time_dimension.CumulVar(index).SetRange(
-                        data['time_windows'][depot_idx][0],
-                        data['time_windows'][depot_idx][1])
-
-                if prob_type == 'pickup_delivery':
-                    # Define Transportation Requests.
-                    for request in data['pickups_deliveries']:
-                        pickup_index = manager.NodeToIndex(request[0])
-                        delivery_index = manager.NodeToIndex(request[1])
-                        routing.AddPickupAndDelivery(pickup_index, delivery_index)
-                        routing.solver().Add(
-                            routing.VehicleVar(pickup_index) == routing.VehicleVar(
-                                delivery_index))
-                        routing.solver().Add(
-                            time_dimension.CumulVar(pickup_index) <=
-                            time_dimension.CumulVar(delivery_index))
-
-                demand_callback_index = routing.RegisterUnaryTransitCallback(
-                        demand_callback)
-                routing.AddDimensionWithVehicleCapacity(
-                    demand_callback_index,
-                    0,  # null capacity slack
-                    data['vehicle_capacities'],  # vehicle maximum capacities
-                    True,  # start cumul to zero
-                    'Capacity')
-
-                # Instantiate route start and end times to produce feasible times.
-                for i in range(data['num_vehicles']):
-                    routing.AddVariableMinimizedByFinalizer(
-                        time_dimension.CumulVar(routing.Start(i)))
-                    routing.AddVariableMinimizedByFinalizer(
-                        time_dimension.CumulVar(routing.End(i)))
-
-                # Setting first solution heuristic.
-                search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-                search_parameters.time_limit.seconds = 2   #set a time limit of 2 seconds for a search
-                search_parameters.solution_limit = 10     #set a solution limit of 10 for a search
-
-                s_time = time()
-                search_parameters.first_solution_strategy = (
-                    routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
-
-                # Solve the problem.
-                solution = routing.SolveWithParameters(search_parameters)
-
-                solve_time = time() - s_time
-                print('Time to solve is: ', solve_time)
-
-                # Print solution on console.
-                if solution:
-                    print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                                   payload_df)
-                    print('\n')
-
-                else:
-                    print('Could not find a solution for carrier: ', carr_id)
-                    error_list.append([carr_id, 'NO SOLUTION'])
-                    print('\n')
-
-
-        except Exception as e:
-            print('Could not solve problem for carrier: ', carr_id, ': ', e)
-            error_list.append([carr_id, e])
-            print('\n')
 
     run_time = time() - b_time
     print('Time for the run: ', run_time)
@@ -749,10 +724,6 @@ def main(args=None):
         ship_type="B2B"
     elif "B2C" in args.payload_file:
         ship_type="B2C"
-
-    with open("../Sim_outputs/error.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(error_list)
 
     tour_df.to_csv("../Sim_outputs/Tour_plan/%s_freight_tours.csv" %ship_type, index=False)
     carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier.csv" %ship_type, index=False)
@@ -772,7 +743,6 @@ def main(args=None):
     carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
     payload_df.to_csv("../Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
     print ("Complete saving tour-plan with xy coordinate for %s" %ship_type)
-
 
 
 if __name__ == "__main__":
