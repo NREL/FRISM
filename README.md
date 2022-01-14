@@ -32,3 +32,6 @@ This will output three files in the src/Sim_outputs/Tour_plan folder:
 **_carrier.csv**: csv file with tour information for each carrier and its vehicles.
 <br>
 **_freight_tours.csv**: csv file with freight tour information including departure location, departure time and maximum duration.
+
+If there are carriers for which tours could be generated for some reason, they can be found in **error.csv** under src/Sim_ou
+ folder.
