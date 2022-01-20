@@ -576,7 +576,7 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'reason'])
 
-    for carr_id in [7254190.0]: #c_df['carrier_id'].unique():
+    for carr_id in c_df['carrier_id'].unique():
         try:
             # Initialize parameters used for probelm setting
             veh_capacity = 0
