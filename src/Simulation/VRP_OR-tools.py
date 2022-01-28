@@ -147,7 +147,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
             demand = math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0])
             data['demands'].append(copy(demand))
-            data['demands'].append(copy(0))
+            data['demands'].append(copy(-1 * demand))
 
             # Add pickup service time and delivery service time
             service_time = float(df_prob.loc[df_prob['payload_id'] == i]['pu_stop_duration'].values[0])
@@ -617,11 +617,11 @@ def main(args=None):
                 md_start_id = int(vc_prob['md_start_id'].values[0])
                 hd_start_id = int(vc_prob['hd_start_id'].values[0])
                 prob_type = str(df_prob.iloc[0]['job'])
-
+                
             # for now pickup and delivery works
             # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
             # if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
-                print('Solvign problem for carrier ', carr_id)
+                print('Solvign problem for carrier ', carr_id, ' with type', prob_type)
                 data = create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carr_id,
                                         md_start_id, hd_start_id, CBGzone_df, tt_df, dist_df)
 
