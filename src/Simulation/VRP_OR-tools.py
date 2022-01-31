@@ -314,11 +314,17 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                 end_index = payload_i   # to be used to adjust load info for delivery problems
                 # payload_df.loc[beg_index]['cummulativeWeightInlb'] = tot_load
 
+                l = 0
                 for k in range(beg_index, end_index):
                     temp_load = tot_load - payload_df.loc[k]['weightInlb']
                     payload_df.loc[k]['cummulativeWeightInlb'] = temp_load
-                    plan_output_l += ' {0} Load({1}) -> '.format(node_index, temp_load)
+                    if k == beg_index: payload_df.loc[k]['weightInlb'] = temp_load
+                    else:
+                        payload_df.loc[k]['weightInlb'] = -1 * payload_df.loc[k]['weightInlb']
+
+                    plan_output_l += ' {0} Load({1}) -> '.format(node_list[l], temp_load)
                     tot_load = copy(temp_load)
+                    l += 1
 
                 # When the vehicle goes back to the depot, it's load is zero
                 payload_df.loc[end_index]['cummulativeWeightInlb'] = 0
@@ -639,7 +645,8 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'reason'])
 
-    for carr_id in c_df['carrier_id'].unique():
+    # for carr_id in c_df['carrier_id'].unique():
+    for carr_id in [6450961]:
         try:
             # Initialize parameters used for probelm setting
             veh_capacity = 0
