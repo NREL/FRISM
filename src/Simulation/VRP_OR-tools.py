@@ -84,6 +84,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     data['time_windows'].append((int(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_lower'].values[0]),
                                 int(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_upper'].values[0])))
     data['demands'] = []
+    # if problem is delivery, we start with full laod at depot
+    # if problem is pickup, we start with empty load
     data['demands'].append(0.0) # Adding demand for depot
 
     data['geo_ids'] = []
@@ -159,6 +161,13 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             data['pickups_deliveries'].append([index, index+1])
             index += 2
 
+    # After gathering demand by location, change demand of depot to full load at the depot
+    #JU: this need to be double checked for a problem where one vehile is not enough to deliver everything
+    # Below did not work if more than 1 vehicle is needed to handle depot demand
+    # if prob_type == 'delivery':
+    #     data['demands'][0] = -1 * sum(data['demands'])
+
+
     # Adding travel time for rest of locations
     print("Beginning to get time matrix")
 
@@ -215,15 +224,15 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     return data
 
 
-def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df):
+def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df, prob_type):
     """Prints solution on console."""
     global tour_id
     global payload_i
     print(f'Objective: {solution.ObjectiveValue()}')
     time_dimension = routing.GetDimensionOrDie('Time')
     total_time = 0
-    route_load = 0
     for vehicle_id in range(data['num_vehicles']):
+        route_load = 0
         index = routing.Start(vehicle_id)
         start_loc = manager.IndexToNode(index)
         next_loc = manager.IndexToNode(solution.Value(routing.NextVar(index)))
@@ -241,29 +250,82 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             plan_output = 'Route for vehicle {0} with id {1}:\n'.format(vehicle_id, data['vehicle_ids'][vehicle_id])
             plan_output_l = 'Load for vehicle {}:\n'.format(vehicle_id)
-            seqId = 1
+            seqId = 0
+
+            if prob_type == 'delivery':
+                beg_index = payload_i   # to be used to adjust load info for delivery problems
+                node_list = []
+
             while not routing.IsEnd(index):
+
                 node_index = manager.IndexToNode(index)
                 time_var = time_dimension.CumulVar(index)
                 plan_output += '{0} Time({1},{2}) -> '.format(
                     manager.IndexToNode(index), solution.Min(time_var),
                     solution.Max(time_var))
 
-                if(node_index != 0): # Only add the payload info if this is not the depot
+                # Load info
+                route_load += data['demands'][node_index]
+
+                # Add processing for depot
+                if node_index == 0:
+                    payload_df.loc[payload_i] = [int(-1), int(seqId), int(tour_id),
+                                                 int(1),
+                                                 int(data['demands'][node_index]), int(route_load), 1,
+                                                 int(data['loc_zones'][node_index]),
+                                                 int((solution.Min(time_var) - data['stop_durations'][
+                                                     node_index]) * 60),
+                                                 int(0 * 60),
+                                                 int(0 * 60),
+                                                 int(0 * 60)]
+
+                elif(node_index != 0): # Only add the payload info if this is not the depot
                     payload_df.loc[payload_i] = [int(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
-                                                 data['demands'][node_index], 1, int(data['loc_zones'][node_index]),
+                                                 int(data['demands'][node_index]), int(route_load), 1, int(data['loc_zones'][node_index]),
                                                 int((solution.Min(time_var)-data['stop_durations'][node_index])*60),
                                                  int(data['time_windows'][node_index][0]*60),
                                                 int(data['time_windows'][node_index][1]*60),
                                                  int(data['stop_durations'][node_index]*60)]
-                    payload_i += 1
-                    seqId += 1
+                payload_i += 1
+                seqId += 1
 
-                # Load info
-                route_load += data['demands'][node_index]
-                plan_output_l += ' {0} Load({1}) -> '.format(node_index, route_load)
+
+                if prob_type == 'delivery': node_list.append(copy(node_index))
+                else:
+                    plan_output_l += ' {0} Load({1}) -> '.format(node_index, route_load)
                 previous_index = index
                 index = solution.Value(routing.NextVar(index))
+
+            # Node of depot
+            node_index = manager.IndexToNode(index)
+            payload_df.loc[payload_i] = [int(-1), int(seqId), int(tour_id),
+                                         int(1),
+                                         int(data['demands'][node_index]), int(route_load), 1,
+                                         int(data['loc_zones'][node_index]),
+                                         int((solution.Min(time_var) - data['stop_durations'][
+                                             node_index]) * 60),
+                                         int(0 * 60),
+                                         int(0 * 60),
+                                         int(0 * 60)]
+
+
+            if prob_type == 'delivery':
+                tot_load = route_load
+                end_index = payload_i   # to be used to adjust load info for delivery problems
+                # payload_df.loc[beg_index]['cummulativeWeightInlb'] = tot_load
+
+                for k in range(beg_index, end_index):
+                    temp_load = tot_load - payload_df.loc[k]['weightInlb']
+                    payload_df.loc[k]['cummulativeWeightInlb'] = temp_load
+                    plan_output_l += ' {0} Load({1}) -> '.format(node_index, temp_load)
+                    tot_load = copy(temp_load)
+
+                # When the vehicle goes back to the depot, it's load is zero
+                payload_df.loc[end_index]['cummulativeWeightInlb'] = 0
+                route_load = temp_load
+
+                #Increment the load index
+            payload_i +=1
 
             time_var = time_dimension.CumulVar(index)
             plan_output += '{0} Time({1},{2})\n'.format(manager.IndexToNode(index),
@@ -271,8 +333,9 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                                         solution.Max(time_var))
             plan_output_l += ' {0} Load({1})'.format(manager.IndexToNode(index),
                                                  route_load)
-            plan_output += 'Time of the route: {}min'.format(
+            if prob_type != 'delivery': plan_output += 'Time of the route: {}min'.format(
                 solution.Min(time_var) - start_time)
+
             print(plan_output)
             print(plan_output_l)
             total_time += solution.Min(time_var)- start_time
@@ -569,8 +632,8 @@ def main(args=None):
     # format for payload format
     # payloadId, sequenceRank, tourId, payloadType, weightInlb, requestType,locationZone,
     # estimatedTimeOfArrivalInSec, arrivalTimeWindowInSec_lower, arrivalTimeWindowInSec_upper,operationDurationInSec
-    payload_df = pd.DataFrame(columns = ['payloadId','sequenceRank','tourId','payloadType','weightInlb','requestType',
-                                         'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
+    payload_df = pd.DataFrame(columns = ['payloadId','sequenceRank','tourId','payloadType','weightInlb','cummulativeWeightInlb',
+                                         'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
                                          'arrivalTimeWindowInSec_upper','operationDurationInSec'])
 
     error_list = []
@@ -726,7 +789,7 @@ def main(args=None):
                 # Print solution on console.
                 if solution:
                     print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                                   payload_df)
+                                   payload_df, prob_type)
                     print('\n')
 
                 else:
@@ -759,7 +822,8 @@ def main(args=None):
     carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier.csv" %ship_type, index=False)
     payload_df.to_csv("../Sim_outputs/Tour_plan/%s_payload.csv" %ship_type, index=False)
 
-    print ('Complete saveing tour-plan files for %s' %ship_type)
+    print ('Completed saving tour-plan files for %s' %ship_type, '\n')
+
     dir_geo='../Sim_inputs/Geo_data/'
     polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
     ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones
