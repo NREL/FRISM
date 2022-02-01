@@ -8,6 +8,9 @@ Juliette Ugirumurera: <jugirumu@nrel.gov>
 ## Description
 FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel.
 
+## Access to input data
+Origin destination travel time and distance matrices, as well as freight centroid zones for the San Francisco Bay Area can be found on this [google drive link](https://drive.google.com/drive/folders/14LSjFYH3BtmqUaaAVoPk3wPhGc2f2nBz). 
+
 ## Setup python environment
 ```linux
 conda env create -f environment.yml
@@ -34,4 +37,4 @@ This will output three files in the src/Sim_outputs/Tour_plan folder:
 **_freight_tours.csv**: csv file with freight tour information including departure location, departure time and maximum duration.
 
 ## Error Catching
-If there are carriers for which tours could not be generated for some reason, they can be found in **error.csv** under src/Sim_outputs folder. This file has two columns: a **carrier** column that indicates the carrier id, and a **reason** column that indicates why a solution could not be calculated. 
+If there are carriers for which tours could not be generated for some reason, they can be found in **error.csv** under src/Sim_outputs folder. This file has two columns: a **carrier** column that indicates the carrier id, and a **reason** column that indicates why a solution could not be calculated.
