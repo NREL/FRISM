@@ -1,5 +1,5 @@
 # FRISM: FReight Integrated Simulation Model
-### Contributors
+## Contributors
 Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 <br>
 Juliette Ugirumurera: <jugirumu@nrel.gov>
@@ -9,7 +9,7 @@ Juliette Ugirumurera: <jugirumu@nrel.gov>
 FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel.
 
 ## Access to input data
-Origin destination travel time and distance matrices, as well as freight centroid zones for the San Francisco Bay Area can be found on this [google drive link](https://drive.google.com/drive/folders/14LSjFYH3BtmqUaaAVoPk3wPhGc2f2nBz). 
+Origin destination travel time and distance matrices, as well as freight centroid zones for the San Francisco Bay Area can be found on this [google drive link](https://drive.google.com/drive/folders/14LSjFYH3BtmqUaaAVoPk3wPhGc2f2nBz).
 
 ## Setup python environment
 ```linux
