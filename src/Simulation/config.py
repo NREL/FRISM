@@ -126,25 +126,13 @@ fnm_B2B_payload="B2B_payload"
 fnm_B2B_carrier="B2B_carrier"
 fnm_vtype="vehicle_types.csv"
 
-fdir_main_output= "../Sim_outputs/Shipment2Fleet/"
+fdir_main_output= "../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/"
 
 #ship_direction = 'out' # ['out','in', 'all']
 commodity_list= ["1", "2", "3", "4", "5"]
 weight_theshold=40000
 
 # County: [1, 13, 41, 55, 75, 81, 85, 95, 97], all = 9999
-
-
-# household_file='../../FRISM_DATA/Model_inputs/NHTS/hhpub.csv'
-# person_file='../../FRISM_DATA/Model_inputs/NHTS/perpub.csv'
-# python HH_ecom_models.py -hf ../../FRISM_DATA/Model_inputs/NHTS/hhpub.csv -pf ../../FRISM_DATA/Model_inputs/NHTS/perpub.csv -mt W
-
-
-# household_file='../../FRISM_DATA/Sim_inputs/plans-base-2010/households.csv'
-# person_file='../../FRISM_DATA/Sim_inputs/plans-base-2010/persons.csv'
-# python B2C_Generation.py -hf ../../FRISM_DATA/Sim_inputs/plans-base-2010/households.csv -pf ../../FRISM_DATA/Sim_inputs/plans-base-2010/persons.csv
-
-# python Shipment2Fleet.py -st B2B -ct 1 -sd out
 
 # HH variables that can be used, based on synth pop
 # "HHSIZE"

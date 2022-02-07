@@ -52,16 +52,16 @@ print (head_text)
 # print (hh_gen_est_text)
 # # Please replace hf, pf if their directory changes 
 # os.system("python HH_ecom_models.py \
-#     -hf ../../FRISM_DATA/Model_inputs/NHTS/hhpub.csv \
-#         -pf ../../FRISM_DATA/Model_inputs/NHTS/perpub.csv \
+#     -hf ../../../FRISM_input_output/Model_inputs/NHTS/hhpub.csv \
+#         -pf ../../../FRISM_input_output/Model_inputs/NHTS/perpub.csv \
 #             -mt WOD")
 
 # # 2. End-Consumer Behavior Module Run (E-commerce generation) 
 # print (ec_module_text)
 # # Please replace W, O, D, WOD with one of thme you want to run
 # os.system("python B2C_Generation.py \
-#     -hf ../../FRISM_DATA/Sim_inputs/plans-base-2010/households.csv \
-#         -pf ../../FRISM_DATA/Sim_inputs/plans-base-2010/persons.csv")
+#     -hf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/households.csv \
+#         -pf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/persons.csv")
 
 # 3. Distribution Channel Module Run  
 print (dc_module_text)
@@ -84,20 +84,20 @@ os.system("python Shipment2Fleet.py \
 # print (co_module_text)
 # # B2C
 # os.system("python VRP_OR-tools.py \
-#     -t ../Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#         -d ../Sim_inputs/Geo_data/od_distance.csv \
-#             -ct ../Sim_inputs/Geo_data/freight_centroids.geojson \
-#                 -cr ../Sim_outputs/test/B2C_carrier.csv \
-#                     -pl ../Sim_outputs/test/B2C_payload.csv \
-#                         -vt ../Sim_outputs/test/vehicle_types.csv")
+#     -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#         -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+#             -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+#                 -cr ../../../FRISM_input_output/Sim_outputs/B2C_carrier_county1_shipall.csv \
+#                     -pl ../../../FRISM_input_output/Sim_outputs/B2C_payload_county1_shipall.csv \
+#                         -vt ../../../FRISM_input_output/Sim_outputs/vehicle_types.csv")
 # # B2B
 # os.system("python VRP_OR-tools.py \
-#     -t ../Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#         -d ../Sim_inputs/Geo_data/od_distance.csv \
-#             -ct ../Sim_inputs/Geo_data/freight_centroids.geojson \
-#                 -cr ../Sim_outputs/test/B2B_carrier.csv \
-#                     -pl ../Sim_outputs/test/B2B_payload.csv \
-#                         -vt ../Sim_outputs/test/vehicle_types.csv")
+#     -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#         -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+#             -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+#                 -cr ../../../FRISM_input_output/Sim_outputs/B2B_carrier_county1_shipout.csv \
+#                     -pl ../../../FRISM_input_output/Sim_outputs/B2B_payload_county1_shipout.csv \
+#                         -vt ../../../FRISM_input_output/Sim_outputs/vehicle_types.csv")
 
 print ("Completed running modules you selected")
 

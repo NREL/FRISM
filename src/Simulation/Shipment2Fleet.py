@@ -22,7 +22,7 @@ def create_global_variable():
 ######################### General CODES ############################
 def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file, ship_type):
     # firm and warehouse(for-hire carrier)
-    fdir_firms='../../FRISM_DATA/Sim_inputs/Synth_firm_pop/'
+    fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
     firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
     firms=firms.rename({'BusID':'SellerID'}, axis='columns')
     warehouses= pd.read_csv(fdir_firms+warehouse_file, header=0, sep=',')
@@ -43,7 +43,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         print ("Please define shipment type: B2B or B2C")
 
     # Geo data including distance, CBGzone,
-    fdir_geo='../../FRISM_DATA/Sim_inputs/Geo_data/'
+    fdir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
 
     dist_df=pd.read_csv(fdir_geo+dist_file, header=0, sep=',')
     CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
@@ -60,7 +60,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
 
 
     # Truck activity distribution
-    fdir_truck='../Model_carrier_op/INRIX_processing/'
+    fdir_truck='../../../FRISM_input_output/Model_carrier_op/INRIX_processing/'
     if ship_type == 'B2C':
         df_dpt_dist=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
     elif ship_type == 'B2B':
@@ -230,7 +230,7 @@ def veh_type_create():
 ########################### B2C CODES #############################
 def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county):
     # read household delivery file from 
-    df_hh = pd.read_csv('../Sim_outputs/Generation/households_del.csv', header=0, sep=',')
+    df_hh = pd.read_csv('../../../FRISM_input_output/Sim_outputs/Generation/households_del.csv', header=0, sep=',')
     df_hh= df_hh[['household_id','delivery_f', 'block_id']]
     df_hh['GEOID'] =df_hh['block_id'].apply(lambda x: np.floor(x/1000))
     df_hh = df_hh.merge(CBGzone_df[['GEOID','MESOZONE','County']], on='GEOID', how='left')
@@ -252,7 +252,7 @@ def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county):
     # Generate load in "lb"
     df_hh_D["D_truckload"]=df_hh_D["D_packages"].apply(b2c_d_truckload)
     # Save daily household having shipments and sum of load 
-    df_hh_D.to_csv ('../Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
+    df_hh_D.to_csv ('../../../FRISM_input_output/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
     return df_hh_D
 
 def b2c_household_aggregation (df_hh_D, zone_df,hh_aggregation_num):
@@ -269,7 +269,7 @@ def b2c_household_aggregation (df_hh_D, zone_df,hh_aggregation_num):
     df_hh_D_GrID['tour_tt']=df_hh_D_GrID.apply(lambda x: b2c_apro_tour_time(x['MESOZONE'], x['num_hh'], x['group_size'],hh_aggregation_num,zone_df), axis=1)
     print ("A total of aggregated B2C shipments:", df_hh_D_GrID.shape[0])
 
-    df_hh_D_GrID.to_csv ('../Sim_outputs/Generation/B2C_daily_aggregation.csv', index = False, header=True)
+    df_hh_D_GrID.to_csv ('../../../FRISM_input_output/Sim_outputs/Generation/B2C_daily_aggregation.csv', index = False, header=True)
     df_hh_D_GrID= df_hh_D_GrID.reset_index()
     return df_hh_D_GrID
 
@@ -405,12 +405,12 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
 # c1: bulk, c2:fuel_fert, c3:interm_food, c4:mfr_goods, c5:others 
 def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold):
     # read household delivery file from
-    fdir_synth_firm='../../FRISM_DATA/Sim_inputs/Synth_firm_results/'
+    fdir_synth_firm='../../../FRISM_input_output/Sim_inputs/Synth_firm_results/'
     B2BF_T_D=pd.DataFrame()
     for com in commodity_list:
         B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction)
         B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)         
-    B2BF_T_D.to_csv('../Sim_outputs/Generation/B2B_daily_%s.csv' %sel_county, index = False, header=True)
+    B2BF_T_D.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/B2B_daily_%s.csv' %sel_county, index = False, header=True)
     
 
     ## Deal with the daily shipment seperately
@@ -955,15 +955,15 @@ def main(args=None):
         df_hh_D_GrID.loc[:,'veh_type'] ="md"
         df_hh_D_GrID.loc[:,'assigned_carrier']=-1
         df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
-        df_hh_D_GrID.to_csv('../Sim_outputs/temp_save/df_hh_D_GrID_before.csv', index = False, header=True)
+        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_before.csv', index = False, header=True)
         # Assigned the carrirer to shipment!: 
         ## This part is time consuming which is associated to the function "carrier_sel()"
         print ("**** Complete aggregation and Starting carrier assignement ****")
         print ("size of shipment:", df_hh_D_GrID.shape[0])
         non_sel_seller=pd.DataFrame() 
         with alive_bar(df_hh_D_GrID.shape[0], force_tty=True) as bar:
-            for i in range(0,df_hh_D_GrID.shape[0]): #***************** need to comment out and comment the line below *************************************
-            #for i in range(0,10):
+            #for i in range(0,df_hh_D_GrID.shape[0]): #***************** need to comment out and comment the line below *************************************
+            for i in range(0,10):
                 if df_hh_D_GrID.loc[i,'veh_type'] == "md":
                     cap_index = "md_capacity"
                 elif df_hh_D_GrID.loc[i,'veh_type'] == "hd":
@@ -985,12 +985,12 @@ def main(args=None):
         print ("**** Completed carrier assignement and Generating results ****")    
         df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] >=0].reset_index(drop=True)
         ## temporary saving: hh_D= with assigned_carrier
-        df_hh_D_GrID.to_csv('../Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned.csv', index = False, header=True)
+        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned.csv', index = False, header=True)
 
         payloads, carriers=b2c_create_output(df_hh_D_GrID,truckings,df_dpt_dist, args.ship_type)
 
-        payloads.to_csv (config.fdir_main_output+config.fnm_B2C_payload+"_%s_%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
-        carriers.to_csv (config.fdir_main_output+config.fnm_B2C_carrier+"_%s_%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+        payloads.to_csv (config.fdir_main_output+config.fnm_B2C_payload+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+        carriers.to_csv (config.fdir_main_output+config.fnm_B2C_carrier+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
 
         print ("**** Completed generating B2C payload/carrier file ****")
 
@@ -998,7 +998,7 @@ def main(args=None):
         # Create daily B2B for private and B2B for for-hire 
         print ("**** Start processing daily B2B shipment")
         FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold)
-        PV_B2B .to_csv('../Sim_outputs/temp_save/PV_B2B.csv', index = False, header=True)
+        PV_B2B .to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B.csv', index = False, header=True)
         ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
         ## Need to find a couple of carriers (like making a contract with carriers)
         ##### Update requried: This could be updated later with contract-related modeling 
@@ -1012,15 +1012,15 @@ def main(args=None):
         FH_Seller.loc[:,'tour_tt']=30
         FH_Seller.loc[:,'assigned_carrier']=-1
         FH_Seller=FH_Seller.reset_index(drop=True)
-        FH_Seller.to_csv('../Sim_outputs/temp_save/FH_Seller_before.csv', index = False, header=True) 
+        FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_before.csv', index = False, header=True) 
         # Assigned the carrirer to shipment!: 
         ## This part is time consuming which is associated to the function "carrier_sel()" 
         print ("**** Completed for-hire aggregation and Starting carrier assignement for hire ****")
         print ("size of shipment:", FH_Seller.shape[0])
         non_sel_seller=pd.DataFrame() 
         with alive_bar(FH_Seller.shape[0], force_tty=True) as bar:
-            for i in range(0,FH_Seller.shape[0]): #***************** need to comment out and comment the line below *************************************
-            #for i in range(0,10):
+            #for i in range(0,FH_Seller.shape[0]): #***************** need to comment out and comment the line below *************************************
+            for i in range(0,10):
                 if FH_Seller.loc[i,'veh_type'] == "md":
                     cap_index = "md_capacity"
                 elif FH_Seller.loc[i,'veh_type'] == "hd":
@@ -1040,19 +1040,19 @@ def main(args=None):
                 bar()
         print ("**** Completed carrier assignement ****")
         FH_Seller=FH_Seller[FH_Seller['assigned_carrier'] >=0].reset_index(drop=True)
-        FH_Seller.to_csv('../Sim_outputs/temp_save/FH_Seller_carrier_assigned.csv', index = False, header=True)
+        FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned.csv', index = False, header=True)
 
         FH_B2B=FH_B2B.merge(FH_Seller[['SellerID', 'assigned_carrier', 'veh_type']], on=['SellerID','veh_type'], how='inner')
         ## temporary saving: hh_D= with assigned_carrier
-        FH_B2B.to_csv('../Sim_outputs/temp_save/FH_B2B_carrier_assigned.csv', index = False, header=True)
+        FH_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_carrier_assigned.csv', index = False, header=True)
         PV_B2B = PV_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
         FH_B2B= FH_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
 
         # create payload and carriers
         payloads, carriers=b2b_create_output(PV_B2B,FH_B2B,truckings,df_dpt_dist, args.ship_type, ex_zone_list, firms)
 
-        payloads.to_csv (config.fdir_main_output+config.fnm_B2B_payload+"_%s_%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
-        carriers.to_csv (config.fdir_main_output+config.fnm_B2B_carrier+"_%s_%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+        payloads.to_csv (config.fdir_main_output+config.fnm_B2B_payload+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+        carriers.to_csv (config.fdir_main_output+config.fnm_B2B_carrier+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
         print ("**** Completed generating B2C payload/carrier file ****")
 
     vehicle_types = veh_type_create()

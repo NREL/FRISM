@@ -821,17 +821,17 @@ def main(args=None):
         ship_type="B2C"
 
     #  Saving the carrier ids with errors
-    with open("../Sim_outputs/error.csv", "w", newline="") as f:
+    with open("../../../FRISM_input_output/Sim_outputs/error.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(error_list)
 
-    tour_df.to_csv("../Sim_outputs/Tour_plan/%s_freight_tours.csv" %ship_type, index=False)
-    carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier.csv" %ship_type, index=False)
-    payload_df.to_csv("../Sim_outputs/Tour_plan/%s_payload.csv" %ship_type, index=False)
+    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours.csv" %ship_type, index=False)
+    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier.csv" %ship_type, index=False)
+    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload.csv" %ship_type, index=False)
 
     print ('Completed saving tour-plan files for %s' %ship_type, '\n')
 
-    dir_geo='../Sim_inputs/Geo_data/'
+    dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
     polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
     ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones
     if (ship_type =='B2B') :
@@ -840,9 +840,9 @@ def main(args=None):
 
     print ("Assigning x_y coordinate into depots and delivery locations")
     tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv("../Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
-    carrier_df.to_csv("../Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
-    payload_df.to_csv("../Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
+    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
+    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
+    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
     print ("Complete saving tour-plan with xy coordinate for %s" %ship_type)
 
 

@@ -438,9 +438,9 @@ def main(args=None):
     df_hh['WEBUSE17']=loaded_model.predict(sim_X)
     ## Process for validation and save it
     val_hh=df_hh.groupby(['income_cls','WEBUSE17'])['income_cls'].agg(num_hh='count').reset_index()
-    val_hh.to_csv('../Sim_outputs/Generation/%s_webuse_by_income.csv' %config.study_region, index = False, header=True)
+    val_hh.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_webuse_by_income.csv' %config.study_region, index = False, header=True)
     ## Save df_hh for further validation
-    df_hh.to_csv('../Sim_outputs/Generation/%s_hh_synth.csv' %config.study_region, index = False, header=True)
+    df_hh.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_hh_synth.csv' %config.study_region, index = False, header=True)
     print ("** Completed simulated webuse on household **")
     
     # Read and process synth household
@@ -454,7 +454,7 @@ def main(args=None):
     df_per['onlineshop']=df_per.apply(lambda x: onlineshop_calibration(x['income_cls'], x['onlineshop']), axis=1)
     ## Process for validation and save it
     val_per=df_per.groupby(['income_cls','onlineshop'])['income_cls'].agg(num_hh='count').reset_index()
-    val_per.to_csv('../Sim_outputs/Generation/%s_online_by_income.csv' %config.study_region, index = False, header=True)
+    val_per.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_online_by_income.csv' %config.study_region, index = False, header=True)
     print ("** Completed simulated online on individual **")
 
     #Run delivery frequency model
@@ -466,14 +466,14 @@ def main(args=None):
     df_per['delivery_f'] = df_per.apply(lambda x: delivery_process(x['onlineshop'], x['delivery_f']), axis=1)
     ## Process for validation and save it
     sns.displot(df_per['delivery_f'])
-    plt.savefig('../Sim_outputs/Generation/Delivery plot_simulated.png')
+    plt.savefig('../../../FRISM_input_output/Sim_outputs/Generation/Delivery plot_simulated.png')
     ## Save df_per for further validation
-    df_per.to_csv('../Sim_outputs/Generation/%s_per_synth.csv' %config.study_region, index = False, header=True)
+    df_per.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_per_synth.csv' %config.study_region, index = False, header=True)
 
     # Aggregate delivery at household level
     df_per_hh=df_per.groupby(['household_id'])['delivery_f'].agg(delivery_f='sum').reset_index()
     df_hh=df_hh.merge(df_per_hh, on='household_id', how='left')
-    df_hh.to_csv('../Sim_outputs/Generation/households_del.csv', index = False, header=True)
+    df_hh.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/households_del.csv', index = False, header=True)
     print ("** Completed simulated monthly delivery frequency on hosehold **")
 
 if __name__ == "__main__":
