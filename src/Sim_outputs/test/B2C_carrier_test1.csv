@@ -1,3 +1,0 @@
-carrier_id,firm_id,depot_zone,contract_firms,num_veh_type_1,num_veh_type_2,num_veh_type_3,num_veh_type_4,num_veh_type_5,num_veh_type_6,num_veh_type_7,num_veh_type_8,num_veh_type_9,depot_lower,depot_upper,depot_time_before,depot_time_after
-2346558,2346558,1920,Nan,6,0,,,,,,,,960,1320,15,5
-2336189,2336189,7248,Nan,7,0,,,,,,,,960,1320,20,25

@@ -1,6 +1,0 @@
-payloadId,sequenceRank,tourId,payloadType,weightInlb,cummulativeWeightInlb,requestType,locationZone,estimatedTimeOfArrivalInSec,arrivalTimeWindowInSec_lower,arrivalTimeWindowInSec_upper,operationDurationInSec
--1,0,0,1,1409.0,1409.0,1,478,31500,0,0,0
-622,1,0,1,-273,1136.0,1,6121,33780,18000,79200,300
-624,2,0,1,-250,886.0,1,20122,100920,18000,5184000,840
-623,3,0,1,-886,0.0,1,20005,210360,18000,5184000,1080
--1,4,0,1,0,0,1,478,210540,0,0,0
