@@ -640,6 +640,12 @@ def main(args=None):
 
     count_num = args.county_num
 
+    # Saving the created data frames
+    if "B2B" in args.payload_file:
+        ship_type = "B2B"
+    elif "B2C" in args.payload_file:
+        ship_type = "B2C"
+
     tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(args.travel_file, args.dist_file,args.CBGzone_file, args.carrier_file, args.payload_file, args.vehicleType_file)
 
     b_time = time()
@@ -824,11 +830,6 @@ def main(args=None):
     print('Time for the run: ', run_time)
     print('\n')
 
-    # Saving the created data frames
-    if "B2B" in args.payload_file:
-        ship_type="B2B"
-    elif "B2C" in args.payload_file:
-        ship_type="B2C"
 
     #  Saving the carrier ids with errors
     with open("../../../FRISM_input_output/Sim_outputs/error.csv", "w", newline="") as f:
