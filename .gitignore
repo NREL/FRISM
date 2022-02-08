@@ -1,3 +1,8 @@
+.idea/
+.idea/*
+src/Simulation/.idea
+src/Simulation/__pycache__
+
 input_file/*
 input_file/vehicles_by_carrier.csv
 input_file/TAZs/
