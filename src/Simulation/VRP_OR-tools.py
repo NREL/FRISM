@@ -428,7 +428,9 @@ def random_points_in_polygon(polygon):
 def random_loc (t_df,c_df,p_df,SFBay_CBG):
     c_df['depot_zone_x']=0.0
     c_df['depot_zone_y']=0.0
+    c_df =c_df.sort_values(by=['carrierId']).reset_index(drop=True)
     carr_id=0.0
+    
     for i in range(0,c_df.shape[0]):
         if c_df.carrierId[i] == carr_id:
             c_df.loc[i,'depot_zone_x']=c_df.loc[i-1,'depot_zone_x']
@@ -438,20 +440,19 @@ def random_loc (t_df,c_df,p_df,SFBay_CBG):
             c_df.loc[i,'depot_zone_x']=point.x
             c_df.loc[i,'depot_zone_y']=point.y
             carr_id = c_df.carrierId[i]
-
-    t_df['departureLocation_x']=0.0
-    t_df['departureLocation_y']=0.0
-    for i in range(0,t_df.shape[0]):
-        temp=c_df[c_df.depot_zone==t_df.departureLocation_zone[i]][['depot_zone_x','depot_zone_y']].reset_index()
-        t_df.loc[i,'departureLocation_x']=temp.depot_zone_x[0]
-        t_df.loc[i,'departureLocation_y']=temp.depot_zone_y[0]
+    t_df=t_df.merge(c_df[['tourId','depot_zone_x','depot_zone_y']], right_on='tourId', left_on='tour_id', how='left')
+    t_df=t_df.rename({'depot_zone_x':'departureLocation_x', 
+                     'depot_zone_y':'departureLocation_y'}, axis=1)
 
     p_df['locationZone_x']=0.0
     p_df['locationZone_y']=0.0
     for i in range(0,p_df.shape[0]):
-        point=random_points_in_polygon(SFBay_CBG.geometry[SFBay_CBG.MESOZONE==p_df['locationZone'][i]])
-        p_df.loc[i,'locationZone_x']=point.x
-        p_df.loc[i,'locationZone_y']=point.y
+        if "d" in p_df.loc[i,"payloadId"]:
+            p_df.loc[i,['locationZone_x','locationZone_y']]=c_df.loc[c_df["tourId"]==p_df.loc[i,"tourId"], ['depot_zone_x','depot_zone_y']]   
+        else:
+            point=random_points_in_polygon(SFBay_CBG.geometry[SFBay_CBG.MESOZONE==p_df['locationZone'][i]])
+            p_df.loc[i,'locationZone_x']=point.x
+            p_df.loc[i,'locationZone_y']=point.y
 
     return c_df, t_df, p_df
 
@@ -855,9 +856,9 @@ def main(args=None):
 
     print ("Assigning x_y coordinate into depots and delivery locations")
     tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
+    tour_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
+    carrier_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
+    payload_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
     print ("Complete saving tour-plan with xy coordinate for %s" %ship_type)
 
 
