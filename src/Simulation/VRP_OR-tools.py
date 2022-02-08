@@ -279,7 +279,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
                 # Add processing for depot
                 if node_index == 0:
-                    payload_df.loc[payload_i] = [ship_type + str(depot_i), int(seqId), int(tour_id),
+                    payload_df.loc[payload_i] = [str(count_num) + '_' + ship_type + str(depot_i), int(seqId), int(tour_id),
                                                  int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1,
                                                  int(data['loc_zones'][node_index]),
@@ -308,7 +308,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             # Node of depot
             node_index = manager.IndexToNode(index)
-            payload_df.loc[payload_i] = [ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
+            payload_df.loc[payload_i] = [str(count_num) + '_' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
                                          int(1),
                                          int(data['demands'][node_index]), int(route_load), 1,
                                          int(data['loc_zones'][node_index]),
