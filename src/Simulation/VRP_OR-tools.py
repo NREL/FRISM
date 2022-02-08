@@ -279,7 +279,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
                 # Add processing for depot
                 if node_index == 0:
-                    payload_df.loc[payload_i] = [str(count_num) + '_' + ship_type + str(depot_i), int(seqId), int(tour_id),
+                    payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i), int(seqId), int(tour_id),
                                                  int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1,
                                                  int(data['loc_zones'][node_index]),
@@ -308,7 +308,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             # Node of depot
             node_index = manager.IndexToNode(index)
-            payload_df.loc[payload_i] = [str(count_num) + '_' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
+            payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
                                          int(1),
                                          int(data['demands'][node_index]), int(route_load), 1,
                                          int(data['loc_zones'][node_index]),
@@ -447,7 +447,7 @@ def random_loc (t_df,c_df,p_df,SFBay_CBG):
     p_df['locationZone_x']=0.0
     p_df['locationZone_y']=0.0
     for i in range(0,p_df.shape[0]):
-        if "d" in p_df.loc[i,"payloadId"]:
+        if "d" in str(p_df.loc[i,"payloadId"]):
             p_df.loc[i,['locationZone_x','locationZone_y']]=c_df.loc[c_df["tourId"]==p_df.loc[i,"tourId"], ['depot_zone_x','depot_zone_y']]   
         else:
             point=random_points_in_polygon(SFBay_CBG.geometry[SFBay_CBG.MESOZONE==p_df['locationZone'][i]])
