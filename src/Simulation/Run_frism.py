@@ -89,7 +89,7 @@ os.system("python Shipment2Fleet.py \
 #             -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
 #                 -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_carrier_county1_shipall.csv \
 #                     -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
-#                         -vt ../../../FRISM_input_output/Sim_outputs/vehicle_types.csv")
+#                         -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 # # B2B
 # os.system("python VRP_OR-tools.py \
 #     -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
@@ -97,7 +97,7 @@ os.system("python Shipment2Fleet.py \
 #             -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
 #                 -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipout.csv \
 #                     -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipout.csv \
-#                         -vt ../../../FRISM_input_output/Sim_outputs/vehicle_types.csv")
+#                         -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 
 print ("Completed running modules you selected")
 
