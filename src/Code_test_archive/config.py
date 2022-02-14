@@ -119,6 +119,7 @@ CBG_file= 'sfbay_freight.geojson'
 
 
 b2c_delivery_frequency=30
+hh_aggregation_size=15
 
 fnm_B2C_payload="B2C_payload"
 fnm_B2C_carrier="B2C_carrier"
@@ -130,7 +131,9 @@ fdir_main_output= "../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/"
 
 #ship_direction = 'out' # ['out','in', 'all']
 commodity_list= ["1", "2", "3", "4", "5"]
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 weight_theshold=40000
+
 
 # County: [1, 13, 41, 55, 75, 81, 85, 95, 97], all = 9999
 
