@@ -68,17 +68,17 @@ print (dc_module_text)
 # B2C
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-# os.system("python Shipment2Fleet.py \
-#     -st B2C \
-#         -ct 1 \
-#             -sd all")
+os.system("python Shipment2Fleet.py \
+    -st B2C \
+        -ct 1 \
+            -sd all")
 # B2B
 # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all 
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-# os.system("python Shipment2Fleet.py \
-#     -st B2B \
-#         -ct 1 \
-#             -sd out")
+os.system("python Shipment2Fleet.py \
+    -st B2B \
+        -ct 1 \
+            -sd out")
 
 # # 4. Carrier opration Module Run  
 # print (co_module_text)
@@ -91,14 +91,14 @@ print (dc_module_text)
 #                     -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
 #                         -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 # # B2B
-os.system("python VRP_OR-tools.py \
-    -cy 1 \
-        -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-            -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
-                -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-                    -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipout.csv \
-                        -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipout.csv \
-                            -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
+# os.system("python VRP_OR-tools.py \
+#     -cy 1 \
+#         -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+#                 -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipout.csv \
+#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipout.csv \
+#                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 
 print ("Completed running modules you selected")
 
