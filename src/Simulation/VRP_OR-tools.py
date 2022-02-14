@@ -465,9 +465,9 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
 
     p_df_update=pd.DataFrame()
 
-    list_nm=['payloadId','sequenceRank','tourId','payloadType','weightInlb','requestType',
-                                             'locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
-                                             'arrivalTimeWindowInSec_upper','operationDurationInSec']
+    list_nm=['payloadId','sequenceRank','tourId','payloadType','weightInlb','cummulativeWeightInlb',
+                                         'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
+                                         'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x','locationZone_y']
     for tour_id in p_df['tourId'].unique():
         temp_payload = p_df[p_df['tourId']==tour_id].reset_index()
         if c_df[c_df['tourId']==tour_id]['BoundaryZONE'].values[0] == 'no'  :
@@ -484,8 +484,11 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
                     loc_from= temp_payload.loc[i,'locationZone']
                     dtime_from = temp_payload.loc[i,'estimatedTimeOfArrivalInSec']+temp_payload.loc[i,'operationDurationInSec']
                     temp_payload_update=pd.concat([temp_payload_update,temp_payload.loc[[i],list_nm]], ignore_index=True)
+                
                 elif temp_payload.loc[i,'BoundaryZONE'] != 'no' and loc_flag=="in":
                     temp_payload.loc[i,'locationZone']=temp_payload.loc[i,'BoundaryZONE']
+                    temp_payload.loc[i,'locationZone_x']=temp_payload.loc[i,'x']
+                    temp_payload.loc[i,'locationZone_y']=temp_payload.loc[i,'y']
                     seq_out=temp_payload.loc[i,'sequenceRank']
                     loc_to = temp_payload.loc[i,'BoundaryZONE']
                     org_geoID=get_geoId(loc_from, CBGzone_df)
@@ -528,99 +531,11 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
                     temp_payload_update=pd.concat([temp_payload_update,temp_payload.loc[[i],list_nm]], ignore_index=True)
                     loc_flag="in"
 
-            temp_payload_update['sequenceRank']=range(1,temp_payload_update.shape[0]+1)
+            temp_payload_update['sequenceRank']=range(0,temp_payload_update.shape[0])
             p_df_update = pd.concat([p_df_update,temp_payload_update], ignore_index=True)
 
-        elif index_tour== "in_bound": # maybe need to revisit later
-            temp_payload_update=pd.DataFrame(columns = list_nm)
-            loc_flag="out"
-            ex_depot = c_df[c_df['tourId']==tour_id]['BoundaryZONE'].values[0]
-            #dtime_from= t_df[t_df['tour_id']==tour_id]['departureTimeInSec'].values[0]
-            n=0
-            for i in range(0,temp_payload.shape[0]):
-                if temp_payload.loc[i,'BoundaryZONE'] == 'no' and loc_flag=="out":
-                    day=int(temp_payload.loc[i,'estimatedTimeOfArrivalInSec']/24*60*60)
-                    loc_from = ex_depot
-                    loc_to = temp_payload.loc[i,'locationZone']
-                    org_geoID=get_geoId(loc_from, CBGzone_df)
-                    dest_geoID=get_geoId(loc_to, CBGzone_df)
-                    travel_time = tt_cal(loc_from, loc_to, org_geoID, dest_geoID, tt_df, dist_df)*60
-
-                    arr_time = temp_payload.loc[i,'estimatedTimeOfArrivalInSec']-day*24*60*60
-                    dep_time= temp_payload.loc[i,'estimatedTimeOfArrivalInSec']-day*24*60*60 - travel_time
-                    if dep_time <=0:
-                        dep_time =0
-                        arr_time = travel_time
-                    loc_flag="in"
-
-                    temp_payload_update=pd.concat([temp_payload_update,temp_payload.loc[[i],list_nm]], ignore_index=True)
-
-
-                    loc_from= temp_payload.loc[i,'locationZone']
-                    dtime_from = temp_payload.loc[i,'estimatedTimeOfArrivalInSec']+temp_payload.loc[i,'operationDurationInSec']
-                    temp_payload_update=pd.concat([temp_payload_update,temp_payload.loc[[i],list_nm]], ignore_index=True)
-                    temp_payload_update.loc[temp_payload_update.index[-1],'estimatedTimeOfArrivalInSec'] = arr_time
-                    if n==0:
-                        c_df.loc[c_df['tourId']== tour_id,'depot_zone']= ex_depot
-                        t_df.loc[t_df['tour_id']== tour_id,'departureLocation_zone']= ex_depot
-                        t_df.loc[t_df['tour_id']== tour_id, 'departureTimeInSec']= dep_time
-                    n=n+1
-                elif temp_payload.loc[i,'BoundaryZONE'] == 'no' and loc_flag=="in":
-                    temp_payload_update=pd.concat([temp_payload_update,temp_payload.loc[[i],list_nm]], ignore_index=True)
-                    temp_payload_update.loc[temp_payload_update.index[-1],'estimatedTimeOfArrivalInSec'] = temp_payload_update.loc[temp_payload_update.index[-2],'estimatedTimeOfArrivalInSec'] + \
-                                                                                                           (temp_payload.loc[i,'estimatedTimeOfArrivalInSec']- temp_payload.loc[i-1,'estimatedTimeOfArrivalInSec'])
-
-            temp_payload_update['sequenceRank']=range(1,temp_payload_update.shape[0]+1)
-            p_df_update = pd.concat([p_df_update,temp_payload_update], ignore_index=True)
     return t_df, c_df, p_df_update
-    p_df=p_df.merge(ex_zone, how ='left', left_on='locationZone', right_on='MESOZONE')
-    p_df.BoundaryZONE.fillna('no', inplace=True)
 
-    p_df_update=pd.DataFrame()
-    for tour_id in p_df['tourId'].unique():
-    #for tour_id in [0,1]:
-        temp_payload = p_df[p_df['tourId']==tour_id].reset_index()
-        if temp_payload.loc[0,'BoundaryZONE'] == 'no':
-            index_tour= "out_bound"
-        else:
-            index_tour= "in_bound"
-        if index_tour== "out_bound":
-            n=0
-            temp_payload['within_flg']=0
-            for i in range(0,temp_payload.shape[0]):
-                if temp_payload.loc[i,'BoundaryZONE'] == 'no':
-                    n=n+0
-                    temp_payload.loc[i,'within_flg']=n
-                else:
-                    n=n+1
-                    temp_payload.loc[i,'within_flg']=n
-                    temp_payload.loc[i,'locationZone']=temp_payload.loc[i,'BoundaryZONE']
-
-            temp_payload=temp_payload[temp_payload['within_flg']<=1]
-            temp_payload=temp_payload.loc[:,"payloadId":"operationDurationInSec"]
-            p_df_update = pd.concat([p_df_update,temp_payload], ignore_index=True)
-        elif index_tour== "in_bound":
-            n=0
-            temp_payload['within_flg']=0
-            for i in range(0,temp_payload.shape[0]):
-                if temp_payload.loc[i,'BoundaryZONE'] != 'no':
-                    n=n+0
-                    temp_payload.loc[i,'within_flg']=n
-                else:
-                    ex_depot=temp_payload.loc[i-1,'BoundaryZONE']
-                    ex_depature_time = temp_payload.loc[i,'estimatedTimeOfArrivalInSec']-1.5*60*60
-                    n=n+1
-                    temp_payload.loc[i,'within_flg']=n
-
-
-            temp_payload=temp_payload[temp_payload['within_flg']>=1]
-            temp_payload['sequenceRank'] = temp_payload['within_flg']
-            temp_payload=temp_payload.loc[:,"payloadId":"operationDurationInSec"]
-            c_df.loc[c_df['tourId']== tour_id,'depot_zone']= ex_depot
-            t_df.loc[t_df['tour_id']== tour_id,'departureLocation_zone']= ex_depot
-            t_df.loc[t_df['tour_id']== tour_id, 'departureTimeInSec']= ex_depature_time
-            p_df_update = pd.concat([p_df_update,temp_payload], ignore_index=True)
-        return t_df, c_df, p_df_update
 
 def main(args=None):
     parser = ArgumentParser()
@@ -848,17 +763,17 @@ def main(args=None):
     print ('Completed saving tour-plan files for %s' %ship_type, '\n')
 
     dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
-    polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
+    #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
     ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones
     if (ship_type =='B2B') :
         print ("Starting external zone processing for B2B")
         tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
 
-    print ("Assigning x_y coordinate into depots and delivery locations")
-    tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
-    carrier_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
-    payload_df_xy.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
+    #print ("Assigning x_y coordinate into depots and delivery locations")
+    #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
+    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
+    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
+    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
     print ("Complete saving tour-plan with xy coordinate for %s" %ship_type)
 
 
