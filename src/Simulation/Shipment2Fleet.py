@@ -3,8 +3,6 @@
 ### if args.ship_type == "B2C": ... #for i in range(0,df_hh_D_GrID.shape[0]):
 ### elif args.ship_type == "B2B": ...#for i in range(0,FH_Seller.shape[0]): 
 # %%
-from re import X
-from matplotlib.pyplot import axis
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -1034,7 +1032,9 @@ def main(args=None):
     parser.add_argument("-ct", "--county", dest="sel_county",
                         help="select county; for all area run, put 9999", required=True, type=int)
     parser.add_argument("-sd", "--direction", dest="ship_direction",
-                        help="select 'out', 'in', 'all' for B2B, all for B2C ", required=True, type=str)                                                                   
+                        help="select 'out', 'in', 'all' for B2B, all for B2C ", required=True, type=str)
+    parser.add_argument("-rt", "--run type", dest="run_type",
+                        help="select 'Test' or 'RunSim", required=True, type=str)                                                                                    
     args = parser.parse_args()
 
     start_time=time.time()
@@ -1072,10 +1072,15 @@ def main(args=None):
         ## This part is time consuming which is associated to the function "carrier_sel()"
         print ("**** Complete aggregation and Starting carrier assignement ****")
         print ("size of shipment:", df_hh_D_GrID.shape[0])
-        non_sel_seller=pd.DataFrame() 
-        with alive_bar(df_hh_D_GrID.shape[0], force_tty=True) as bar:
-            #for i in range(0,df_hh_D_GrID.shape[0]): #***************** need to comment out and comment the line below *************************************
-            for i in range(0,20):
+        non_sel_seller=pd.DataFrame()
+        if args.run_type =="Test":
+            run_size=100
+        elif args.run_type =="RunSim":
+            run_size=df_hh_D_GrID.shape[0]
+        else: 
+            print ("Please put a correct run type")   
+        with alive_bar(run_size, force_tty=True) as bar:
+            for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
                 if df_hh_D_GrID.loc[i,'veh_type'] == "md":
                     cap_index = "md_capacity"
                 elif df_hh_D_GrID.loc[i,'veh_type'] == "hd":
@@ -1135,10 +1140,16 @@ def main(args=None):
         ## This part is time consuming which is associated to the function "carrier_sel()" 
         print ("**** Completed for-hire aggregation and Starting carrier assignement for hire ****")
         print ("size of shipment:", FH_Seller.shape[0])
-        non_sel_seller=pd.DataFrame() 
-        with alive_bar(FH_Seller.shape[0], force_tty=True) as bar:
-            #for i in range(0,FH_Seller.shape[0]): #***************** need to comment out and comment the line below *************************************
-            for i in range(0,20):
+        non_sel_seller=pd.DataFrame()
+        if args.run_type =="Test":
+            run_size=100
+        elif args.run_type =="RunSim":
+            run_size=FH_Seller.shape[0]
+        else: 
+            print ("Please put a correct run type")    
+        with alive_bar(run_size, force_tty=True) as bar:
+            for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
+            #for i in range(0,20):
                 if FH_Seller.loc[i,'veh_type'] == "md":
                     cap_index = "md_capacity"
                 elif FH_Seller.loc[i,'veh_type'] == "hd":
