@@ -37,9 +37,9 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
 
+    fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
     if ship_type == 'B2B':
         # firm and warehouse(for-hire carrier)
-        fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
         firm_file_xy=fdir_firms+"xy"+firm_file
         if file_exists(firm_file_xy):
             firms=pd.read_csv(firm_file_xy, header=0, sep=',')
