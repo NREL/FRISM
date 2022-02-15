@@ -1029,9 +1029,9 @@ def main(args=None):
         firms['y']=0
         print ("start")
         with alive_bar(firms.shape[0], force_tty=True) as bar:
-            #for i in range(0,firms.shape[0]):
-            for i in range(0,10):
-                print (i)    
+            for i in range(0,firms.shape[0]):
+            #for i in range(0,10):
+                #print (i)    
                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==firms.loc[i,"MESOZONE"]])
                 firms.loc[i,"x"]=x
                 firms.loc[i,"y"]=y
