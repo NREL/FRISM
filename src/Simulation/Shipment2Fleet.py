@@ -3,6 +3,7 @@
 ### if args.ship_type == "B2C": ... #for i in range(0,df_hh_D_GrID.shape[0]):
 ### elif args.ship_type == "B2B": ...#for i in range(0,FH_Seller.shape[0]): 
 # %%
+from re import X
 from matplotlib.pyplot import axis
 import pandas as pd
 import numpy as np
@@ -46,7 +47,14 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
         firms=firms[~firms['MESOZONE'].isin(list_error_zone)]
         firms=firms.rename({'BusID':'SellerID'}, axis='columns')
-        firms["x"],firms["y"]=zip(*firms["MESOZONE"].apply(lambda x: random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==x])))
+        firms['x']=0
+        firms['y']=0
+        with alive_bar(firms.shape[0], force_tty=True) as bar:
+            for i in range(0,firms.shape[0]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==firms.loc[i,"MESOZONE"]])
+                firms.loc[i,'x']=x
+                firms.loc[i,'x']=y
+                bar()
         firms.to_csv(firm_file_xy, index = False, header=True)
     wh_file_xy=fdir_firms+"xy"+warehouse_file
     if file_exists(wh_file_xy):
@@ -56,7 +64,14 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         warehouses= pd.read_csv(fdir_firms+warehouse_file, header=0, sep=',')
         warehouses=warehouses[~warehouses['MESOZONE'].isin(list_error_zone)]
         warehouses=warehouses[(warehouses['Industry_NAICS6_Make']=="492000") or (warehouses['Industry_NAICS6_Make']=="484000")]
-        warehouses["x"], warehouses["y"]=zip(*warehouses["MESOZONE"].apply(lambda x: random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==x])))
+        warehouses['x']=0
+        warehouses['y']=0
+        with alive_bar(warehouses.shape[0], force_tty=True) as bar:
+            for i in range(0,warehouses.shape[0]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==warehouses.loc[i,"MESOZONE"]])
+                warehouses.loc[i,'x']=x
+                warehouses.loc[i,'x']=y
+                bar()        
         warehouses.to_csv(wh_file_xy, index = False, header=True)
 
     ## Seperate B2B and B2C trucking: Currently use NAICS code for this process; need to update later
@@ -84,7 +99,14 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
         ex_zone=ex_zone[~ex_zone['MESOZONE'].isin(list_error_zone)]
         temp_ex_zone=ex_zone.drop_duplicates(subset=['MESOZONE'])
-        temp_ex_zone["x"],temp_ex_zone["y"]=zip(*temp_ex_zone["MESOZONE"].apply(lambda x: random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==x])))
+        temp_ex_zone['x']=0
+        temp_ex_zone['y']=0
+        with alive_bar(temp_ex_zone.shape[0], force_tty=True) as bar:
+            for i in range(0,temp_ex_zone.shape[0]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"MESOZONE"]])
+                temp_ex_zone.loc[i,'x']=x
+                temp_ex_zone.loc[i,'x']=y
+                bar()  
         ex_zone=ex_zone.merge(temp_ex_zone[["MESOZONE", "x", "y"]], on="MESOZONE", how='left')
         ex_zone.to_csv(ex_zone_file_xy, index = False, header=True)
     ex_zone_list=list(ex_zone["MESOZONE"].unique())
