@@ -46,16 +46,17 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         else:
             print ("**** Generating x_y to firms file")        
             firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
-            firms=firms.reset_index()
             firms=firms[~firms['MESOZONE'].isin(list_error_zone)]
+            firms=firms.reset_index()
             firms=firms.rename({'BusID':'SellerID'}, axis='columns')
+            firms=firms.reset_index()
             firms['x']=0
             firms['y']=0
             with alive_bar(firms.shape[0], force_tty=True) as bar:
                 for i in range(0,firms.shape[0]):
                     [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==firms.loc[i,"MESOZONE"]])
                     firms.loc[i,'x']=x
-                    firms.loc[i,'x']=y
+                    firms.loc[i,'y']=y
                     bar()
             firms.to_csv(firm_file_xy, index = False, header=True)
     elif ship_type == 'B2C':
@@ -70,7 +71,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         print ("**** Generating x_y to warehouses file")         
         warehouses= pd.read_csv(fdir_firms+warehouse_file, header=0, sep=',')
         warehouses=warehouses[~warehouses['MESOZONE'].isin(list_error_zone)]
-        warehouses=warehouses[(warehouses['Industry_NAICS6_Make']=="492000") or (warehouses['Industry_NAICS6_Make']=="484000")]
+        warehouses=warehouses[(warehouses['Industry_NAICS6_Make']=="492000") | (warehouses['Industry_NAICS6_Make']=="484000")]
         warehouses=warehouses.reset_index()
         warehouses['x']=0
         warehouses['y']=0
@@ -78,7 +79,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
             for i in range(0,warehouses.shape[0]):
                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==warehouses.loc[i,"MESOZONE"]])
                 warehouses.loc[i,'x']=x
-                warehouses.loc[i,'x']=y
+                warehouses.loc[i,'y']=y
                 bar()        
         warehouses.to_csv(wh_file_xy, index = False, header=True)
 
@@ -114,7 +115,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
             for i in range(0,temp_ex_zone.shape[0]):
                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"MESOZONE"]])
                 temp_ex_zone.loc[i,'x']=x
-                temp_ex_zone.loc[i,'x']=y
+                temp_ex_zone.loc[i,'y']=y
                 bar()  
         ex_zone=ex_zone.merge(temp_ex_zone[["MESOZONE", "x", "y"]], on="MESOZONE", how='left')
         ex_zone.to_csv(ex_zone_file_xy, index = False, header=True)
@@ -377,7 +378,7 @@ def b2c_d_truckload (packages):
 def b2c_hh_group_id_gen (df,MESOZONE, county, ship_type):
     group_size = df[df['MESOZONE']==MESOZONE]['group_size'].values[0]
     group_num= MESOZONE*100+random.randint(1,group_size)
-    id_gen = str(county) + "_"+ship_type + str(group_num)
+    id_gen = str(county) + "_"+ship_type + str(int(group_num))
     return id_gen
 # B2C travel time and operation time generation, which is used for operational time  
 def b2c_apro_tour_time(zone, num_visit,size, hh_aggregation_num, zone_df):
@@ -1162,8 +1163,8 @@ def main(args=None):
         FH_B2B=FH_B2B.merge(FH_Seller[['SellerID', 'assigned_carrier', 'veh_type']], on=['SellerID','veh_type'], how='inner')
         PV_B2B['payload_id']=PV_B2B.index
         FH_B2B['payload_id']=FH_B2B.index + PV_B2B.shape[0]
-        PV_B2B['payload_id']=PV_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(x))
-        FH_B2B['payload_id']=FH_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(x))
+        PV_B2B['payload_id']=PV_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(int(x)))
+        FH_B2B['payload_id']=FH_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(int(x)))
         id_lookup=pd.concat([PV_B2B[['payload_id','shipment_id']],FH_B2B[['payload_id','shipment_id']]], ignore_index=True)
         # Assing x_y
         PV_B2B=PV_B2B.merge(firms[['SellerID','x','y']], left_on="SellerID", right_on="SellerID", how="left")
