@@ -71,14 +71,16 @@ print (dc_module_text)
 os.system("python Shipment2Fleet.py \
     -st B2C \
         -ct 1 \
-            -sd all")
+            -sd all \
+                -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 # B2B
 # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all 
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 os.system("python Shipment2Fleet.py \
     -st B2B \
         -ct 1 \
-            -sd out")
+            -sd out \
+                -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 # # 4. Carrier opration Module Run  
 # print (co_module_text)
