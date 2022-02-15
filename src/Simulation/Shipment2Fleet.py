@@ -37,25 +37,32 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
 
-    # firm and warehouse(for-hire carrier)
-    fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
-    firm_file_xy=fdir_firms+"xy"+firm_file
-    if file_exists(firm_file_xy):
-        firms=pd.read_csv(firm_file_xy, header=0, sep=',')
-    else:
-        print ("**** Generating x_y to firms file")        
-        firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
-        firms=firms[~firms['MESOZONE'].isin(list_error_zone)]
-        firms=firms.rename({'BusID':'SellerID'}, axis='columns')
-        firms['x']=0
-        firms['y']=0
-        with alive_bar(firms.shape[0], force_tty=True) as bar:
-            for i in range(0,firms.shape[0]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==firms.loc[i,"MESOZONE"]])
-                firms.loc[i,'x']=x
-                firms.loc[i,'x']=y
-                bar()
-        firms.to_csv(firm_file_xy, index = False, header=True)
+    if ship_type == 'B2B':
+        # firm and warehouse(for-hire carrier)
+        fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
+        firm_file_xy=fdir_firms+"xy"+firm_file
+        if file_exists(firm_file_xy):
+            firms=pd.read_csv(firm_file_xy, header=0, sep=',')
+        else:
+            print ("**** Generating x_y to firms file")        
+            firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
+            firms=firms.reset_index()
+            firms=firms[~firms['MESOZONE'].isin(list_error_zone)]
+            firms=firms.rename({'BusID':'SellerID'}, axis='columns')
+            firms['x']=0
+            firms['y']=0
+            with alive_bar(firms.shape[0], force_tty=True) as bar:
+                for i in range(0,firms.shape[0]):
+                    [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==firms.loc[i,"MESOZONE"]])
+                    firms.loc[i,'x']=x
+                    firms.loc[i,'x']=y
+                    bar()
+            firms.to_csv(firm_file_xy, index = False, header=True)
+    elif ship_type == 'B2C':
+        firms=pd.DataFrame()
+    else: 
+        print ("Please define shipment type: B2B or B2C")
+
     wh_file_xy=fdir_firms+"xy"+warehouse_file
     if file_exists(wh_file_xy):
         warehouses=pd.read_csv(wh_file_xy, header=0, sep=',')
@@ -64,6 +71,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         warehouses= pd.read_csv(fdir_firms+warehouse_file, header=0, sep=',')
         warehouses=warehouses[~warehouses['MESOZONE'].isin(list_error_zone)]
         warehouses=warehouses[(warehouses['Industry_NAICS6_Make']=="492000") or (warehouses['Industry_NAICS6_Make']=="484000")]
+        warehouses=warehouses.reset_index()
         warehouses['x']=0
         warehouses['y']=0
         with alive_bar(warehouses.shape[0], force_tty=True) as bar:
@@ -99,6 +107,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
         ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
         ex_zone=ex_zone[~ex_zone['MESOZONE'].isin(list_error_zone)]
         temp_ex_zone=ex_zone.drop_duplicates(subset=['MESOZONE'])
+        temp_ex_zone=temp_ex_zone.reset_index()
         temp_ex_zone['x']=0
         temp_ex_zone['y']=0
         with alive_bar(temp_ex_zone.shape[0], force_tty=True) as bar:
