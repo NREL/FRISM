@@ -232,7 +232,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     return data
 
 
-def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df, prob_type, count_num, ship_type):
+def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df, prob_type,
+                   count_num, ship_type, c_prob, df_prob):
     """Prints solution on console."""
     global tour_id
     global payload_i
@@ -254,9 +255,14 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
             # Adding tour, carrier info to csv
             # Format for tour csv: ['tour_id', 'departureTimeInSec', 'departureLocation_zone', 'maxTourDurationInSec']
             # Fomat for carrier csv: ['carrierId','tourId', 'vehicleId', 'vehicleTypeId','depot_zone']
-            tour_df.loc[tour_id] = [tour_id, start_time*60, data['loc_zones'][manager.IndexToNode(index)], 3600]
+            depot_x = c_prob['c_x'].values[0]
+            depot_y = c_prob['c_y'].values[0]
+
+            tour_df.loc[tour_id] = [tour_id, start_time*60, data['loc_zones'][manager.IndexToNode(index)], 3600,
+                                    depot_x, depot_y]
             carrier_df.loc[tour_id] = [carr_id, tour_id, data['vehicle_ids'][vehicle_id],
-                                       data['vehicle_types'][vehicle_id], data['loc_zones'][manager.IndexToNode(index)]]
+                                       data['vehicle_types'][vehicle_id], data['loc_zones'][manager.IndexToNode(index)],
+                                       depot_x,depot_y]
 
             plan_output = 'Route for vehicle {0} with id {1}:\n'.format(vehicle_id, data['vehicle_ids'][vehicle_id])
             plan_output_l = 'Load for vehicle {}:\n'.format(vehicle_id)
@@ -287,15 +293,35 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                                      node_index]) * 60),
                                                  int(0 * 60),
                                                  int(0 * 60),
-                                                 int(0 * 60)]
+                                                 int(0 * 60), depot_x, depot_y]
 
-                elif(node_index != 0): # Only add the payload info if this is not the depot
-                    payload_df.loc[payload_i] = [int(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
+                elif(node_index != 0):
+                    id_payload = str(data['payload_ids'][node_index-1])
+                    loc_x = 0
+                    loc_y = 0
+                    if prob_type == 'pickup':
+                        loc_x = df_prob[df_prob['payload_id'] == id_payload]['pu_x'].values[0]
+                        loc_y = df_prob[df_prob['payload_id'] == id_payload]['pu_y'].values[0]
+
+                    elif prob_type == 'delivery':
+                        loc_x = df_prob[df_prob['payload_id'] == id_payload]['del_x'].values[0]
+                        loc_y = df_prob[df_prob['payload_id'] == id_payload]['del_y'].values[0]
+                        print('del: ', id_payload, ' ', loc_x, ' ', loc_y)
+                    elif prob_type == 'pickup_delivery':
+                        if data['demands'][node_index] > 0:
+                            loc_x = df_prob[df_prob['payload_id'] == id_payload]['pu_x'].values[0]
+                            loc_y = df_prob[df_prob['payload_id'] == id_payload]['pu_y'].values[0]
+                        elif data['demands'][node_index] < 0:
+                            loc_x = df_prob[df_prob['payload_id'] == id_payload]['del_x'].values[0]
+                            loc_y = df_prob[df_prob['payload_id'] == id_payload]['del_y'].values[0]
+
+                    payload_df.loc[payload_i] = [str(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1, int(data['loc_zones'][node_index]),
                                                 int((solution.Min(time_var)-data['stop_durations'][node_index])*60),
                                                  int(data['time_windows'][node_index][0]*60),
                                                 int(data['time_windows'][node_index][1]*60),
-                                                 int(data['stop_durations'][node_index]*60)]
+                                                 int(data['stop_durations'][node_index]*60),
+                                                 loc_x, loc_y]
                 payload_i += 1
                 seqId += 1
 
@@ -316,7 +342,8 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                              node_index]) * 60),
                                          int(0 * 60),
                                          int(0 * 60),
-                                         int(0 * 60)]
+                                         int(0 * 60),
+                                         depot_x, depot_y]
 
 
             if prob_type == 'delivery':
@@ -327,10 +354,10 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                 l = 0
                 for k in range(beg_index, end_index):
                     temp_load = tot_load - payload_df.loc[k]['weightInlb']
-                    payload_df.loc[k]['cummulativeWeightInlb'] = temp_load
-                    if k == beg_index: payload_df.loc[k]['weightInlb'] = temp_load
+                    payload_df.loc[k,('cummulativeWeightInlb')] = temp_load
+                    if k == beg_index: payload_df.loc[k,('weightInlb')] = temp_load
                     else:
-                        payload_df.loc[k]['weightInlb'] = -1 * payload_df.loc[k]['weightInlb']
+                        payload_df.loc[k,('weightInlb')] = -1 * payload_df.loc[k]['weightInlb']
 
                     plan_output_l += ' {0} Load({1}) -> '.format(node_list[l], temp_load)
                     tot_load = copy(temp_load)
@@ -569,21 +596,22 @@ def main(args=None):
 
     b_time = time()
     # data frames for the tour, carrier and payload
-    tour_df = pd.DataFrame(columns = ['tour_id', 'departureTimeInSec', 'departureLocation_zone', 'maxTourDurationInSec'])
+    tour_df = pd.DataFrame(columns = ['tour_id', 'departureTimeInSec', 'departureLocation_zone', 'maxTourDurationInSec',
+                                      'departureLocation_x','departureLocation_y'])
     # Format for carrier data frame: carrierId,tourId, vehicleId,vehicleTypeId,depot_zone
-    carrier_df = pd.DataFrame(columns = ['carrierId','tourId', 'vehicleId', 'vehicleTypeId','depot_zone'])
+    carrier_df = pd.DataFrame(columns = ['carrierId','tourId', 'vehicleId', 'vehicleTypeId','depot_zone', 'depot_zone_x', 'depot_zone_y'])
     # format for payload format
     # payloadId, sequenceRank, tourId, payloadType, weightInlb, requestType,locationZone,
     # estimatedTimeOfArrivalInSec, arrivalTimeWindowInSec_lower, arrivalTimeWindowInSec_upper,operationDurationInSec
     payload_df = pd.DataFrame(columns = ['payloadId','sequenceRank','tourId','payloadType','weightInlb','cummulativeWeightInlb',
                                          'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
-                                         'arrivalTimeWindowInSec_upper','operationDurationInSec'])
+                                         'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x', 'locationZone_y'])
 
     error_list = []
     error_list.append(['carrier', 'reason'])
 
-    # for carr_id in c_df['carrier_id'].unique():
-    for carr_id in [8655]:
+    for carr_id in c_df['carrier_id'].unique():
+    # for carr_id in [2336228]:
         # Initialize parameters used for probelm setting
 
         # Depot location
@@ -602,6 +630,9 @@ def main(args=None):
                 c_prob = c_prob.dropna()
                 vc_prob = vc_df[vc_df['carrier_id']== carr_id]
                 vc_prob = vc_prob.dropna()
+
+                # print('carrier df: \n')
+                # print(c_prob)
 
                 if len(df_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
@@ -732,7 +763,7 @@ def main(args=None):
                     # Print solution on console.
                     if solution:
                         print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                                       payload_df, prob_type, count_num, ship_type)
+                                       payload_df, prob_type, count_num, ship_type, c_prob, df_prob)
                         print('\n')
 
                     else:
