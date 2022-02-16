@@ -795,7 +795,7 @@ def main(args=None):
 
     dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
     #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
-    ex_zone_match= pd.read_csv(dir_geo+"External_Zones_Mapping.csv") # relationship between external zones and boundary zones
+    ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
     if (ship_type =='B2B') :
         print ("Starting external zone processing for B2B")
         tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
