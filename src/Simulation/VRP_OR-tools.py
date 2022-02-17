@@ -306,7 +306,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                     elif prob_type == 'delivery':
                         loc_x = df_prob[df_prob['payload_id'] == id_payload]['del_x'].values[0]
                         loc_y = df_prob[df_prob['payload_id'] == id_payload]['del_y'].values[0]
-                        print('del: ', id_payload, ' ', loc_x, ' ', loc_y)
+
                     elif prob_type == 'pickup_delivery':
                         if data['demands'][node_index] > 0:
                             loc_x = df_prob[df_prob['payload_id'] == id_payload]['pu_x'].values[0]
@@ -364,7 +364,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                     l += 1
 
                 # When the vehicle goes back to the depot, it's load is zero
-                payload_df.loc[end_index]['cummulativeWeightInlb'] = 0
+                payload_df.loc[end_index,'cummulativeWeightInlb'] = 0
                 route_load = temp_load
 
                 #Increment the load index
@@ -787,11 +787,12 @@ def main(args=None):
         writer = csv.writer(f)
         writer.writerows(error_list)
 
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours.csv" %ship_type, index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier.csv" %ship_type, index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload.csv" %ship_type, index=False)
+    # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
+    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
+    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
+    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
 
-    print ('Completed saving tour-plan files for %s' %ship_type, '\n')
+    print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
     dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
     #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
@@ -802,10 +803,10 @@ def main(args=None):
 
     #print ("Assigning x_y coordinate into depots and delivery locations")
     #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_freight_tours_xy.csv" %ship_type, index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_carrier_xy.csv" %ship_type, index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/%s_payload_xy.csv" %ship_type, index=False)
-    print ("Complete saving tour-plan with xy coordinate for %s" %ship_type)
+    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
+    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
+    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
+    print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
 
 
 
