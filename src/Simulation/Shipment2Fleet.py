@@ -14,15 +14,16 @@ from os.path import exists as file_exists
 from alive_progress import alive_bar
 import time
 from shapely.geometry import Point
-
+# %%
 def create_global_variable():
     global md_max_load
     global hd_max_load
     md_max_load= 11000
     hd_max_load= 40000
+# %%    
 ######################### General CODES ############################
-def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file, ship_type):
-    list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0]
+def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file, ship_type,list_error_zone):
+    #list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0]
     # Geo data including distance, CBGzone,
     fdir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
 
@@ -83,14 +84,14 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
 
     ## Seperate B2B and B2C trucking: Currently use NAICS code for this process; need to update later
     if ship_type == 'B2C':
-        truckings=warehouses[warehouses['Industry_NAICS6_Make']=="492000"].reset_index()
+        truckings=warehouses[warehouses['Industry_NAICS6_Make']==492000].reset_index()
         truckings['md_veh']=truckings['md_veh']+truckings['hd_veh'] # temporary solution since lack of md in delivery trucking 
         truckings['hd_veh']=0
         truckings['md_capacity']=truckings['md_veh'].apply(lambda x: x *md_max_load)
         truckings['hd_capacity']=truckings['hd_veh'].apply(lambda x: x *hd_max_load)
         truckings['time_cap'] = truckings['md_veh'].apply(lambda x: x * 60*5)       
     elif ship_type == 'B2B':
-        truckings=warehouses[warehouses['Industry_NAICS6_Make']=="484000"].reset_index()
+        truckings=warehouses[warehouses['Industry_NAICS6_Make']==484000].reset_index()
         truckings['md_capacity']=truckings['md_veh'].apply(lambda x: x *md_max_load)
         truckings['hd_capacity']=truckings['hd_veh'].apply(lambda x: x *hd_max_load)
         truckings['time_cap'] = truckings.apply(lambda x: (x['md_veh'] + x['hd_veh'])* 60*8, axis=1) 
@@ -1054,122 +1055,149 @@ def main(args=None):
                                                                                      config.warehouse_file, 
                                                                                      config.dist_file,
                                                                                      config.CBG_file, 
-                                                                                     args.ship_type)
+                                                                                     args.ship_type,
+                                                                                     config.list_error_zone)
 
     # Read and generate daily shipment file
     if args.ship_type == "B2C":
-        print ("**** Start processing daily B2C shipment")
-        df_hh_D= b2c_input_files_processing(CBGzone_df, 
-                                            config.b2c_delivery_frequency, args.sel_county)
 
-        print ("**** Completed initial daily generation and Start processing aggregation")
-        df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, args.sel_county, args.ship_type)
-        df_hh_D_GrID.loc[:,'veh_type'] ="md"
-        df_hh_D_GrID.loc[:,'assigned_carrier']=-1
-        df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
-        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %args.sel_county, index = False, header=True)
-        # Assigned the carrirer to shipment!: 
-        ## This part is time consuming which is associated to the function "carrier_sel()"
-        print ("**** Complete aggregation and Starting carrier assignement ****")
-        print ("size of shipment:", df_hh_D_GrID.shape[0])
-        non_sel_seller=pd.DataFrame()
-        if args.run_type =="Test":
-            run_size=100
-        elif args.run_type =="RunSim":
-            run_size=df_hh_D_GrID.shape[0]
-        else: 
-            print ("Please put a correct run type")   
-        with alive_bar(run_size, force_tty=True) as bar:
-            for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
-                if df_hh_D_GrID.loc[i,'veh_type'] == "md":
-                    cap_index = "md_capacity"
-                elif df_hh_D_GrID.loc[i,'veh_type'] == "hd":
-                    cap_index ="hd_capacity"            
-                # find a carrier who can hand a shipment at row i 
-                sel_busID=carrier_sel(df_hh_D_GrID.loc[i,'MESOZONE'], df_hh_D_GrID.loc[i,'D_truckload'],
-                                    df_hh_D_GrID.loc[i,'tour_tt'],df_hh_D_GrID.loc[i,'veh_type'], dist_df, truckings )
-                # put the carrier into df
-                if sel_busID == -1:
-                    non_sel_seller=pd.concat([non_sel_seller,df_hh_D_GrID.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-                else: 
-                    df_hh_D_GrID.loc[i,'assigned_carrier']=sel_busID
-                    # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
-                    trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
-                    truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - df_hh_D_GrID.loc[i,'D_truckload']
-                    truckings.loc[trucking_index,"time_cap"] = truckings.loc[trucking_index,"time_cap"] - df_hh_D_GrID.loc[i,'tour_tt']
-                bar()
-                #print (i)
-        print ("**** Completed carrier assignement and Generating results ****")    
-        df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] >=0].reset_index(drop=True)
+        if file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county):
+            df_hh_D_GrID=pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, header=0, sep=',')
+        else:
+            print ("**** Start processing daily B2C shipment")
+            df_hh_D= b2c_input_files_processing(CBGzone_df, 
+                                                config.b2c_delivery_frequency, args.sel_county)
+
+            print ("**** Completed initial daily generation and Start processing aggregation")
+            df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, args.sel_county, args.ship_type)
+            df_hh_D_GrID.loc[:,'veh_type'] ="md"
+            df_hh_D_GrID.loc[:,'assigned_carrier']=-1
+            df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
+            df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %args.sel_county, index = False, header=True)
+            id_lookup.to_csv (config.fdir_main_output+"B2Bid_lookup+"+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+            # Assigned the carrirer to shipment!: 
+            ## This part is time consuming which is associated to the function "carrier_sel()"
+            print ("**** Complete aggregation and Starting carrier assignement ****")
+            print ("size of shipment:", df_hh_D_GrID.shape[0])
+            non_sel_seller=pd.DataFrame()
+            if args.run_type =="Test":
+                run_size=20
+            elif args.run_type =="RunSim":
+                run_size=df_hh_D_GrID.shape[0]
+            else: 
+                print ("Please put a correct run type")       
+            with alive_bar(run_size, force_tty=True) as bar:
+                for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
+                    if df_hh_D_GrID.loc[i,'veh_type'] == "md":
+                        cap_index = "md_capacity"
+                    elif df_hh_D_GrID.loc[i,'veh_type'] == "hd":
+                        cap_index ="hd_capacity"            
+                    # find a carrier who can hand a shipment at row i 
+                    sel_busID=carrier_sel(df_hh_D_GrID.loc[i,'MESOZONE'], df_hh_D_GrID.loc[i,'D_truckload'],
+                                        df_hh_D_GrID.loc[i,'tour_tt'],df_hh_D_GrID.loc[i,'veh_type'], dist_df, truckings )
+                    # put the carrier into df
+                    if sel_busID == -1:
+                        non_sel_seller=pd.concat([non_sel_seller,df_hh_D_GrID.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+                    else: 
+                        df_hh_D_GrID.loc[i,'assigned_carrier']=sel_busID
+                        # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
+                        trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
+                        truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - df_hh_D_GrID.loc[i,'D_truckload']
+                        truckings.loc[trucking_index,"time_cap"] = truckings.loc[trucking_index,"time_cap"] - df_hh_D_GrID.loc[i,'tour_tt']
+                    bar()
+                    #print (i)
+            print ("**** Completed carrier assignement and Generating results ****")    
+            df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] >=0].reset_index(drop=True)
+            df_hh_D_GrID=df_hh_D_GrID[~df_hh_D_GrID['MESOZONE'].isin(config.list_error_zone)]
+            df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, index = False, header=True)
+
         # x_y assignment
-        df_hh_D_GrID["del_x"],df_hh_D_GrID["del_y"]=zip(*df_hh_D_GrID["MESOZONE"].apply(lambda x: random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==x])))
+        df_hh_D_GrID=df_hh_D_GrID.reset_index()
+        df_hh_D_GrID['del_x']=0
+        df_hh_D_GrID['del_y']=0
+        print ("**xy allocation job size:", df_hh_D_GrID.shape[0])
+        with alive_bar(df_hh_D_GrID.shape[0], force_tty=True) as bar:
+            for i in range(0,df_hh_D_GrID.shape[0]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==df_hh_D_GrID.loc[i,"MESOZONE"]])
+                df_hh_D_GrID.loc[i,'del_x']=x
+                df_hh_D_GrID.loc[i,'del_y']=y
+                bar()
+        #df_hh_D_GrID["del_x"],df_hh_D_GrID["del_y"]=zip(*df_hh_D_GrID["MESOZONE"].apply(lambda x: random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==x])))
         #df_hh_D_GrID=df_hh_D_GrID.merge(truckings[['BusID','x','y']], left_on="assigned_carrier", right_on="BusID", how="left")
         #df_hh_D_GrID.rename({'x': 'c_x','y': 'c_y'},axis=1, inplace=True)
         ## temporary saving: hh_D= with assigned_carrier
-        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, index = False, header=True)
+        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, index = False, header=True)
         
 
         payloads, carriers=b2c_create_output(df_hh_D_GrID,truckings,df_dpt_dist, args.ship_type)
 
         payloads.to_csv (config.fdir_main_output+config.fnm_B2C_payload+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
         carriers.to_csv (config.fdir_main_output+config.fnm_B2C_carrier+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
-        id_lookup.to_csv (config.fdir_main_output+"B2Bid_lookup+"+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
+        
 
         print ("**** Completed generating B2C payload/carrier file ****")
 
     elif args.ship_type == "B2B":
-        # Create daily B2B for private and B2B for for-hire 
-        print ("**** Start processing daily B2B shipment")
-        FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold)
-        PV_B2B .to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
-        ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
-        ## Need to find a couple of carriers (like making a contract with carriers)
-        ##### Update requried: This could be updated later with contract-related modeling 
-        # temporary hold 
-        # print ("**** Completed daily B2B shipment and staring processing for-hire carrier aggregation ****")
-        # FH_Seller= FH_B2B.groupby(['SellerID', 'SellerZone','ship_group','veh_type'])['D_truckload'].agg(D_truckload='sum', num_shipments='count').reset_index()
-        # FH_Seller['tour_tt'] = FH_Seller.apply(lambda x: b2b_apro_tour_time(x['SellerZone'], x['num_shipments'], 1, CBGzone_df), axis=1)
-        # FH_Seller.loc[:,'assigned_carrier']=-1
-        # FH_Seller=FH_Seller.reset_index(drop=True) 
-        FH_Seller=FH_B2B[['SellerID', 'SellerZone','D_truckload','veh_type']]
-        FH_Seller.loc[:,'tour_tt']=30
-        FH_Seller.loc[:,'assigned_carrier']=-1
-        FH_Seller=FH_Seller.reset_index(drop=True)
-        FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_before_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True) 
-        # Assigned the carrirer to shipment!: 
-        ## This part is time consuming which is associated to the function "carrier_sel()" 
-        print ("**** Completed for-hire aggregation and Starting carrier assignement for hire ****")
-        print ("size of shipment:", FH_Seller.shape[0])
-        non_sel_seller=pd.DataFrame()
-        if args.run_type =="Test":
-            run_size=100
-        elif args.run_type =="RunSim":
-            run_size=FH_Seller.shape[0]
-        else: 
-            print ("Please put a correct run type")    
-        with alive_bar(run_size, force_tty=True) as bar:
-            for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
-            #for i in range(0,20):
-                if FH_Seller.loc[i,'veh_type'] == "md":
-                    cap_index = "md_capacity"
-                elif FH_Seller.loc[i,'veh_type'] == "hd":
-                    cap_index ="hd_capacity"
-                # find a carrier who can hand a shipment at row i 
-                sel_busID=carrier_sel(FH_Seller.loc[i,'SellerZone'], FH_Seller.loc[i,'D_truckload'],
-                                    FH_Seller.loc[i,'tour_tt'], FH_Seller.loc[i,'veh_type'], dist_df, truckings)
-                if sel_busID == -1:
-                    non_sel_seller=pd.concat([non_sel_seller,FH_Seller.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-                else:    
-                # put the carrier into df
-                    FH_Seller.loc[i,'assigned_carrier']=sel_busID
-                    # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
-                    trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
-                    truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - FH_Seller.loc[i,'D_truckload']
-                    truckings.loc[trucking_index,"time_cap"] = truckings.loc[trucking_index,"time_cap"] - FH_Seller.loc[i,'tour_tt']        
-                bar()
-        print ("**** Completed carrier assignement ****")
-        FH_Seller=FH_Seller[FH_Seller['assigned_carrier'] >=0].reset_index(drop=True)
-        FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+        # Create daily B2B for private and B2B for for-hire
+        if file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
+        file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
+        file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)):
+            FH_B2B= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
+            PV_B2B= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
+            FH_Seller= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
+        else:     
+            print ("**** Start processing daily B2B shipment")
+            FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold)
+            FH_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+            PV_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+            ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
+            ## Need to find a couple of carriers (like making a contract with carriers)
+            ##### Update requried: This could be updated later with contract-related modeling 
+            # temporary hold 
+            # print ("**** Completed daily B2B shipment and staring processing for-hire carrier aggregation ****")
+            # FH_Seller= FH_B2B.groupby(['SellerID', 'SellerZone','ship_group','veh_type'])['D_truckload'].agg(D_truckload='sum', num_shipments='count').reset_index()
+            # FH_Seller['tour_tt'] = FH_Seller.apply(lambda x: b2b_apro_tour_time(x['SellerZone'], x['num_shipments'], 1, CBGzone_df), axis=1)
+            # FH_Seller.loc[:,'assigned_carrier']=-1
+            # FH_Seller=FH_Seller.reset_index(drop=True) 
+            FH_Seller=FH_B2B[['SellerID', 'SellerZone','D_truckload','veh_type']]
+            FH_Seller.loc[:,'tour_tt']=30
+            FH_Seller.loc[:,'assigned_carrier']=-1
+            FH_Seller=FH_Seller.reset_index(drop=True)
+            FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_before_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True) 
+            # Assigned the carrirer to shipment!: 
+            ## This part is time consuming which is associated to the function "carrier_sel()" 
+            print ("**** Completed for-hire aggregation and Starting carrier assignement for hire ****")
+            print ("size of shipment:", FH_Seller.shape[0])
+            non_sel_seller=pd.DataFrame()
+            if args.run_type =="Test":
+                run_size=20
+            elif args.run_type =="RunSim":
+                run_size=FH_Seller.shape[0]
+            else: 
+                print ("Please put a correct run type")    
+            with alive_bar(run_size, force_tty=True) as bar:
+                for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
+                #for i in range(0,20):
+                    if FH_Seller.loc[i,'veh_type'] == "md":
+                        cap_index = "md_capacity"
+                    elif FH_Seller.loc[i,'veh_type'] == "hd":
+                        cap_index ="hd_capacity"
+                    # find a carrier who can hand a shipment at row i 
+                    sel_busID=carrier_sel(FH_Seller.loc[i,'SellerZone'], FH_Seller.loc[i,'D_truckload'],
+                                        FH_Seller.loc[i,'tour_tt'], FH_Seller.loc[i,'veh_type'], dist_df, truckings)
+                    if sel_busID == -1:
+                        non_sel_seller=pd.concat([non_sel_seller,FH_Seller.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+                    else:    
+                    # put the carrier into df
+                        FH_Seller.loc[i,'assigned_carrier']=sel_busID
+                        # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
+                        trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
+                        truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - FH_Seller.loc[i,'D_truckload']
+                        truckings.loc[trucking_index,"time_cap"] = truckings.loc[trucking_index,"time_cap"] - FH_Seller.loc[i,'tour_tt']        
+                    bar()
+            print ("**** Completed carrier assignement ****")
+            FH_Seller=FH_Seller[FH_Seller['assigned_carrier'] >=0].reset_index(drop=True)
+            FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
 
         FH_B2B=FH_B2B.merge(FH_Seller[['SellerID', 'assigned_carrier', 'veh_type']], on=['SellerID','veh_type'], how='inner')
         PV_B2B['payload_id']=PV_B2B.index
@@ -1213,3 +1241,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+# %%
