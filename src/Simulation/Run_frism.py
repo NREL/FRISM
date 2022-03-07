@@ -87,22 +87,22 @@ print (dc_module_text)
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # # B2C
-os.system("python VRP_OR-tools.py \
-    -cy 1 \
-        -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-            -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
-                -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-                    -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_carrier_county1_shipall.csv \
-                        -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
-                            -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
-    # # B2B
 # os.system("python VRP_OR-tools.py \
 #     -cy 1 \
 #         -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
 #             -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
 #                 -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipout.csv \
-#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipout.csv \
+#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_carrier_county1_shipall.csv \
+#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
 #                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
+    # # B2B
+os.system("python VRP_OR-tools.py \
+    -cy 1 \
+        -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+            -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+                -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+                    -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipall.csv \
+                        -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipall.csv \
+                            -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 
 print ("Completed running modules you selected")

@@ -414,7 +414,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     p_df['tour_id'] = np.nan
     p_df['pu_arrival_time'] = np.nan
     p_df['del_arrival_time'] = np.nan
-    p_df = p_df.fillna(int(0));
+    p_df = p_df.fillna(int(0))
 
     # Adding in additional colums for vehicle tours
     # Changing tour id and sequence id into ints
@@ -426,11 +426,13 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     v_df = v_df.dropna(axis=1, how='all')   # Removing all nan
 
     # Create vehicle sequence vehicle ID
-    vc_df = c_df[['carrier_id', 'num_veh_type_1','num_veh_type_2']]
-    vc_df.columns= ['carrier_id', 'md_veh', 'hd_veh']
+    vc_df = pd.DataFrame()
+    vc_df['carrier_id']=c_df['carrier_id']
+    vc_df['md_veh']=c_df['num_veh_type_1']
+    vc_df['hd_veh'] = c_df['num_veh_type_2']
     vc_df['md_start_id']=np.nan
     vc_df['hd_start_id']=np.nan
-    vc_df = vc_df.fillna(int(0));
+    vc_df = vc_df.fillna(int(0))
     vc_df = vc_df.reset_index()
 
     n=0
@@ -438,9 +440,6 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
         vc_df.loc[i,'md_start_id'] =  n
         vc_df.loc[i,'hd_start_id'] =  n + vc_df.loc[i,'md_veh']
         n= vc_df.loc[i,'hd_start_id'] + vc_df.loc[i,'hd_veh']
-
-    # Reading vehicles by carrier
-    #vc_df = pd.read_csv(vehicleCarrier_file)
 
     return tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df
 
@@ -608,7 +607,7 @@ def main(args=None):
                                          'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x', 'locationZone_y'])
 
     error_list = []
-    error_list.append(['carrier', 'reason'])
+    error_list.append(['carrier', 'veh', 'reason'])
 
     for carr_id in c_df['carrier_id'].unique():
     # for carr_id in [2336228]:
@@ -618,6 +617,7 @@ def main(args=None):
         depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
         veh_types = p_df[(p_df['carrier_id'] == carr_id)].veh_type.unique()
+        print('veh_types is: ', veh_types)
 
         for veh in veh_types:
             try:
@@ -637,17 +637,17 @@ def main(args=None):
                 if len(df_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
                     print('\n')
-                    error_list.append([carr_id, 'NO PAYLOAD INFO'])
+                    error_list.append([carr_id, veh, 'NO PAYLOAD INFO'])
 
                 elif len(f_prob) == 0 or len(vc_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
                     print('\n')
-                    error_list.append([carr_id, 'NO VEHICLE TYPE INFO'])
+                    error_list.append([carr_id, veh, 'NO VEHICLE TYPE INFO'])
 
                 elif len(c_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
                     print('\n')
-                    error_list.append([carr_id, 'NO CARRIER INFO'])
+                    error_list.append([carr_id, veh, 'NO CARRIER INFO'])
 
                 else:
 
@@ -767,14 +767,14 @@ def main(args=None):
                         print('\n')
 
                     else:
-                        print('Could not find a solution for carrier: ', carr_id)
-                        error_list.append([carr_id, 'NO SOLUTION'])
+                        print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' NO SOLUTION')
+                        error_list.append([carr_id, veh, 'NO SOLUTION'])
                         print('\n')
 
 
             except Exception as e:
                 print('Could not solve problem for carrier: ', carr_id, 'and vehicle ', veh , ' : ', e)
-                error_list.append([carr_id, e])
+                error_list.append([carr_id, veh, e])
                 print('\n')
 
     run_time = time() - b_time
@@ -783,7 +783,7 @@ def main(args=None):
 
 
     #  Saving the carrier ids with errors
-    with open("../../../FRISM_input_output/Sim_outputs/error.csv", "w", newline="") as f:
+    with open("../../../FRISM_input_output/Sim_outputs/%s_county%s_error.csv"%(ship_type, str(count_num)), "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(error_list)
 
