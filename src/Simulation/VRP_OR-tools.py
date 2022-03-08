@@ -609,8 +609,8 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'veh', 'reason'])
 
-    for carr_id in c_df['carrier_id'].unique():
-    # for carr_id in [2336228]:
+    # for carr_id in c_df['carrier_id'].unique():
+    # for carr_id in [2247553, 2247978, 2247582]:
         # Initialize parameters used for probelm setting
 
         # Depot location
@@ -634,6 +634,16 @@ def main(args=None):
                 # print('carrier df: \n')
                 # print(c_prob)
 
+                total_load = sum(df_prob[(df_prob.carrier_id == carr_id) & (df_prob.veh_type == veh)]['weight'])
+                veh_capacity = 0
+                veh_num = 0
+                if veh == 'md':
+                    veh_capacity = int(v_df[v_df['veh_category'] == 'MD']['payload_capacity_weight'].values[0])
+                    veh_num = int(vc_df['md_veh'].values[0])
+                elif veh =='hd':
+                    veh_capacity = int(v_df[v_df['veh_category'] == 'HD']['payload_capacity_weight'].values[0])
+                    veh_num = int(vc_df['hd_veh'].values[0])
+
                 if len(df_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
                     print('\n')
@@ -648,6 +658,12 @@ def main(args=None):
                     print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO CARRIER INFO'])
+                
+                elif (total_load > (veh_num*veh_capacity)):
+                    print('Could not solve problem for carrier ', carr_id, ': TOTAL LOAD GREATER THAN VEHICLES CAPACITY')
+                    print('Load is: ', total_load, ' total veh capacity is: ', veh_num*veh_capacity)
+                    print('\n')
+                    error_list.append([carr_id, veh, 'TOTAL LOAD GREATER THAN VEHICLES CAPACITY'])
 
                 else:
 
@@ -704,8 +720,8 @@ def main(args=None):
                         if location_idx == data['depot']:
                             continue
                         index = manager.NodeToIndex(location_idx)
-                        if carr_id == 7252990.0:
-                            print('time: ', data['time_windows'])
+                        # if carr_id == 7252990.0:
+                        #     print('time: ', data['time_windows'])
                         time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
 
                     # Add time window constraints for each vehicle start node.
@@ -747,8 +763,7 @@ def main(args=None):
 
                     # Setting first solution heuristic.
                     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-                    search_parameters.time_limit.seconds = 2   #set a time limit of 2 seconds for a search
-                    search_parameters.solution_limit = 10     #set a solution limit of 10 for a search
+                    search_parameters.time_limit.seconds = 300   #set a time limit of 300 seconds for a search
 
                     s_time = time()
                     search_parameters.first_solution_strategy = (
@@ -756,6 +771,8 @@ def main(args=None):
 
                     # Solve the problem.
                     solution = routing.SolveWithParameters(search_parameters)
+
+                    
 
                     solve_time = time() - s_time
                     print('\nTime to solve is: ', solve_time)
@@ -767,8 +784,19 @@ def main(args=None):
                         print('\n')
 
                     else:
-                        print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' NO SOLUTION')
-                        error_list.append([carr_id, veh, 'NO SOLUTION'])
+                        st = routing.status()
+                        message = ''
+                        if st == 0:
+                            message = 'PROBLEM NOT YET SOLVED'
+                        elif st == 2:
+                            message = 'NO SOLUTION FOUND FOR PROBLEM'
+                        elif st == 3:
+                            message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
+                        elif st ==4:
+                            message = 'MODEL, PARAMETERS, OR FLAGS ARE INVALID'
+
+                        print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' : ', message)
+                        error_list.append([carr_id, veh, message])
                         print('\n')
 
 
