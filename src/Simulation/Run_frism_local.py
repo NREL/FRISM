@@ -87,7 +87,7 @@ for county in [13, 41, 55, 75, 81, 85, 95, 97]:
     -st B2B \
         -ct %s \
             -sd all \
-                -rt RunSim"%str(county)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+                -rt RunSim"%str(county)) # if you want to run test with 100 shipment allocation to carriers, "-rt Test". Otherwise "-rt RunSim"
 
 
     # # 4. Carrier opration Module Run
