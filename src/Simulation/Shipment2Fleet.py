@@ -485,12 +485,13 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
 
 ########################### B2B CODES ############################
 # c1: bulk, c2:fuel_fert, c3:interm_food, c4:mfr_goods, c5:others 
-def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold, list_error_zone):
+def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold, list_error_zone, county_list):
     # read household delivery file from
     fdir_synth_firm='../../../FRISM_input_output/Sim_inputs/Synth_firm_results/'
+    county_wo_sel= [i for i in county_list if i != sel_county]
     B2BF_T_D=pd.DataFrame()
     for com in commodity_list:
-        B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction)
+        B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel)
         B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]              
@@ -690,7 +691,7 @@ def b2b_d_select(TruckLoad,w_th):
             return 1
          else: return 0   
     else: return 0 
-def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_county,ship_direction):
+def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_county,ship_direction, county_wo_sel):
     daily_b2b_fname=fdir+'Daily_sctg%s_OD_%s_%s.csv' % (commoidty, sel_county,ship_direction)
     if file_exists(daily_b2b_fname):
         B2BF=pd.read_csv(daily_b2b_fname, header=0, sep=',')
@@ -711,6 +712,7 @@ def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_
                     temp= temp[(temp['BuyerCounty']==sel_county) & (temp['SellerCounty']!=sel_county)].reset_index(drop=True)
                 elif ship_direction == "all":
                     temp= temp[(temp['BuyerCounty']==sel_county) | (temp['SellerCounty']==sel_county)].reset_index(drop=True)
+                    temp= temp[~temp['SellerCounty'].isin(county_wo_sel)].reset_index(drop=True)
             temp['TruckLoad']=temp['TruckLoad']*2000
             temp["D_truckload"]=0
             temp["D_selection"]=0
@@ -1149,7 +1151,7 @@ def main(args=None):
             FH_Seller= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), header=0, sep=',')
         else:     
             print ("**** Start processing daily B2B shipment")
-            FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone)
+            FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list)
             FH_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
             PV_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
             ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
