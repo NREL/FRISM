@@ -105,18 +105,18 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     else:
         print ("**** Generating x_y to ex_zone files")          
         ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
-        ex_zone=ex_zone[~ex_zone['MESOZONE'].isin(list_error_zone)]
-        temp_ex_zone=ex_zone.drop_duplicates(subset=['MESOZONE'])
+        ex_zone=ex_zone[~ex_zone['BoundaryZONE'].isin(list_error_zone)]
+        temp_ex_zone=ex_zone.drop_duplicates(subset=['BoundaryZONE'])
         temp_ex_zone=temp_ex_zone.reset_index()
         temp_ex_zone['x']=0
         temp_ex_zone['y']=0
         with alive_bar(temp_ex_zone.shape[0], force_tty=True) as bar:
             for i in range(0,temp_ex_zone.shape[0]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"MESOZONE"]])
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"BoundaryZONE"]])
                 temp_ex_zone.loc[i,'x']=x
                 temp_ex_zone.loc[i,'y']=y
                 bar()  
-        ex_zone=ex_zone.merge(temp_ex_zone[["MESOZONE", "x", "y"]], on="MESOZONE", how='left')
+        ex_zone=ex_zone.merge(temp_ex_zone[["BoundaryZONE", "x", "y"]], on="BoundaryZONE", how='left')
         ex_zone.to_csv(ex_zone_file_xy, index = False, header=True)
     ex_zone_list=list(ex_zone["MESOZONE"].unique())
 
