@@ -212,8 +212,8 @@ def depot_time_depart(zone_id,df_dpt_dist,ship_type):
             d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
             d_time=random.randrange(d_time*60, (d_time+1)*60, 10)
         except:
-            d_time= random.randrange(7*60, 14*60, 10)
-        if d_time >16*60:
+            d_time= random.randrange(6*60, 11*60, 10)
+        if d_time >12*60:
             d_time = d_time - random.randrange(8*60, 12*60, 10)
     else:
         print ("Please define shipment type: B2B or B2C")        
