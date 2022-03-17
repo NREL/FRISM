@@ -50,19 +50,19 @@ Running Carrier Operation to simulate tour-plan for each carrier
 print (head_text)
 
 # # 1. Model estimation for End-Consumer Behavior Module (E-commerce generation)
-print (hh_gen_est_text)
-# Please replace hf, pf if their directory changes
-os.system("python HH_ecom_models.py \
-    -hf ../../../FRISM_input_output_{}/Model_inputs/NHTS/hhpub.csv \
-        -pf ../../../FRISM_input_output_{}/Model_inputs/NHTS/perpub.csv \
-            -mt WOD".format(config.study_region,config.study_region))
+# print (hh_gen_est_text)
+# # Please replace hf, pf if their directory changes
+# os.system("python HH_ecom_models.py \
+#     -hf ../../../FRISM_input_output_{}/Model_inputs/NHTS/hhpub.csv \
+#         -pf ../../../FRISM_input_output_{}/Model_inputs/NHTS/perpub.csv \
+#             -mt WOD".format(config.study_region,config.study_region))
 
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
-# print (ec_module_text)
-# # Please replace W, O, D, WOD with one of thme you want to run
-# os.system("python B2C_Generation.py \
-#     -hf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/households.csv \
-#         -pf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/persons.csv")
+print (ec_module_text)
+# Please replace W, O, D, WOD with one of thme you want to run
+os.system("python B2C_Generation.py \
+    -hf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/households.csv.zip \
+        -pf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/persons.csv.zip")
 
 # 3. Distribution Channel Module Run
 print (dc_module_text)
