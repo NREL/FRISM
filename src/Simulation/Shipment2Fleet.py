@@ -494,7 +494,11 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
         B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel)
         B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
-    B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]              
+    B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
+    B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
+    B2BF_T_D["SellerID"]=B2BF_T_D["SellerID"].astype(str).astype(float)
+    B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
+    B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
     B2BF_T_D.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
     
 
