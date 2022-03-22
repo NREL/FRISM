@@ -496,9 +496,9 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
     B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
-    B2BF_T_D["SellerID"]=B2BF_T_D["SellerID"].astype(str).astype(float)
-    B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
-    B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
+    #B2BF_T_D["SellerID"]=B2BF_T_D["SellerID"].astype(str).astype(float)
+    #B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
+    #B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
     B2BF_T_D.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
     
 
@@ -704,6 +704,23 @@ def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_
         sub_fdir="sctg%s_truck/" %commoidty
         for filename in glob.glob(fdir+sub_fdir+'*.csv'):
             temp= pd.read_csv(filename, header=0, sep=',')
+            temp=temp.astype({'BuyerID': 'int64',
+            "BuyerZone":"int64",
+            "BuyerNAICS":"string",
+            "SellerID":"int64",
+            "SellerZone":"int64",
+            "SellerNAICS":"string",
+            "TruckLoad": "float64",
+            "SCTG_Group": "int64",
+            "shipment_id":"int64",
+            "orig_FAFID":"int64",
+            "dest_FAFID":"int64",
+            "mode_choice":"string",
+            "probability":"float64",
+            "Distance":"float64",
+            "Travel_time":"float64",
+            "in_study_area":"int64" 
+            })
             # Add SellerCounty and BuyerCounty for filering 
             temp = temp.merge(CBGzone_df[['MESOZONE','County']], left_on="SellerZone", right_on='MESOZONE', how='left')
             temp=temp.rename({'County':'SellerCounty'}, axis=1)
