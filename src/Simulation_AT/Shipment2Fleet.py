@@ -15,33 +15,42 @@ from alive_progress import alive_bar
 import time
 from shapely.geometry import Point
 # %%
-def create_global_variable():
+def create_global_variable(md_max, hd_max, fdir):
     global md_max_load
     global hd_max_load
+    global fdir_in_out
     md_max_load= 11000
     hd_max_load= 40000
+    fdir_in_out = fdir
 # %%    
 ######################### General CODES ############################
 def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file, ship_type,list_error_zone):
     #list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0]
     # Geo data including distance, CBGzone,
-    fdir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
+    fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
 
     dist_df=pd.read_csv(fdir_geo+dist_file, header=0, sep=',')
+    dist_df.columns=['Origin','Destination','dist']
     CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
     #CBGzone_df=CBGzone_df[['GEOID','CBPZONE','MESOZONE','area']]
+    CBGzone_df= CBGzone_df.to_crs({'proj': 'cea'})
+    CBGzone_df["area"]=CBGzone_df['geometry'].area/(10**6)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
     ## Add county id from GEOID
     CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
     CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
 
-    fdir_firms='../../../FRISM_input_output/Sim_inputs/Synth_firm_pop/'
+    fdir_firms=fdir_in_out+'/Sim_inputs/Synth_firm_pop/'
     if ship_type == 'B2B':
         # firm and warehouse(for-hire carrier)
         firm_file_xy=fdir_firms+"xy"+firm_file
         if file_exists(firm_file_xy):
             firms=pd.read_csv(firm_file_xy, header=0, sep=',')
+            if "BusID" in firms.columns:
+                firms=firms.rename({'BusID':'SellerID'}, axis='columns')
+            if "lat" in firms.columns:
+                firms=firms.rename({'lat':'y', 'long': 'x'}, axis='columns')
         else:
             print ("**** Generating x_y to firms file")        
             firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
@@ -66,6 +75,8 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     wh_file_xy=fdir_firms+"xy"+warehouse_file
     if file_exists(wh_file_xy):
         warehouses=pd.read_csv(wh_file_xy, header=0, sep=',')
+        if "lat" in warehouses.columns:
+            warehouses=warehouses.rename({'lat':'y', 'long': 'x'}, axis='columns')
     else:
         print ("**** Generating x_y to warehouses file")         
         warehouses= pd.read_csv(fdir_firms+warehouse_file, header=0, sep=',')
@@ -98,6 +109,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     else:
         print ("Please define shipment type: B2B or B2C")
     truckings = truckings.merge(CBGzone_df[['MESOZONE','County']], on='MESOZONE', how='left')
+    
     # externalZone
     ex_zone_file_xy = fdir_geo+"xy"+"External_Zones_Mapping.csv"
     if file_exists(ex_zone_file_xy):
@@ -105,23 +117,23 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     else:
         print ("**** Generating x_y to ex_zone files")          
         ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
-        ex_zone=ex_zone[~ex_zone['MESOZONE'].isin(list_error_zone)]
-        temp_ex_zone=ex_zone.drop_duplicates(subset=['MESOZONE'])
+        ex_zone=ex_zone[~ex_zone['BoundaryZONE'].isin(list_error_zone)]
+        temp_ex_zone=ex_zone.drop_duplicates(subset=['BoundaryZONE'])
         temp_ex_zone=temp_ex_zone.reset_index()
         temp_ex_zone['x']=0
         temp_ex_zone['y']=0
         with alive_bar(temp_ex_zone.shape[0], force_tty=True) as bar:
             for i in range(0,temp_ex_zone.shape[0]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"MESOZONE"]])
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==temp_ex_zone.loc[i,"BoundaryZONE"]])
                 temp_ex_zone.loc[i,'x']=x
                 temp_ex_zone.loc[i,'y']=y
                 bar()  
-        ex_zone=ex_zone.merge(temp_ex_zone[["MESOZONE", "x", "y"]], on="MESOZONE", how='left')
+        ex_zone=ex_zone.merge(temp_ex_zone[["BoundaryZONE", "x", "y"]], on="BoundaryZONE", how='left')
         ex_zone.to_csv(ex_zone_file_xy, index = False, header=True)
     ex_zone_list=list(ex_zone["MESOZONE"].unique())
 
     # Truck activity distribution
-    fdir_truck='../../../FRISM_input_output/Model_carrier_op/INRIX_processing/'
+    fdir_truck=fdir_in_out+'/Model_carrier_op/INRIX_processing/'
     if ship_type == 'B2C':
         df_dpt_dist=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
     elif ship_type == 'B2B':
@@ -212,8 +224,8 @@ def depot_time_depart(zone_id,df_dpt_dist,ship_type):
             d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
             d_time=random.randrange(d_time*60, (d_time+1)*60, 10)
         except:
-            d_time= random.randrange(7*60, 14*60, 10)
-        if d_time >16*60:
+            d_time= random.randrange(6*60, 11*60, 10)
+        if d_time >12*60:
             d_time = d_time - random.randrange(8*60, 12*60, 10)
     else:
         print ("Please define shipment type: B2B or B2C")        
@@ -299,7 +311,7 @@ def veh_type_create():
 ########################### B2C CODES #############################
 def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county):
     # read household delivery file from 
-    df_hh = pd.read_csv('../../../FRISM_input_output/Sim_outputs/Generation/households_del.csv', header=0, sep=',')
+    df_hh = pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/households_del.csv', header=0, sep=',')
     df_hh= df_hh[['household_id','delivery_f', 'block_id']]
     df_hh['GEOID'] =df_hh['block_id'].apply(lambda x: np.floor(x/1000))
     df_hh = df_hh.merge(CBGzone_df[['GEOID','MESOZONE','County']], on='GEOID', how='left')
@@ -321,7 +333,7 @@ def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county):
     # Generate load in "lb"
     df_hh_D["D_truckload"]=df_hh_D["D_packages"].apply(b2c_d_truckload)
     # Save daily household having shipments and sum of load 
-    df_hh_D.to_csv ('../../../FRISM_input_output/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
+    df_hh_D.to_csv (fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
     return df_hh_D
 
 def b2c_household_aggregation (df_hh_D, zone_df,hh_aggregation_num, county, ship_type):
@@ -340,7 +352,7 @@ def b2c_household_aggregation (df_hh_D, zone_df,hh_aggregation_num, county, ship
     df_hh_D_GrID['tour_tt']=df_hh_D_GrID.apply(lambda x: b2c_apro_tour_time(x['MESOZONE'], x['num_hh'], x['group_size'],hh_aggregation_num,zone_df), axis=1)
     print ("A total of aggregated B2C shipments:", df_hh_D_GrID.shape[0])
 
-    df_hh_D_GrID.to_csv ('../../../FRISM_input_output/Sim_outputs/Generation/B2C_daily_aggregation_%s.csv' %county, index = False, header=True)
+    df_hh_D_GrID.to_csv (fdir_in_out+'/Sim_outputs/Generation/B2C_daily_aggregation_%s.csv' %county, index = False, header=True)
     df_hh_D_GrID= df_hh_D_GrID.reset_index()
     return df_hh_D_GrID, payload_household_lookup
 
@@ -487,15 +499,19 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
 # c1: bulk, c2:fuel_fert, c3:interm_food, c4:mfr_goods, c5:others 
 def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold, list_error_zone, county_list):
     # read household delivery file from
-    fdir_synth_firm='../../../FRISM_input_output/Sim_inputs/Synth_firm_results/'
+    fdir_synth_firm=fdir_in_out+'/Sim_inputs/Synth_firm_results/'
     county_wo_sel= [i for i in county_list if i != sel_county]
     B2BF_T_D=pd.DataFrame()
     for com in commodity_list:
         B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel)
         B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
-    B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]              
-    B2BF_T_D.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
+    B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
+    B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
+    #B2BF_T_D["SellerID"]=B2BF_T_D["SellerID"].astype(str).astype(float)
+    #B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
+    #B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
+    B2BF_T_D.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
     
 
     ## Deal with the daily shipment seperately
@@ -700,6 +716,23 @@ def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_
         sub_fdir="sctg%s_truck/" %commoidty
         for filename in glob.glob(fdir+sub_fdir+'*.csv'):
             temp= pd.read_csv(filename, header=0, sep=',')
+            temp=temp.astype({'BuyerID': 'int64',
+            "BuyerZone":"int64",
+            "BuyerNAICS":"string",
+            "SellerID":"int64",
+            "SellerZone":"int64",
+            "SellerNAICS":"string",
+            "TruckLoad": "float64",
+            "SCTG_Group": "int64",
+            "shipment_id":"int64",
+            "orig_FAFID":"int64",
+            "dest_FAFID":"int64",
+            "mode_choice":"string",
+            "probability":"float64",
+            "Distance":"float64",
+            "Travel_time":"float64",
+            "in_study_area":"int64" 
+            })
             # Add SellerCounty and BuyerCounty for filering 
             temp = temp.merge(CBGzone_df[['MESOZONE','County']], left_on="SellerZone", right_on='MESOZONE', how='left')
             temp=temp.rename({'County':'SellerCounty'}, axis=1)
@@ -1043,7 +1076,7 @@ def main(args=None):
     args = parser.parse_args()
 
     start_time=time.time()
-    create_global_variable()
+    create_global_variable(11000,40000,config.fdir_in_out)
     # Read general files including geo data, firm and trukcing population data
     if args.ship_type == "B2C":
         print("* Runing %s Distribution Channel Module with Tour type in Carrier Operation *" % args.ship_type)
@@ -1065,8 +1098,8 @@ def main(args=None):
     # Read and generate daily shipment file
     if args.ship_type == "B2C":
 
-        if file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type)):
-            df_hh_D_GrID=pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), header=0, sep=',')
+        if file_exists(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type)):
+            df_hh_D_GrID=pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), header=0, sep=',')
         else:
             print ("**** Start processing daily B2C shipment")
             df_hh_D= b2c_input_files_processing(CBGzone_df, 
@@ -1077,7 +1110,7 @@ def main(args=None):
             df_hh_D_GrID.loc[:,'veh_type'] ="md"
             df_hh_D_GrID.loc[:,'assigned_carrier']=-1
             df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
-            df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %args.sel_county, index = False, header=True)
+            df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %args.sel_county, index = False, header=True)
             id_lookup.to_csv (config.fdir_main_output+"B2Bid_lookup+"+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
             # Assigned the carrirer to shipment!: 
             ## This part is time consuming which is associated to the function "carrier_sel()"
@@ -1113,7 +1146,7 @@ def main(args=None):
             print ("**** Completed carrier assignement and Generating results ****")    
             df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] >=0].reset_index(drop=True)
             df_hh_D_GrID=df_hh_D_GrID[~df_hh_D_GrID['MESOZONE'].isin(config.list_error_zone)]
-            df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), index = False, header=True)
+            df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), index = False, header=True)
 
         # x_y assignment
         df_hh_D_GrID=df_hh_D_GrID.reset_index()
@@ -1130,7 +1163,7 @@ def main(args=None):
         #df_hh_D_GrID=df_hh_D_GrID.merge(truckings[['BusID','x','y']], left_on="assigned_carrier", right_on="BusID", how="left")
         #df_hh_D_GrID.rename({'x': 'c_x','y': 'c_y'},axis=1, inplace=True)
         ## temporary saving: hh_D= with assigned_carrier
-        df_hh_D_GrID.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, index = False, header=True)
+        df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %args.sel_county, index = False, header=True)
         
 
         payloads, carriers=b2c_create_output(df_hh_D_GrID,truckings,df_dpt_dist, args.ship_type)
@@ -1143,17 +1176,17 @@ def main(args=None):
 
     elif args.ship_type == "B2B":
         # Create daily B2B for private and B2B for for-hire
-        if file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
-        file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
-        file_exists('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type)):
-            FH_B2B= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
-            PV_B2B= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
-            FH_Seller= pd.read_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), header=0, sep=',')
+        if file_exists(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
+        file_exists(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
+        file_exists(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type)):
+            FH_B2B= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
+            PV_B2B= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
+            FH_Seller= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), header=0, sep=',')
         else:     
             print ("**** Start processing daily B2B shipment")
             FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list)
-            FH_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
-            PV_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+            FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+            PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
             ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
             ## Need to find a couple of carriers (like making a contract with carriers)
             ##### Update requried: This could be updated later with contract-related modeling 
@@ -1167,7 +1200,7 @@ def main(args=None):
             FH_Seller.loc[:,'tour_tt']=30
             FH_Seller.loc[:,'assigned_carrier']=-1
             FH_Seller=FH_Seller.reset_index(drop=True)
-            FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_before_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True) 
+            FH_Seller.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_before_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True) 
             # Assigned the carrirer to shipment!: 
             ## This part is time consuming which is associated to the function "carrier_sel()" 
             print ("**** Completed for-hire aggregation and Starting carrier assignement for hire ****")
@@ -1201,7 +1234,7 @@ def main(args=None):
                     bar()
             print ("**** Completed carrier assignement ****")
             FH_Seller=FH_Seller[FH_Seller['assigned_carrier'] >=0].reset_index(drop=True)
-            FH_Seller.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), index = False, header=True)
+            FH_Seller.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), index = False, header=True)
 
         FH_B2B=FH_B2B.merge(FH_Seller[['SellerID', 'assigned_carrier', 'veh_type']], on=['SellerID','veh_type'], how='inner')
         PV_B2B['payload_id']=PV_B2B.index
@@ -1225,7 +1258,7 @@ def main(args=None):
         truckings['inbound_index']=truckings['County'].apply(lambda x: 0 if x in config.county_list else 1)
 
         ## temporary saving: hh_D= with assigned_carrier
-        FH_B2B.to_csv('../../../FRISM_input_output/Sim_outputs/temp_save/FH_B2B_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+        FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         PV_B2B = PV_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
         FH_B2B= FH_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
 

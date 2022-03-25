@@ -115,16 +115,16 @@ selected_x_var_delivery=[
 b2c_delivery_frequency=30
 hh_aggregation_size=15
 
-
+fdir_in_out= "../../../FRISM_input_output_AT"
 # input for B2B/Geo_data
-firm_file= 'synthfirms_all_Sep.csv'
-warehouse_file= 'warehouses_all_Sep.csv'
-dist_file= 'od_distance.csv'
-CBG_file= 'sfbay_freight.geojson'
+firm_file= 'synthetic_firms.csv'
+warehouse_file= 'synthetic_carriers.csv'
+dist_file= 'Austin_od_dist.csv'
+CBG_file= 'Austin_freight.geojson'
 ##ship_direction = 'out' # ['out','in', 'all']
 commodity_list= ["1", "2", "3", "4", "5"]
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97] ## this should be updated 
-list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0] # this should be updated
+list_error_zone=[] # this should be updated
 weight_theshold=40000
 
 # output data structure

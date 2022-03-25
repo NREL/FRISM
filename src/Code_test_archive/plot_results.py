@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 import seaborn as sns
+import geopandas as gpd
 #import osmnx as ox
 #import plotly.graph_objects as go
 
@@ -68,4 +69,41 @@ for ic_nm in list_income:
     plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], study_region))
     plt.legend(loc="upper right")
     plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(study_region, ic_nm))
+
+
+################################################################################################################    
+# %%
+
+fdir_truck='../../../FRISM_input_output/Model_carrier_op/INRIX_processing/'
+df_dpt_dist_MD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
+df_dpt_dist_HD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_HD.csv', header=0, sep=',')
+
+fdir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
+CBGzone_df = gpd.read_file(fdir_geo+'freight_centroids.geojson')
+CBGzone_df.GEOID=CBGzone_df.GEOID.astype(str).astype(int)
+df_dpt_dist_MD=df_dpt_dist_MD.merge(CBGzone_df[["GEOID",'MESOZONE']], left_on="cbg_id", right_on="GEOID", how='left')
+df_dpt_dist_HD=df_dpt_dist_HD.merge(CBGzone_df[["GEOID",'MESOZONE']], left_on="cbg_id", right_on="GEOID", how='left')
+sel_zone= pd.read_csv(fdir_geo+'selected zone.csv')
+sel_zone=sel_zone.rename({'blkgrpid':'GEOID'}, axis=1)
+sel_zone = sel_zone.merge(CBGzone_df[['GEOID','MESOZONE']], on='GEOID', how='left')
+
+df_dpt_dist_MD=df_dpt_dist_MD[df_dpt_dist_MD['MESOZONE'].isin(sel_zone['MESOZONE'])].reset_index()
+df_dpt_dist_HD=df_dpt_dist_HD[df_dpt_dist_HD['MESOZONE'].isin(sel_zone['MESOZONE'])].reset_index()
+
+MD_dpt= df_dpt_dist_MD.groupby(['start_hour'])['Trip'].sum()
+MD_dpt=MD_dpt.to_frame()
+MD_dpt.reset_index(level=(0), inplace=True)
+MD_dpt['Trip_rate']=MD_dpt['Trip']/MD_dpt['Trip'].sum()
+
+HD_dpt= df_dpt_dist_HD.groupby(['start_hour'])['Trip'].sum()
+HD_dpt=HD_dpt.to_frame()
+HD_dpt.reset_index(level=(0), inplace=True)
+HD_dpt['Trip_rate']=HD_dpt['Trip']/HD_dpt['Trip'].sum()
+
+plt.figure(figsize = (8,6))
+plt.plot("start_hour", "Trip", data=MD_dpt,color ="blue", label="MD")
+plt.plot("start_hour", "Trip", data=HD_dpt, color ="red", label="HD")
+plt.title("Distrubtion of stop activities  by time of day (INRIX)")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output/Sim_outputs/INRIX_truck_dist.png')
 # %%
