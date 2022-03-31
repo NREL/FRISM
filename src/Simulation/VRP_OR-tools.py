@@ -609,13 +609,11 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'veh', 'reason'])
 
-    # for carr_id in c_df['carrier_id'].unique():
-    # print(c_df['carrier_id'].unique())
-    for carr_id in [757350]:
+
+    for carr_id in c_df['carrier_id'].unique():
         # Initialize parameters used for probelm setting
 
         # Depot location
-        # print(carr_id)
         depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
         veh_types = p_df[(p_df['carrier_id'] == carr_id)].veh_type.unique()
