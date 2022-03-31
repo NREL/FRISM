@@ -609,10 +609,13 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'veh', 'reason'])
 
-    for carr_id in c_df['carrier_id'].unique():
+    # for carr_id in c_df['carrier_id'].unique():
+    # print(c_df['carrier_id'].unique())
+    for carr_id in [757350]:
         # Initialize parameters used for probelm setting
 
         # Depot location
+        # print(carr_id)
         depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
         veh_types = p_df[(p_df['carrier_id'] == carr_id)].veh_type.unique()
@@ -635,6 +638,7 @@ def main(args=None):
 
                 total_load = sum(df_prob[(df_prob.carrier_id == carr_id) & (df_prob.veh_type == veh)]['weight'])
                 veh_capacity = 0
+                valid = True    # Boolean to indicate if the problem is valid
                 veh_num = 0
                 if veh == 'md':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'MD']['payload_capacity_weight'].values[0])
@@ -647,24 +651,37 @@ def main(args=None):
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO PAYLOAD INFO'])
+                    valid = False
 
                 elif len(f_prob) == 0 or len(vc_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO VEHICLE TYPE INFO'])
+                    valid = False
 
                 elif len(c_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO CARRIER INFO'])
+                    valid = False
                 
                 elif (total_load > (veh_num*veh_capacity)):
-                    print('Could not solve problem for carrier ', carr_id, ': TOTAL LOAD GREATER THAN VEHICLES CAPACITY')
+                    df_prob.sort_values(by=['weight'])
+                    valid = False
+                    print("Load is larger than vehicle capacity")
                     print('Load is: ', total_load, ' total veh capacity is: ', veh_num*veh_capacity)
-                    print('\n')
-                    error_list.append([carr_id, veh, 'TOTAL LOAD GREATER THAN VEHICLES CAPACITY'])
+                    while valid == False and (len(df_prob) > 0):
+                        print('Droping payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight'])
+                        df_prob = df_prob.iloc[:-1 , :]
+                        if  sum(df_prob['weight']) <= veh_num*veh_capacity:
+                            valid = True
+                    
+                    if not valid:
+                        print('Could not solve problem for carrier ', carr_id, ': SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY')
+                        print('\n')
+                        error_list.append([carr_id, veh, 'SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY'])
 
-                else:
+                if valid:
 
                     md_start_id = int(vc_prob['md_start_id'].values[0])
                     hd_start_id = int(vc_prob['hd_start_id'].values[0])
