@@ -51,11 +51,11 @@ df_hh_obs=df_hh_obs.merge(df_per_obs_hh, on='HOUSEID', how='left')
 
 df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(study_region))
 
-# %%
-df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
-df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 1 if np.isnan(x) else int(x))
 
-# %%
+df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+
+
 list_income=["income_cls_0","income_cls_1","income_cls_2","income_cls_3"]
 dic_income={"income_cls_0": "income <$35k",
             "income_cls_1": "income $35k-$75k",
@@ -64,8 +64,11 @@ dic_income={"income_cls_0": "income <$35k",
      
 for ic_nm in list_income:
     plt.figure(figsize = (8,6))
-    plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=30, alpha = 0.3, label="observed")
-    plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=30, alpha = 0.3, label="modeled")
+    #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+    plt.hist(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="observed")
+    plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="modeled")
     plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], study_region))
     plt.legend(loc="upper right")
     plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(study_region, ic_nm))
@@ -106,4 +109,26 @@ plt.plot("start_hour", "Trip", data=HD_dpt, color ="red", label="HD")
 plt.title("Distrubtion of stop activities  by time of day (INRIX)")
 plt.legend(loc="upper right")
 plt.savefig('../../../FRISM_input_output/Sim_outputs/INRIX_truck_dist.png')
+# %%
+f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC/Tour_plan/"
+
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+b2b_carrier=0
+b2b_veh =0
+
+b2c_carrier=0
+b2c_veh =0
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"B2B_county{}_carrier_xy.csv".format(county))
+    b2b_carrier += df['carrierId'].nunique()
+    b2b_veh +=df['tourId'].nunique()
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"B2C_county{}_carrier_xy.csv".format(county))
+    b2c_carrier += df['carrierId'].nunique()
+    b2c_veh +=df['tourId'].nunique()
+
+print ("num_carrier sum: {0}, b2b: {1}, b2c: {2}".format(b2b_carrier+b2c_carrier,b2b_carrier,b2c_carrier))
+print ("num_veh sum: {0}, b2b: {1}, b2c: {2}".format(b2b_veh+b2c_veh,b2b_veh,b2c_veh))
 # %%

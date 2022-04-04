@@ -385,39 +385,61 @@ def edu_class_synth(EDUC):
     else:
         return 3
 
-def delivery_process(online_choice, delivery):
+def delivery_process(online_choice, delivery, income_cl):
     if online_choice ==0:
         final_delivery=0
     elif online_choice ==1:
-        if delivery <=1:
-            final_delivery =1
-        elif delivery >1 and delivery <80:
-            final_delivery = round(delivery-0.5)
-        elif delivery >=80:
-            final_delivery = random.randrange (60,80,1)
+        if income_cl==3:
+            if delivery <=2.5:
+                final_delivery =1
+            elif delivery >2.5: #and delivery <20:
+                final_delivery = round(delivery-0.5)
+            #elif delivery >=20:
+            #    final_delivery = random.randrange (15,60,1)
+        else:     
+            if delivery <=2.5:
+                final_delivery =1
+            elif delivery >2.5 and delivery <20:
+                final_delivery = round(delivery-2)
+            elif delivery >=20:
+                final_delivery = random.randrange (15,60,1)
     return final_delivery
 
 def onlineshop_calibration(income_cl, online_choice):
     if income_cl ==0:
         if online_choice ==0:
-            if random.uniform(0,1) <0.57:
-                return online_choice
-            else:
-                return 1
-        else:
-            return online_choice        
-    elif income_cl ==1:
-        if online_choice ==0:
-            if random.uniform(0,1) <0.68:
+            if random.uniform(0,1) <0.65:
                 return online_choice
             else:
                 return 1
         else:
             return online_choice
+    elif income_cl ==1:
+        return online_choice                 
+    # elif income_cl ==1:
+    #     if online_choice ==0:
+    #         if random.uniform(0,1) <0.68:
+    #             return online_choice
+    #         else:
+    #             return 1
+    #     else:
+    #         return online_choice
     elif income_cl ==2:
-        return online_choice
+        if online_choice ==1:
+            if random.uniform(0,1) <0.8:
+                return online_choice
+            else:
+                return 0
+        else:
+            return online_choice 
     elif income_cl==3:
-        return online_choice                  
+        if online_choice ==1:
+            if random.uniform(0,1) <0.7:
+                return online_choice
+            else:
+                return 0
+        else:
+            return online_choice                   
 
 def main(args=None):
     # read input files
@@ -451,7 +473,7 @@ def main(args=None):
     sim_X = df_per[config.selected_x_var_online]
     loaded_model = joblib.load('online_shop_model.sav')
     df_per['onlineshop']=loaded_model.predict(sim_X)
-    df_per['onlineshop']=df_per.apply(lambda x: onlineshop_calibration(x['income_cls'], x['onlineshop']), axis=1)
+    df_per['onlineshop']=df_per.apply(lambda x: onlineshop_calibration(x['income_cls'], x['onlineshop']), axis=1) #*******************
     ## Process for validation and save it
     val_per=df_per.groupby(['income_cls','onlineshop'])['income_cls'].agg(num_hh='count').reset_index()
     val_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income.csv'.format(config.study_region,config.study_region), index = False, header=True)
@@ -463,7 +485,7 @@ def main(args=None):
     loaded_model = joblib.load('delivery_freq_model.sav')
     df_per['delivery_f']=loaded_model.predict(sim_X)
     ## post proseesing in delivery frequency
-    df_per['delivery_f'] = df_per.apply(lambda x: delivery_process(x['onlineshop'], x['delivery_f']), axis=1)
+    df_per['delivery_f'] = df_per.apply(lambda x: delivery_process(x['onlineshop'], x['delivery_f'], x['income_cls']), axis=1) #**********************
     ## Process for validation and save it
     sns.displot(df_per['delivery_f'])
     plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Generation/Delivery plot_simulated.png'.format(config.study_region))
