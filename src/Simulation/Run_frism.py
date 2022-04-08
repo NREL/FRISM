@@ -52,16 +52,16 @@ print (head_text)
 # print (hh_gen_est_text)
 # # Please replace hf, pf if their directory changes
 # os.system("python HH_ecom_models.py \
-#     -hf ../../../FRISM_input_output/Model_inputs/NHTS/hhpub.csv \
-#         -pf ../../../FRISM_input_output/Model_inputs/NHTS/perpub.csv \
+#     -hf ../../../FRISM_input_output_SF/Model_inputs/NHTS/hhpub.csv \
+#         -pf ../../../FRISM_input_output_SF/Model_inputs/NHTS/perpub.csv \
 #             -mt WOD")
 
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
 # print (ec_module_text)
 # # Please replace W, O, D, WOD with one of thme you want to run
 # os.system("python B2C_Generation.py \
-#     -hf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/households.csv \
-#         -pf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/persons.csv")
+#     -hf ../../../FRISM_input_output_SF/Sim_inputs/sfbay_2018/households.csv.zip \
+#         -pf ../../../FRISM_input_output_SF/Sim_inputs/sfbay_2018/persons.csv.zip")
 
 # 3. Distribution Channel Module Run
 print (dc_module_text)
@@ -69,11 +69,11 @@ print (dc_module_text)
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
-# os.system("python Shipment2Fleet.py \
-#     -st B2C \
-#         -ct 1 \
-#             -sd all \
-#                 -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+os.system("python Shipment2Fleet.py \
+    -st B2C \
+        -ct 1 \
+            -sd all \
+                -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt Test". Otherwise "-rt RunSim"
 # # B2B
 # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
 # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
@@ -96,13 +96,13 @@ print (dc_module_text)
 #                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
 #                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
     # # B2B
-os.system("python VRP_OR-tools.py \
-    -cy 1 \
-        -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-            -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
-                -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-                    -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipall.csv \
-                        -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipall.csv \
-                            -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
+# os.system("python VRP_OR-tools.py \
+#     -cy 1 \
+#         -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+#                 -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipall.csv \
+#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipall.csv \
+#                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
 
 print ("Completed running modules you selected")

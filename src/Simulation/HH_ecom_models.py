@@ -347,9 +347,9 @@ def web_model(df_hh_state,state_CBSA,study_CBSA,selected_x_var_hh):
     df_hh_non_study=df_hh_state[df_hh_state['HH_CBSA'].isin(list(set(state_CBSA)-set(study_CBSA)))]
     df_hh_study=df_hh_state[df_hh_state['HH_CBSA'].isin(study_CBSA)]
     val_hh=df_hh_study.groupby(['income_cls','WEBUSE17'])['income_cls'].agg(num_hh='count').reset_index()
-    val_hh.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_webuse_by_income_observed.csv' %config.study_region, index = False, header=True)
+    val_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income_observed.csv'.format(config.study_region,config.study_region), index = False, header=True)
     ### Save Studay region data for validation 
-    df_hh_study.to_csv('../../../FRISM_input_output/Model_inputs/NHTS/%s_hh.csv' %config.study_region, index = False, header=True)
+    df_hh_study.to_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_hh.csv'.format(config.study_region,config.study_region), index = False, header=True)
     
     X_non_study=df_hh_non_study[selected_x_var_hh]
     Y_non_study=df_hh_non_study['WEBUSE17']
@@ -399,10 +399,10 @@ def online_model(df_per_state,state_CBSA,study_CBSA,selected_x_var_per):
     df_per_non_study=df_per_state[df_per_state['HH_CBSA'].isin(list(set(state_CBSA)-set(study_CBSA)))]
     df_per_study=df_per_state[df_per_state['HH_CBSA'].isin(study_CBSA)]
     val_per=df_per_study.groupby(['income_cls','onlineshop'])['income_cls'].agg(num_hh='count').reset_index()
-    val_per.to_csv('../../../FRISM_input_output/Sim_outputs/Generation/%s_online_by_income_observed.csv' %config.study_region, index = False, header=True)
+    val_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income_observed.csv'.format(config.study_region,config.study_region), index = False, header=True)
 
     ### Save Studay region data for validation 
-    df_per_study.to_csv('../../../FRISM_input_output/Model_inputs/NHTS/%s_per.csv' %config.study_region, index = False, header=True)
+    df_per_study.to_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_per.csv'.format(config.study_region,config.study_region), index = False, header=True)
     
     X_non_study=df_per_non_study[selected_x_var_per]
     Y_non_study=df_per_non_study['onlineshop']

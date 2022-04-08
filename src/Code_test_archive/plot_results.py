@@ -23,7 +23,9 @@ sf_map = plt.imread('../../../FRISM_input_output/Sim_inputs/Geo_data/SF_map.png'
 BBox= (-123.655,-121.524,36.869,38.852)
 
 # %%
-ship_type=args.ship_type
+#
+# ship_type=args.ship_type
+ship_type="B2B"
 #ship_type="B2B"
 for count_num in county_list:
 
@@ -40,7 +42,7 @@ for count_num in county_list:
 ################################################################################################################
 # %%
 
-study_region="AT"
+study_region= "SF" #"AT" 
 web_obs=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income_observed.csv'.format(study_region,study_region))
 online_bi_obs=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income_observed.csv'.format(study_region,study_region))
 

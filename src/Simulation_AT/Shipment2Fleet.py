@@ -19,8 +19,8 @@ def create_global_variable(md_max, hd_max, fdir):
     global md_max_load
     global hd_max_load
     global fdir_in_out
-    md_max_load= 11000
-    hd_max_load= 40000
+    md_max_load= md_max
+    hd_max_load= hd_max
     fdir_in_out = fdir
 # %%    
 ######################### General CODES ############################
@@ -1076,7 +1076,7 @@ def main(args=None):
     args = parser.parse_args()
 
     start_time=time.time()
-    create_global_variable(11000,40000,config.fdir_in_out)
+    create_global_variable(config.md_cap,config.hd_cap,config.fdir_in_out)
     # Read general files including geo data, firm and trukcing population data
     if args.ship_type == "B2C":
         print("* Runing %s Distribution Channel Module with Tour type in Carrier Operation *" % args.ship_type)
