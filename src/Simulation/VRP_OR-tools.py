@@ -669,7 +669,9 @@ def main(args=None):
                     print("Load is larger than vehicle capacity")
                     print('Load is: ', total_load, ' total veh capacity is: ', veh_num*veh_capacity)
                     while valid == False and (len(df_prob) > 0):
-                        print('Droping payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight'])
+                        message = 'Dropped payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight']
+                        error_list.append([carr_id, veh, message])
+                        print(message)
                         df_prob = df_prob.iloc[:-1 , :]
                         if  sum(df_prob['weight']) <= veh_num*veh_capacity:
                             valid = True
