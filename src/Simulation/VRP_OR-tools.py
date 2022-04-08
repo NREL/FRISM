@@ -16,7 +16,7 @@ import numpy as np
 from argparse import ArgumentParser
 from shapely.geometry import Point
 import random
-
+import config
 # Global Variables
 tour_id = 0
 payload_i = 0
@@ -825,14 +825,14 @@ def main(args=None):
 
 
     #  Saving the carrier ids with errors
-    with open("../../../FRISM_input_output/Sim_outputs/%s_county%s_error.csv"%(ship_type, str(count_num)), "w", newline="") as f:
+    with open(config.fdir_in_out+"/Sim_outputs/%s_county%s_error.csv"%(ship_type, str(count_num)), "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(error_list)
 
     # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
+    tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
+    carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
+    payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
 
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
@@ -845,9 +845,9 @@ def main(args=None):
 
     #print ("Assigning x_y coordinate into depots and delivery locations")
     #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
+    tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
+    carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
+    payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
     print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
 
 
