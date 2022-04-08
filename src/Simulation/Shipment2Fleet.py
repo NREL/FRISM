@@ -436,7 +436,7 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
     'pu_y'])
 
     payloads['payload_id']= df_del['household_gr_id']
-    payloads['carrier_id']= df_del['assigned_carrier']
+    payloads['carrier_id']= df_del['assigned_carrier'].apply(lambda x: 'B2B_'+str(x))
     #payloads['sequence_id']=
     #payloads['tour_id']=
     payloads['commodity']=5
@@ -483,8 +483,8 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
 
     carrier_input=carrier_input.merge(truckings[['assigned_carrier','md_veh','hd_veh','MESOZONE','x','y']], on = 'assigned_carrier', how='left')
 
-    carriers['carrier_id']=carrier_input['assigned_carrier']
-    carriers['firm_id']=carrier_input['assigned_carrier']
+    carriers['carrier_id']=carrier_input['assigned_carrier'].apply(lambda x: 'B2B_'+str(x))
+    carriers['firm_id']=carrier_input['assigned_carrier'].apply(lambda x: 'B2B_'+str(x))
     carriers['depot_zone']=carrier_input['MESOZONE']
     carriers['contract_firms']='Nan'
     carriers['num_veh_type_1']=carrier_input['md_veh']
