@@ -754,7 +754,8 @@ def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_
             temp['TruckLoad']=temp['TruckLoad']*2000
             temp["D_truckload"]=0
             temp["D_selection"]=0
-            temp["D_truckload"]=temp['TruckLoad'].apply(lambda x: b2b_d_truckload(x, weight_theshold))
+            temp["D_truckload"]=temp['TruckLoad']
+            #temp["D_truckload"]=temp['TruckLoad'].apply(lambda x: b2b_d_truckload(x, weight_theshold))
             temp["D_selection"]=temp['TruckLoad'].apply(lambda x: b2b_d_select(x, weight_theshold))
             temp=temp.query('D_selection ==1')
             B2BF=pd.concat([B2BF,temp],ignore_index=True)

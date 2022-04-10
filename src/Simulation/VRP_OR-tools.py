@@ -409,7 +409,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     c_df = c_df.fillna(0); # Fill all nan with zeros
 
     # Removing nans
-    p_df['carrier_id'] = p_df['carrier_id'].astype(int)
+    p_df['carrier_id'] = p_df['carrier_id'].astype(str)
     p_df['sequence_id'] = np.nan
     p_df['tour_id'] = np.nan
     p_df['pu_arrival_time'] = np.nan
@@ -838,7 +838,7 @@ def main(args=None):
 
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
-    dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
+    dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
     #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
     ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
     if (ship_type =='B2B') :
