@@ -610,8 +610,8 @@ def main(args=None):
     error_list.append(['carrier', 'veh', 'reason'])
 
 
-    for carr_id in c_df['carrier_id'].unique():
-    # for carr_id in ['B2B_2353366']:
+    # for carr_id in c_df['carrier_id'].unique():
+    for carr_id in ['B2B_2353366']:
         # Initialize parameters used for probelm setting
 
         # Depot location
@@ -828,7 +828,7 @@ def main(args=None):
 
 
     #  Saving the carrier ids with errors
-    if error_list > 0:
+    if len(error_list) > 0:
         with open(config.fdir_in_out+"/Sim_outputs/%s_county%s_error.csv"%(ship_type, str(count_num)), "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(error_list)
