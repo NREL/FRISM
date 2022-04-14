@@ -127,7 +127,7 @@ commodity_list= ["1", "2", "3", "4", "5"]
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97] ## this should be updated 
 list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0, 20028.0, 6248.0] # this should be updated
 weight_theshold=40000
-md_cap =11000
+md_cap=11000
 hd_cap=40000
 
 # output data structure

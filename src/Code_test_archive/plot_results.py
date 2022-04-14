@@ -1,3 +1,4 @@
+
 # %%
 from matplotlib.image import AxesImage
 import pandas as pd
@@ -19,7 +20,7 @@ args = parser.parse_args()
 
 # %%
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-sf_map = plt.imread('../../../FRISM_input_output/Sim_inputs/Geo_data/SF_map.png')
+sf_map = plt.imread('../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SF_map.png')
 BBox= (-123.655,-121.524,36.869,38.852)
 
 # %%
@@ -39,7 +40,38 @@ for count_num in county_list:
     ax.imshow(sf_map, zorder=0, extent = BBox, aspect= 'equal')
     fig.savefig('../../../FRISM_input_output/Sim_outputs/{0}payload_plot_county{1}.png'.format(ship_type, count_num))
 
+# %%
+fdir_in_out= "../../../FRISM_input_output_SF"
+fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
+CBG_file= 'sfbay_freight.geojson'
+
+CBGzone_df = gpd.read_file(fdir_geo+CBG_file)
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
+## Add county id from GEOID
+CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
+CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
+sf_shape_file=CBGzone_df[CBGzone_df["County"].isin(county_list)]
+
+# %%
+
+ship_type="B2B"
+#ship_type="B2B"
+payload_df=pd.DataFrame()
+for count_num in county_list:
+    temp=pd.read_csv("../../../Results_from_HPC_v2/Shipment2Fleet/{0}_payload_county{1}_shipall.csv" .format(ship_type, count_num))
+    payload_df=pd.concat([payload_df,temp],ignore_index=True)
+
+payload_by_meso=payload_df.groupby(['del_zone'])['del_zone'].agg(agg_ship="count").reset_index()
+payload_by_meso['agg_ship']=payload_by_meso['agg_ship']*10
+sf_shape_file=sf_shape_file.merge(payload_by_meso,  left_on="MESOZONE",  right_on="del_zone", how="left" )
+sf_shape_file.to_file(fdir_geo+"{}_aggregated_demand.geojson".format(ship_type), driver='GeoJSON')
+
+'''
+https://api.mapbox.com/styles/v1/ksjeong/cl1y7ojor001314o5mg62wtd7/wmts?access_token=pk.eyJ1Ijoia3NqZW9uZyIsImEiOiJjbDF5N3p4amcwN2ltM2ptZjl2cnQ5YW42In0.hj4c3SVS9YLVe5YTiDdJDw
+'''
 ################################################################################################################
+
 # %%
 
 study_region= "SF" #"AT" 

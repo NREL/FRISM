@@ -40,6 +40,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
     CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
+    CBGzone_df= CBGzone_df.to_crs('EPSG:4269')
 
     fdir_firms=fdir_in_out+'/Sim_inputs/Synth_firm_pop/'
     if ship_type == 'B2B':
