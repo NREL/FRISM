@@ -840,19 +840,19 @@ def main(args=None):
 
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
-    dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
-    #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
-    ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
-    if (ship_type =='B2B') :
-        print ("Starting external zone processing for B2B")
-        tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
+    # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
+    # #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
+    # ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
+    # if (ship_type =='B2B') :
+    #     print ("Starting external zone processing for B2B")
+    #     tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
 
-    #print ("Assigning x_y coordinate into depots and delivery locations")
-    #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
-    carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
-    payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
-    print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
+    # #print ("Assigning x_y coordinate into depots and delivery locations")
+    # #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
+    # tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
+    # carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
+    # payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
+    # print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
 
 
 
