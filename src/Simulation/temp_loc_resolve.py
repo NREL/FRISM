@@ -52,3 +52,13 @@ for county in  county_list:
 
 print ("complete the job")
 # %%
+fdir_in_out= "../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
+
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+for county in  county_list:
+    payload_df=pd.read_csv(fdir_in_out+"B2B_carrier_county{}_shipall.csv".format(county))
+    payload_df["num_veh_type_1"]=payload_df["num_veh_type_1"].apply(lambda x: x+3)
+    payload_df["num_veh_type_2"]=payload_df["num_veh_type_2"].apply(lambda x: x+3)
+    payload_df.to_csv(fdir_in_out+"B2B_carrier_county{}_shipall.csv".format(county), index = False, header=True)
+
+# %%
