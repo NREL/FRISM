@@ -1056,6 +1056,9 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     payloads=pd.concat([payloads, payloads_FH],ignore_index=True)
     ### End Create Payload file 
     ### Create Carrier file
+    # temp increase vehicles 
+    carriers["num_veh_type_1"]=carriers["num_veh_type_1"].apply(lambda x: (x+10))
+    carriers["num_veh_type_2"]=carriers["num_veh_type_2"].apply(lambda x: (x+10))
     return payloads, carriers
     ### End Create Carrier file    
 ##################################################################
