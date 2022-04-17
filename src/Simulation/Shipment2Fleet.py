@@ -558,60 +558,53 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
     PV_B2B= B2BF_T_D[B2BF_T_D['mode_choice']=="Private Truck"].reset_index(drop=True)
 
     firms=firms[firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
+    firms=firms.drop(columns=['md_veh', 'hd_veh'])
+
+    FH_B2B[["md_truckload","hd_truckload","veh_type"]] =FH_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
+    PV_B2B[["md_truckload","hd_truckload","veh_type"]] =PV_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
+    
+    # Just increase vehilce to meet the demand instead of shifting demnad to for-hire
+    PV_B2B_Seller_Group=PV_B2B.groupby("SellerID").agg(md_total_load=("md_truckload", "sum"), hd_total_load=("hd_truckload", "sum")).reset_index()
+    PV_B2B_Seller_Group["md_veh"]=PV_B2B_Seller_Group["md_total_load"].apply(lambda x: int(x/md_max_load) +5)
+    PV_B2B_Seller_Group["hd_veh"]=PV_B2B_Seller_Group["hd_total_load"].apply(lambda x: int(x/hd_max_load) +5)
+
+    firms=firms.merge(PV_B2B_Seller_Group[["SellerID","md_veh","hd_veh"]], on="SellerID", how="left").reset_index(drop=True)
     firms["md_capacity"]=firms["md_veh"]*md_max_load
     firms["hd_capacity"]=firms["hd_veh"]*hd_max_load
-
-    firms_temp=firms.copy()
-
-    # Assign MD_truck load and HD_truck_load
-    for i in range(0, PV_B2B.shape[0]):
-        firm_index=firms_temp.index[firms_temp["SellerID"]==PV_B2B.loc[i,"SellerID"]].values[0]
-        [md_cap, hd_cap]=firms_temp.loc[firm_index,["md_capacity","hd_capacity"]].values.tolist()
-        md_load,hd_load=b2b_veh_type_truckload(PV_B2B.loc[i,"SCTG_Group"],PV_B2B.loc[i,"Distance"], PV_B2B.loc[i,"D_truckload"], md_cap, hd_cap, df_vius)
-        PV_B2B.loc[i,["md_truckload","hd_truckload"]]=[md_load,hd_load]
-        firms_temp.loc[firm_index,["md_capacity","hd_capacity"]]=[md_cap-md_load,hd_cap-hd_load]
-
-    for i in range(0, FH_B2B.shape[0]):
-        [md_cap, hd_cap]=[100000000,100000000]
-        md_load,hd_load=b2b_veh_type_truckload(FH_B2B.loc[i,"SCTG_Group"],FH_B2B.loc[i,"Distance"], FH_B2B.loc[i,"D_truckload"], md_cap, hd_cap, df_vius)
-        FH_B2B.loc[i,["md_truckload","hd_truckload"]]=[md_load,hd_load]
-
-    firms_temp=firms.copy()
+    
     ## Assign shipment can be hanlded in Private truck to For-hire truck 
     ## Rule base: for capacity
-    PV_B2B =PV_B2B.sort_values(by=['SellerID', 'Distance']).reset_index(drop=True)
-    sel_ID=0
-    for i in range (0,PV_B2B.shape[0]):
-        if (sel_ID != PV_B2B["SellerID"].iloc[i]):
-            firm_index=firms_temp.index[firms_temp["SellerID"]==PV_B2B.loc[i,"SellerID"]].values[0]
-            [md_cap, hd_cap]=firms_temp.loc[firm_index,["md_capacity","hd_capacity"]].values.tolist() 
-            sel_ID=PV_B2B["SellerID"].iloc[i]
-        if (PV_B2B["md_truckload"].iloc[i] <= md_cap) and (PV_B2B["hd_truckload"].iloc[i] <= hd_cap) :
-            md_cap = md_cap - PV_B2B["md_truckload"].iloc[i]
-            hd_cap = hd_cap - PV_B2B["hd_truckload"].iloc[i]
-        elif (PV_B2B["md_truckload"].iloc[i] <= md_cap) and (PV_B2B["hd_truckload"].iloc[i] > hd_cap) :
-            md_cap = md_cap - PV_B2B["md_truckload"].iloc[i]
-            FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-            FH_B2B.loc[FH_B2B.shape[0]-1, "md_truckload"]=0
-            PV_B2B.loc[i, "hd_truckload"]=0
-        elif (PV_B2B["md_truckload"].iloc[i] > md_cap) and (PV_B2B["hd_truckload"].iloc[i] <= hd_cap) :
-            hd_cap = hd_cap - PV_B2B["hd_truckload"].iloc[i]
-            FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-            FH_B2B.loc[FH_B2B.shape[0]-1, "hd_truckload"]=0
-            PV_B2B.loc[i, "md_truckload"]=0
-        elif (PV_B2B["md_truckload"].iloc[i] > md_cap) and (PV_B2B["hd_truckload"].iloc[i] > hd_cap):
-            FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-            PV_B2B.loc[i, "hd_truckload"]=0
-            PV_B2B.loc[i, "md_truckload"]=0
+    # PV_B2B =PV_B2B.sort_values(by=['SellerID', 'Distance']).reset_index(drop=True)
+    # sel_ID=0
+    # for i in range (0,PV_B2B.shape[0]):
+    #     if (sel_ID != PV_B2B["SellerID"].iloc[i]):
+    #         firm_index=firms_temp.index[firms_temp["SellerID"]==PV_B2B.loc[i,"SellerID"]].values[0]
+    #         [md_cap, hd_cap]=firms_temp.loc[firm_index,["md_capacity","hd_capacity"]].values.tolist() 
+    #         sel_ID=PV_B2B["SellerID"].iloc[i]
+    #     if (PV_B2B["md_truckload"].iloc[i] <= md_cap) and (PV_B2B["hd_truckload"].iloc[i] <= hd_cap) :
+    #         md_cap = md_cap - PV_B2B["md_truckload"].iloc[i]
+    #         hd_cap = hd_cap - PV_B2B["hd_truckload"].iloc[i]
+    #     elif (PV_B2B["md_truckload"].iloc[i] <= md_cap) and (PV_B2B["hd_truckload"].iloc[i] > hd_cap) :
+    #         md_cap = md_cap - PV_B2B["md_truckload"].iloc[i]
+    #         FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+    #         FH_B2B.loc[FH_B2B.shape[0]-1, "md_truckload"]=0
+    #         PV_B2B.loc[i, "hd_truckload"]=0
+    #     elif (PV_B2B["md_truckload"].iloc[i] > md_cap) and (PV_B2B["hd_truckload"].iloc[i] <= hd_cap) :
+    #         hd_cap = hd_cap - PV_B2B["hd_truckload"].iloc[i]
+    #         FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+    #         FH_B2B.loc[FH_B2B.shape[0]-1, "hd_truckload"]=0
+    #         PV_B2B.loc[i, "md_truckload"]=0
+    #     elif (PV_B2B["md_truckload"].iloc[i] > md_cap) and (PV_B2B["hd_truckload"].iloc[i] > hd_cap):
+    #         FH_B2B= pd.concat([FH_B2B,PV_B2B.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+    #         PV_B2B.loc[i, "hd_truckload"]=0
+    #         PV_B2B.loc[i, "md_truckload"]=0
 
     # PV MD/HD shipment level processing 
-    PV_B2B_MD= PV_B2B[PV_B2B["md_truckload"]>0].reset_index(drop=True)
-    PV_B2B_HD= PV_B2B[PV_B2B["hd_truckload"]>0].reset_index(drop=True)
+    PV_B2B_MD= PV_B2B[PV_B2B["veh_type"]=="md"].reset_index(drop=True)
+    PV_B2B_HD= PV_B2B[PV_B2B["veh_type"]=="hd"].reset_index(drop=True)
 
     PV_B2B_MD["D_truckload"]=PV_B2B_MD["md_truckload"]
-    PV_B2B_MD["veh_type"]='md'
     PV_B2B_HD["D_truckload"]=PV_B2B_HD["hd_truckload"]
-    PV_B2B_HD["veh_type"]='hd'
     ## MD
     PV_B2B_MD_Ship=pd.DataFrame()
     for i in range(0,PV_B2B_MD.shape[0]):  
@@ -622,8 +615,9 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
             temp["D_truckload"]= load
         else:    
             temp["D_truckload"]=md_max_load
-            temp.loc[temp.shape[0]-1,"D_truckload"]=load-md_max_load*(num_shipment-1)
-        PV_B2B_MD_Ship= pd.concat([PV_B2B_MD_Ship,temp], ignore_index=True).reset_index(drop=True)    
+            temp["D_truckload"].iloc[-1]=load-md_max_load*(num_shipment-1)
+        PV_B2B_MD_Ship= pd.concat([PV_B2B_MD_Ship,temp], ignore_index=True).reset_index(drop=True)
+        del temp    
     ## HD
     PV_B2B_HD_Ship=pd.DataFrame()
     for i in range(0,PV_B2B_HD.shape[0]):  
@@ -634,20 +628,19 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
             temp["D_truckload"]= load
         else:    
             temp["D_truckload"]=hd_max_load
-            temp.loc[temp.shape[0]-1,"D_truckload"]=load-hd_max_load*(num_shipment-1)
-        PV_B2B_HD_Ship= pd.concat([PV_B2B_HD_Ship,temp], ignore_index=True).reset_index(drop=True)    
+            temp["D_truckload"].iloc[-1]=load-hd_max_load*(num_shipment-1)
+        PV_B2B_HD_Ship= pd.concat([PV_B2B_HD_Ship,temp], ignore_index=True).reset_index(drop=True)
+        del temp     
 
     PV_B2B = pd.concat([PV_B2B_MD_Ship, PV_B2B_HD_Ship], ignore_index=True).reset_index(drop=True)
 
     # FH MD/HD shipment level processing 
-    FH_B2B_MD= FH_B2B[FH_B2B["md_truckload"]>0].reset_index(drop=True)
-    FH_B2B_HD= FH_B2B[FH_B2B["hd_truckload"]>0].reset_index(drop=True)
+    FH_B2B_MD= FH_B2B[FH_B2B["veh_type"]=="md"].reset_index(drop=True)
+    FH_B2B_HD= FH_B2B[FH_B2B["veh_type"]=="hd"].reset_index(drop=True)
 
     FH_B2B_MD["D_truckload"]=FH_B2B_MD["md_truckload"]
-    FH_B2B_MD["veh_type"]='md'
     FH_B2B_HD["D_truckload"]=FH_B2B_HD["hd_truckload"]
-    FH_B2B_HD["veh_type"]='hd'
-
+    
     FH_B2B_MD_Ship=pd.DataFrame()
     for i in range(0,FH_B2B_MD.shape[0]):
         load=FH_B2B_MD["D_truckload"].iloc[i]
@@ -657,11 +650,15 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
             temp["D_truckload"]= load
         else:    
             temp["D_truckload"]=md_max_load
-            temp.loc[temp.shape[0]-1,"D_truckload"]=load-md_max_load*(num_shipment-1)
-        id_gen= np.repeat([1,2,3,4],int(num_shipment/4)+1)    
+            temp["D_truckload"].iloc[-1]=load-md_max_load*(num_shipment-1)
+        id_gen=[]
+        group_size=3
+        for i in range(1,int(num_shipment/group_size)+2):
+            id_gen_list=[i]*group_size
+            id_gen=id_gen+id_gen_list    
         temp["ship_group"]=id_gen[0:temp.shape[0]]
         FH_B2B_MD_Ship= pd.concat([FH_B2B_MD_Ship,temp], ignore_index=True).reset_index(drop=True)    
-
+        del temp 
     FH_B2B_HD_Ship=pd.DataFrame()
     for i in range(0,FH_B2B_HD.shape[0]):  
         load=FH_B2B_HD["D_truckload"].iloc[i]
@@ -671,14 +668,19 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
             temp["D_truckload"]= load
         else:    
             temp["D_truckload"]=hd_max_load
-            temp.loc[temp.shape[0]-1,"D_truckload"]=load-hd_max_load*(num_shipment-1)
-        id_gen= np.repeat([1,2,3,4],int(num_shipment/4)+1)    
+            temp["D_truckload"].iloc[-1]=load-hd_max_load*(num_shipment-1)
+        id_gen=[]
+        group_size=3
+        for i in range(1,int(num_shipment/group_size)+2):
+            id_gen_list=[i]*group_size
+            id_gen=id_gen+id_gen_list     
         temp["ship_group"]=id_gen[0:temp.shape[0]]
         FH_B2B_HD_Ship= pd.concat([FH_B2B_HD_Ship,temp], ignore_index=True).reset_index(drop=True)
+        del temp 
 
     FH_B2B = pd.concat([FH_B2B_MD_Ship, FH_B2B_HD_Ship], ignore_index=True).reset_index(drop=True)
 
-    return FH_B2B, PV_B2B
+    return FH_B2B, PV_B2B, firms
 # need to update this for commodity specific for daily
 def b2b_d_truckload(TruckLoad, w_th):
     # w_th= weight threshold
@@ -803,7 +805,7 @@ def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_
             B2BF=pd.concat([B2BF,temp],ignore_index=True)
         B2BF.to_csv(fdir+'Daily_sctg%s_OD_%s_%s.csv' % (commoidty, sel_county,ship_direction), index = False, header=True)
     return B2BF
-def b2b_veh_type_truckload(SCTG_Group,Distance, D_truckload, md_capacity, hd_capacity,df_vius):
+def b2b_veh_type_truckload(SCTG_Group,Distance, D_truckload, df_vius):
 
     if Distance <=50:
         col_name="TRIP0_50"
@@ -816,33 +818,19 @@ def b2b_veh_type_truckload(SCTG_Group,Distance, D_truckload, md_capacity, hd_cap
     else:                   
         col_name='TRIP500MORE'
     
-
     hd_val=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['veh_type']=='hd')][col_name].values[0]
     md_val=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['veh_type']=='md')][col_name].values[0]
     hd_ratio= hd_val/(hd_val+md_val)
 
     if random.uniform(0,1) < hd_ratio:
-        initial_vh ="hd"
-        temp_md = 0
-        temp_hd = D_truckload
+        v_type ="hd"
+        md_load = 0
+        hd_load = D_truckload
     else:
-        initial_vh ="md"
-        temp_md = D_truckload
-        temp_hd = 0
-
-    if temp_md<=md_capacity and temp_hd <=hd_capacity:
-        md_load= temp_md
-        hd_load= temp_hd 
-    elif temp_md>md_capacity and temp_hd <=hd_capacity:
-        md_load= md_capacity
-        hd_load= D_truckload - md_capacity
-    elif temp_md>md_capacity and temp_hd > hd_capacity:
-        md_load= D_truckload - hd_capacity 
-        hd_load= hd_capacity                                       
-    elif temp_md<=md_capacity and temp_hd > hd_capacity:
-        md_load= md_capacity
-        hd_load= D_truckload - md_capacity 
-    return md_load, hd_load 
+        v_type ="md"
+        md_load = D_truckload
+        hd_load = 0
+    return [md_load, hd_load, v_type]
 def b2b_apro_tour_time(zone, num_visit,size, zone_df):
     try:
         if num_visit >1:
@@ -1190,16 +1178,19 @@ def main(args=None):
         # Create daily B2B for private and B2B for for-hire
         if file_exists(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
         file_exists(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction)) and \
-        file_exists(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type)):
+        file_exists(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type)) and \
+        file_exists(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction)):
             FH_B2B= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
             PV_B2B= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',')
             FH_Seller= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_Seller_carrier_assigned_county%s_ship%s_%s.csv' %(args.sel_county, args.ship_direction, args.run_type), header=0, sep=',')
+            firms = pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',' )
         else:     
             print ("**** Start processing daily B2B shipment")
             df_vius= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/vehicle_proportion_by_sctg_dist.csv", header=0, sep=',')
-            FH_B2B, PV_B2B = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius)
+            FH_B2B, PV_B2B, firms = b2b_input_files_processing(firms,CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius)
             FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
             PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+            firms.to_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
             ## Get shipper's shipment the entire truckload (sum by seller ID ) for each day: 
             ## Need to find a couple of carriers (like making a contract with carriers)
             ##### Update requried: This could be updated later with contract-related modeling 
