@@ -220,3 +220,75 @@ for i in range (0, df_for_qc.shape[0]):
 
 df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0416.csv")
 # %%
+#[1, 13, 41, 55, 75, 81, 85, 95, 97]
+f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC_v3/Shipment2Fleet/"
+county=85
+df_carr=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
+df_pay=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
+
+carr_id_from_car_f=df_carr["carrier_id"].unique()
+
+test= df_pay[~df_pay["carrier_id"].isin(carr_id_from_car_f)]
+test.shape[0]
+# %%
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
+f_dir="../../../Results_from_HPC_v3/Shipment2Fleet/"
+county =85
+df_carr=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
+df_pay=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
+print (df_pay.shape[0])
+
+# %%
+new_df_pay=pd.DataFrame()
+new_df_carr=pd.DataFrame()
+#for c_id in df_carr["carrier_id"].unique():
+for c_id in ["B2B_1006810_4976","B2B_1006812_4977"]:    
+    temp_pay_md= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="md")].reset_index(drop=True)
+    temp_pay_hd= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="hd")].reset_index(drop=True)
+    temp_carr_md = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
+    temp_carr_hd = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
+    num_md = temp_pay_md.shape[0]
+    num_hd = temp_pay_hd.shape[0]
+
+    if num_md ==0:
+        temp_carr_md = pd.DataFrame()
+    elif num_md <= 30 and num_md >0:
+        new_c_id=c_id+"m"
+        temp_pay_md["carrier_id"] = new_c_id
+        temp_carr_md["carrier_id"] = new_c_id
+        temp_carr_md["num_veh_type_1"] =num_md
+        temp_carr_md["num_veh_type_2"] =0
+    else: 
+        for i in range(0,temp_pay_md.shape[0]):
+            new_c_id=c_id+"m{}".format(str(int(i/30)))
+            temp_pay_md.loc[i,"carrier_id"] = new_c_id
+        break_num=int(num_md/30)+1
+        temp_carr_md=pd.concat([temp_carr_md]*break_num, ignore_index=True).reset_index(drop=True)
+        for i in range(0,temp_carr_md.shape[0]):
+            new_c_id=c_id+"m{}".format(str(i))
+            temp_carr_md.loc[i,"carrier_id"] = new_c_id
+            temp_carr_md["num_veh_type_1"] =30
+            temp_carr_md["num_veh_type_2"] =0                    
+    if num_hd ==0:
+        temp_carr_hd = pd.DataFrame()
+    elif num_hd <= 30 and num_hd >0:
+        new_c_id=c_id+"h"
+        temp_pay_hd["carrier_id"] = new_c_id
+        temp_carr_hd["carrier_id"] = new_c_id
+        temp_carr_hd["num_veh_type_1"] =0
+        temp_carr_hd["num_veh_type_2"] =num_hd
+    else: 
+        for i in range(0,temp_pay_hd.shape[0]):
+            new_c_id=c_id+"h{}".format(str(int(i/30)))
+            temp_pay_hd.loc[i,"carrier_id"] = new_c_id
+        break_num=int(num_hd/30)+1
+        temp_carr_hd=pd.concat([temp_carr_hd]*break_num, ignore_index=True).reset_index(drop=True)
+        for i in range(0,temp_carr_hd.shape[0]):
+            new_c_id=c_id+"h{}".format(str(i))
+            temp_carr_hd.loc[i,"carrier_id"] = new_c_id
+            temp_carr_hd["num_veh_type_1"] =0
+            temp_carr_hd["num_veh_type_2"] =30
+    new_df_pay=pd.concat([new_df_pay,temp_pay_md, temp_pay_hd], ignore_index=True).reset_index(drop=True)
+    new_df_carr=pd.concat([new_df_carr,temp_carr_md, temp_carr_hd ], ignore_index=True).reset_index(drop=True) 
+
+# %%
