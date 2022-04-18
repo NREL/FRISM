@@ -292,3 +292,8 @@ for c_id in ["B2B_1006810_4976","B2B_1006812_4977"]:
     new_df_carr=pd.concat([new_df_carr,temp_carr_md, temp_carr_hd ], ignore_index=True).reset_index(drop=True) 
 
 # %%
+fdir_in_out= "../../../FRISM_input_output_SF/Sim_inputs/Synth_firm_pop/"
+f_nm="xysynthfirms_all_Sep.csv"
+
+firms = pd.read_csv(fdir_in_out+f_nm)
+# %%

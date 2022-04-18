@@ -560,6 +560,8 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
     firms=firms[firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
     firms=firms.drop(columns=['md_veh', 'hd_veh'])
 
+    firms_rest=firms[~firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
+
     FH_B2B[["md_truckload","hd_truckload","veh_type"]] =FH_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
     PV_B2B[["md_truckload","hd_truckload","veh_type"]] =PV_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
     
@@ -679,7 +681,7 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
         del temp 
 
     FH_B2B = pd.concat([FH_B2B_MD_Ship, FH_B2B_HD_Ship], ignore_index=True).reset_index(drop=True)
-
+    firms=pd.concat([firms,firms_rest], ignore_index=True).reset_index(drop=True)
     return FH_B2B, PV_B2B, firms
 # need to update this for commodity specific for daily
 def b2b_d_truckload(TruckLoad, w_th):
