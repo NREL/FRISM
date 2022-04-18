@@ -579,6 +579,13 @@ def main(args=None):
                         help="payload file in csv format", required=True, type=str)
     parser.add_argument("-vt", "--vehicle_type_file", dest="vehicleType_file",
                         help="vehicle type file in csv format", required=True, type=str)
+    parser.add_argument("-fn", "--separate_file index", dest="file_idx",
+                        help="an inteager", default=9999, type=str)                        
+
+    args = parser.parse_args()
+    file_index=args.file_idx
+
+    count_num = args.county_num
 
     args = parser.parse_args()
 
@@ -837,10 +844,14 @@ def main(args=None):
             writer.writerows(error_list)
 
     # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
-    tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
-    carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
-    payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
-
+    if file_index == 9999:
+        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
+        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
+        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
+    else:    
+        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours{2}.csv".format(ship_type, count_num, str(file_index)), index=False)
+        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier{2}.csv".format(ship_type, count_num,str(file_index)), index=False)
+        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload{2}.csv".format(ship_type, count_num, str(file_index)), index=False)
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
     # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
