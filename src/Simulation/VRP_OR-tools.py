@@ -611,7 +611,7 @@ def main(args=None):
 
 
     for carr_id in c_df['carrier_id'].unique():
-    #for carr_id in ['B2B_2353366']:
+    # for carr_id in ['B2B_7333937d_3332m']:
         # Initialize parameters used for probelm setting
 
         # Depot location
@@ -641,10 +641,12 @@ def main(args=None):
                 veh_num = 0
                 if veh == 'md':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'MD']['payload_capacity_weight'].values[0])
-                    veh_num = int(vc_df['md_veh'].values[0])
+                    veh_num = int(vc_prob['md_veh'].values[0])
                 elif veh =='hd':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'HD']['payload_capacity_weight'].values[0])
-                    veh_num = int(vc_df['hd_veh'].values[0])
+                    veh_num = int(vc_prob['hd_veh'].values[0])
+
+                max_veh_cap = veh_num*veh_capacity  # variable for saving the vehicle capacity
 
                 if len(df_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
@@ -664,17 +666,17 @@ def main(args=None):
                     error_list.append([carr_id, veh, 'NO CARRIER INFO'])
                     valid = False
                 
-                elif (total_load > (veh_num*veh_capacity)):
+                elif total_load > max_veh_cap:
                     df_prob.sort_values(by=['weight'])
                     valid = False
                     print("Load is larger than vehicle capacity")
-                    print('Load is: ', total_load, ' total veh capacity is: ', veh_num*veh_capacity)
+                    print('Load is: ', total_load, ' num of veh: ', veh_num, ' total veh capacity is: ', max_veh_cap)
                     while valid == False and (len(df_prob) > 0):
                         message = 'Dropped payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight']
                         error_list.append([carr_id, veh, message])
                         print(message)
                         df_prob = df_prob.iloc[:-1 , :]
-                        if  sum(df_prob['weight']) <= veh_num*veh_capacity:
+                        if  sum(df_prob['weight']) <= max_veh_cap:
                             valid = True
                     
                     if not valid:
@@ -780,7 +782,7 @@ def main(args=None):
 
                     # Setting first solution heuristic.
                     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-                    search_parameters.time_limit.seconds = 300   #set a time limit of 300 seconds for a search
+                    search_parameters.time_limit.seconds = 900   #set a time limit of 300 seconds for a search
 
                     s_time = time()
                     search_parameters.first_solution_strategy = (
@@ -807,6 +809,7 @@ def main(args=None):
                             message = 'PROBLEM NOT YET SOLVED'
                         elif st == 2:
                             message = 'NO SOLUTION FOUND FOR PROBLEM'
+                            # print(data)
                         elif st == 3:
                             message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
                         elif st ==4:
