@@ -35,7 +35,6 @@ dependencies:
     - cspy==1.0.1
     - cycler==0.10.0
     - debugpy==1.4.3
-    - dec,ator==5.1.0
     - defusedxml==0.7.1
     - descartes==1.1.0
     - entrypoints==0.3
