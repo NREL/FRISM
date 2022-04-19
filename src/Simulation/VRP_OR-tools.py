@@ -396,7 +396,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     # We need to know the depot using the carrier file
     c_df = pd.read_csv(carrier_file)
     c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
-    c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
+    #c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
 
     # reading payload definition
     p_df = pd.read_csv(payload_file)
@@ -618,9 +618,9 @@ def main(args=None):
 
 
     for carr_id in c_df['carrier_id'].unique():
-    # for carr_id in ['B2B_7333937d_3332m']:
+    # for carr_id in ["B2B_1460_0h",'B2B_692792_316m']:
         # Initialize parameters used for probelm setting
-
+        
         # Depot location
         depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
@@ -652,6 +652,10 @@ def main(args=None):
                 elif veh =='hd':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'HD']['payload_capacity_weight'].values[0])
                     veh_num = int(vc_prob['hd_veh'].values[0])
+
+                # temporary QC check
+                print ("Carrier Id: {}".format(carr_id))    
+                print ("veh_type: {0} veh_capacity: {1} veh_num: {2}".format(veh,veh_capacity,veh_num))    
 
                 max_veh_cap = veh_num*veh_capacity  # variable for saving the vehicle capacity
 
