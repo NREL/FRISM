@@ -289,8 +289,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                                  int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1,
                                                  int(data['loc_zones'][node_index]),
-                                                 int((solution.Min(time_var) - data['stop_durations'][
-                                                     node_index]) * 60),
+                                                 int(solution.Min(time_var) * 60),
                                                  int(0 * 60),
                                                  int(0 * 60),
                                                  int(0 * 60), depot_x, depot_y]
@@ -317,7 +316,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
                     payload_df.loc[payload_i] = [str(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1, int(data['loc_zones'][node_index]),
-                                                int((solution.Min(time_var)-data['stop_durations'][node_index])*60),
+                                                int(solution.Min(time_var)*60),
                                                  int(data['time_windows'][node_index][0]*60),
                                                 int(data['time_windows'][node_index][1]*60),
                                                  int(data['stop_durations'][node_index]*60),
@@ -338,8 +337,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                          int(1),
                                          int(data['demands'][node_index]), int(route_load), 1,
                                          int(data['loc_zones'][node_index]),
-                                         int((solution.Min(time_var) - data['stop_durations'][
-                                             node_index]) * 60),
+                                         int(solution.Min(time_var) * 60),
                                          int(0 * 60),
                                          int(0 * 60),
                                          int(0 * 60),
@@ -721,7 +719,7 @@ def main(args=None):
                         # Convert from routing variable Index to time matrix NodeIndex.
                         from_node = manager.IndexToNode(from_index)
                         to_node = manager.IndexToNode(to_index)
-                        return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
+                        return data['time_matrix'][from_node][to_node] + data['stop_durations'][from_node]
 
                     # Add Capacity constraint.
                     def demand_callback(from_index):
