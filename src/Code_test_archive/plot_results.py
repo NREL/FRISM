@@ -144,6 +144,7 @@ plt.title("Distrubtion of stop activities  by time of day (INRIX)")
 plt.legend(loc="upper right")
 plt.savefig('../../../FRISM_input_output/Sim_outputs/INRIX_truck_dist.png')
 # %%
+################################# QC V1 #####################
 f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC/Tour_plan/"
 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
@@ -166,6 +167,7 @@ for county in county_list:
 print ("num_carrier sum: {0}, b2b: {1}, b2c: {2}".format(b2b_carrier+b2c_carrier,b2b_carrier,b2c_carrier))
 print ("num_veh sum: {0}, b2b: {1}, b2c: {2}".format(b2b_veh+b2c_veh,b2b_veh,b2c_veh))
 # %%
+################################# QC V2 #####################
 f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/"
 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
@@ -212,7 +214,7 @@ for i in range (0, df_for_qc.shape[0]):
         try: 
             df_ship_v2= pd.read_csv(f_dir+"Results_from_HPC_v3/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
             df_for_qc.loc[i,s_type+"_ship_v2"]=df_ship_v2.shape[0]
-            df_car_v2= pd.read_csv(f_dir+"Results_from_HPC_v3/Tour_plan/"+"{}_county{}_carrier_xy.csv".format(s_type,county))
+            df_car_v2= pd.read_csv(f_dir+"Results_from_HPC_v3/Tour_plan/"+"{}_county{}_carrier.csv".format(s_type,county))
             df_for_qc.loc[i,s_type+"_carr_v2"]= df_car_v2['carrierId'].nunique()
             df_for_qc.loc[i,s_type+"_veh_v2"]=df_car_v2['tourId'].nunique()
         except:
