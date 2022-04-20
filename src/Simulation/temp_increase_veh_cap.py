@@ -30,12 +30,20 @@ def del_tu(del_tw_upper):
     else:
         return 24*60    
             
+# county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+# #county_list=[1]
+# f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
+# for county in county_list:
+#     for file_nm in range(0, 10):
+#         df = pd.read_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county, file_nm))
+#         df["pu_tw_upper"] = df.apply(lambda x:pu_tu(x["pu_tw_upper"], x["job"]), axis=1)
+#         df["del_tw_upper"] = df.apply(lambda x:del_tu(x["del_tw_upper"]), axis=1)
+#         df.to_csv(f_dir+f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county, file_nm), index = False, header=True)  
+
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 #county_list=[1]
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
 for county in county_list:
-    for file_nm in range(0, 10):
-        df = pd.read_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county, file_nm))
-        df["pu_tw_upper"] = df.apply(lambda x:pu_tu(x["pu_tw_upper"], x["job"]), axis=1)
-        df["del_tw_upper"] = df.apply(lambda x:del_tu(x["del_tw_upper"]), axis=1)
-        df.to_csv(f_dir+f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county, file_nm), index = False, header=True)    
+    df = pd.read_csv(f_dir+"B2B_carrier_county{}_shipall_A.csv".format(county))
+    df["depot_upper"] = df["depot_upper"].apply(lambda x: 48*60 if x>25*60 else random.randint(21,24+4)*60)
+    df.to_csv(f_dir+f_dir+"B2B_carrier_county{}_shipall_A.csv".format(county), index = False, header=True)  
