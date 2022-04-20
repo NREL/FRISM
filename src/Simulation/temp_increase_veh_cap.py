@@ -30,8 +30,8 @@ def del_tu(del_tw_upper):
     else:
         return 24*60    
             
-#county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-county_list=[1]
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+#county_list=[1]
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
 for county in county_list:
     for file_nm in range(0, 10):
