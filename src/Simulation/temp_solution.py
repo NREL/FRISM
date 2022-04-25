@@ -38,18 +38,18 @@ def random_points_in_polygon(polygon):
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
 #f_dir="../../../Results_from_HPC_v3/Shipment2Fleet/"
 
-df_carr=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
-df_pay=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
+carriers=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
+payloads=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
 
 # %%
-new_df_pay=pd.DataFrame()
-new_df_carr=pd.DataFrame()
-for c_id in df_carr["carrier_id"].unique():
+new_payloads=pd.DataFrame()
+new_carriers=pd.DataFrame()
+for c_id in carriers["carrier_id"].unique():
 #for c_id in ["B2B_1006810_4976","B2B_1006812_4977"]:    
-    temp_pay_md= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="md")].reset_index(drop=True)
-    temp_pay_hd= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="hd")].reset_index(drop=True)
-    temp_carr_md = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
-    temp_carr_hd = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
+    temp_pay_md= payloads[(payloads["carrier_id"]==c_id) & (payloads["veh_type"]=="md")].reset_index(drop=True)
+    temp_pay_hd= payloads[(payloads["carrier_id"]==c_id) & (payloads["veh_type"]=="hd")].reset_index(drop=True)
+    temp_carr_md = carriers[carriers["carrier_id"]==c_id].reset_index(drop=True)
+    temp_carr_hd = carriers[carriers["carrier_id"]==c_id].reset_index(drop=True)
     num_md = temp_pay_md.shape[0]
     num_hd = temp_pay_hd.shape[0]
 
@@ -91,41 +91,41 @@ for c_id in df_carr["carrier_id"].unique():
             temp_carr_hd.loc[i,"carrier_id"] = new_c_id
             temp_carr_hd["num_veh_type_1"] =0
             temp_carr_hd["num_veh_type_2"] =30
-    new_df_pay=pd.concat([new_df_pay,temp_pay_md, temp_pay_hd], ignore_index=True).reset_index(drop=True)
-    new_df_carr=pd.concat([new_df_carr,temp_carr_md, temp_carr_hd ], ignore_index=True).reset_index(drop=True) 
+    new_payloads=pd.concat([new_payloads,temp_pay_md, temp_pay_hd], ignore_index=True).reset_index(drop=True)
+    new_carriers=pd.concat([new_carriers,temp_carr_md, temp_carr_hd ], ignore_index=True).reset_index(drop=True) 
 
 print ("missing x,y locations")
 # %%
-with alive_bar(new_df_pay.shape[0], force_tty=True) as bar:
-    for i in range(0,new_df_pay.shape[0]):
-        if new_df_pay.loc[i,"job"] =="delivery":
-            if pd.isnull(new_df_pay.loc[i,"del_x"]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_df_pay.loc[i,"del_zone"]])
-                new_df_pay.loc[i,'del_x']=x
-                new_df_pay.loc[i,'del_y']=y 
-        elif new_df_pay.loc[i,"job"] =="pickup_delivery":
-            if pd.isnull(new_df_pay.loc[i,"del_x"]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_df_pay.loc[i,"del_zone"]])
-                new_df_pay.loc[i,'del_x']=x
-                new_df_pay.loc[i,'del_y']=y
-            if pd.isnull(new_df_pay.loc[i,"pu_x"]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_df_pay.loc[i,"pu_zone"]])
-                new_df_pay.loc[i,'pu_x']=x
-                new_df_pay.loc[i,'pu_y']=y      
+with alive_bar(new_payloads.shape[0], force_tty=True) as bar:
+    for i in range(0,new_payloads.shape[0]):
+        if new_payloads.loc[i,"job"] =="delivery":
+            if pd.isnull(new_payloads.loc[i,"del_x"]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
+                new_payloads.loc[i,'del_x']=x
+                new_payloads.loc[i,'del_y']=y 
+        elif new_payloads.loc[i,"job"] =="pickup_delivery":
+            if pd.isnull(new_payloads.loc[i,"del_x"]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
+                new_payloads.loc[i,'del_x']=x
+                new_payloads.loc[i,'del_y']=y
+            if pd.isnull(new_payloads.loc[i,"pu_x"]):
+                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"pu_zone"]])
+                new_payloads.loc[i,'pu_x']=x
+                new_payloads.loc[i,'pu_y']=y      
         bar()
 
 file_num=10
-new_df_carr.to_csv(f_dir+"B2B_carrier_county{}_shipall_A.csv".format(county), index = False, header=True)
-new_df_pay.to_csv(f_dir+"B2B_payload_county{}_shipall_A.csv".format(county), index = False, header=True)
-carrier_list=new_df_pay["carrier_id"].unique()
+new_carriers.to_csv(f_dir+"B2B_carrier_county{}_shipall_A.csv".format(county), index = False, header=True)
+new_payloads.to_csv(f_dir+"B2B_payload_county{}_shipall_A.csv".format(county), index = False, header=True)
+carrier_list=new_payloads["carrier_id"].unique()
 
 for i in range(0, file_num):
-    new_df_pay_break= new_df_pay[new_df_pay["carrier_id"].isin(carrier_list[i::file_num])]
-    new_df_pay_break.to_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county,i), index = False, header=True)
+    new_payloads_break= new_payloads[new_payloads["carrier_id"].isin(carrier_list[i::file_num])]
+    new_payloads_break.to_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county,i), index = False, header=True)
 
 print ("complete the job")
 # %%
 # num=0
 # for i in range(0, file_num):
-#     new_df_pay_break=pd.read_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county,i))
-#     num +=new_df_pay_break.shape[0]
+#     new_payloads_break=pd.read_csv(f_dir+"B2B_payload_county{}_shipall_{}.csv".format(county,i))
+#     num +=new_payloads_break.shape[0]

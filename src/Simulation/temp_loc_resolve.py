@@ -33,9 +33,10 @@ def random_points_in_polygon(polygon):
 
 # %%
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+fdir_f="/Sim_outputs/Tour_plan_inputs/"
 for county in  county_list:
     print ("processing loctaion allocation for {}county".format(county))
-    payload_df=pd.read_csv(fdir_in_out+"/Sim_outputs/Tour_plan/"+"B2C_county{}_payload_xy.csv".format(county))
+    payload_df=pd.read_csv(fdir_in_out+fdir_f+"{}_county{}_payload.csv".format("B2C",str(county)))
 
     print ("**xy allocation job size:", payload_df.shape[0])
 
@@ -48,17 +49,8 @@ for county in  county_list:
                 payload_df.loc[i,'locationZone_x']=x
                 payload_df.loc[i,'locationZone_y']=y
                 bar()
-    payload_df.to_csv(fdir_in_out+"/Sim_outputs/Tour_plan/"+"B2C_county{}_payload_xy.csv".format(county), index = False, header=True)
+    payload_df.to_csv(fdir_in_out+fdir_f+"{}_county{}_payload.csv".format("B2C",str(county)), index = False, header=True)
 
 print ("complete the job")
-# %%
-fdir_in_out= "../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
-
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-for county in  county_list:
-    payload_df=pd.read_csv(fdir_in_out+"B2B_carrier_county{}_shipall.csv".format(county))
-    payload_df["num_veh_type_1"]=payload_df["num_veh_type_1"].apply(lambda x: (x+1)*30)
-    payload_df["num_veh_type_2"]=payload_df["num_veh_type_2"].apply(lambda x: (x+1)*30)
-    payload_df.to_csv(fdir_in_out+"B2B_carrier_county{}_shipall.csv".format(county), index = False, header=True)
 
 # %%

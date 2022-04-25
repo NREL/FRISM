@@ -109,13 +109,16 @@ for ic_nm in list_income:
 
 
 ################################################################################################################    
-# %%
 
-fdir_truck='../../../FRISM_input_output/Model_carrier_op/INRIX_processing/'
+
+# %%
+############################################# Validation TOD distribution against INRIX #####################
+## INRIX data
+fdir_truck='../../../FRISM_input_output_SF/Model_carrier_op/INRIX_processing/'
 df_dpt_dist_MD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
 df_dpt_dist_HD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_HD.csv', header=0, sep=',')
 
-fdir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
+fdir_geo='../../../FRISM_input_output_SF/Sim_inputs/Geo_data/'
 CBGzone_df = gpd.read_file(fdir_geo+'freight_centroids.geojson')
 CBGzone_df.GEOID=CBGzone_df.GEOID.astype(str).astype(int)
 df_dpt_dist_MD=df_dpt_dist_MD.merge(CBGzone_df[["GEOID",'MESOZONE']], left_on="cbg_id", right_on="GEOID", how='left')
@@ -137,91 +140,152 @@ HD_dpt=HD_dpt.to_frame()
 HD_dpt.reset_index(level=(0), inplace=True)
 HD_dpt['Trip_rate']=HD_dpt['Trip']/HD_dpt['Trip'].sum()
 
+f_dir_val= "../../../FRISM_input_output_SF/Validation/"
+MD_dpt.to_csv(f_dir_val+"md_tod_inrix_observed.csv", index = False, header=True )
+HD_dpt.to_csv(f_dir_val+"hd_tod_inrix_observed.csv", index = False, header=True )
+# %%
+## Result data
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+MD_df_b2c=pd.DataFrame()
+v_type= "B2C"
+for county in county_list:
+    df_payload = pd.read_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)))
+    df_payload["end_depot"] = df_payload["payloadId"].apply(lambda x: 1 if x.endswith("_") else 0 )
+    df_payload= df_payload[df_payload["end_depot"]==0].reset_index()
+    df_payload['start_hour'] = df_payload['estimatedTimeOfArrivalInSec'].apply(lambda x: int(x/3600))
+    MD_df_b2c=pd.concat([MD_df_b2c,df_payload], ignore_index=True).reset_index(drop=True)
+
+
+MD_df_b2b=pd.DataFrame()
+HD_df_b2b=pd.DataFrame()
+v_type= "B2B"
+for county in county_list:
+    df_payload = pd.read_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)))
+    df_carr =pd.read_csv(f_dir+"{}_county{}_carrier.csv".format(v_type,str(county)))
+    df_payload["end_depot"] = df_payload["payloadId"].apply(lambda x: 1 if x.endswith("_") else 0 )
+    df_payload= df_payload[df_payload["end_depot"]==0].reset_index()
+    df_payload['start_hour'] = df_payload['estimatedTimeOfArrivalInSec'].apply(lambda x: int(x/3600))
+    df_payload['start_hour'] = df_payload['start_hour'].apply(lambda x: x-24 if x >=24 else x)
+    df_payload_md = df_payload[df_payload["tourId"].isin(df_carr[df_carr["vehicleTypeId"]==1]["tourId"].unique())]#.reset_index()
+    df_payload_hd = df_payload[df_payload["tourId"].isin(df_carr[df_carr["vehicleTypeId"]==2]["tourId"].unique())]#.reset_index()
+    MD_df_b2b=pd.concat([MD_df_b2b,df_payload_md], ignore_index=True).reset_index(drop=True)
+    HD_df_b2b=pd.concat([HD_df_b2b,df_payload_hd], ignore_index=True).reset_index(drop=True)
+MD_df_b2bC = pd.concat([MD_df_b2b,MD_df_b2c], ignore_index=True).reset_index(drop=True)
+#MD_df_b2bC = MD_df_b2c
+MD_dpt_B2B=  MD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
+MD_dpt_B2C=  MD_df_b2c.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
+MD_dpt_B2BC=  MD_df_b2bC.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
+HD_dpt_B2B=  HD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
+
+MD_dpt_B2B['Trip_rate']=MD_dpt_B2B['Trip']/MD_dpt_B2B['Trip'].sum()
+MD_dpt_B2C['Trip_rate']=MD_dpt_B2C['Trip']/MD_dpt_B2C['Trip'].sum()
+MD_dpt_B2BC['Trip_rate']=MD_dpt_B2BC['Trip']/MD_dpt_B2BC['Trip'].sum()
+HD_dpt_B2B['Trip_rate']=HD_dpt_B2B['Trip']/HD_dpt_B2B['Trip'].sum()
+
+MD_dpt_B2BC.to_csv(f_dir_val+"md_tod_frism_simulated.csv", index = False, header=True )
+HD_dpt_B2B.to_csv(f_dir_val+"hd_tod_frism_simulated.csv", index = False, header=True )
+
+from scipy.interpolate import make_interp_spline
+
+md_sim_trip = MD_dpt_B2BC['Trip_rate'].to_numpy()
+md_sim_hour = MD_dpt_B2BC['start_hour'].to_numpy()
+hd_sim_trip = HD_dpt_B2B['Trip_rate'].to_numpy()
+hd_sim_hour = HD_dpt_B2B['start_hour'].to_numpy()
+
+md2b_sim_trip = MD_dpt_B2B['Trip_rate'].to_numpy()
+md2b_sim_hour = MD_dpt_B2B['start_hour'].to_numpy()
+md2c_sim_trip = MD_dpt_B2C['Trip_rate'].to_numpy()
+md2c_sim_hour = MD_dpt_B2C['start_hour'].to_numpy()
+
+md_inrix_trip = MD_dpt['Trip_rate'].to_numpy()
+md_inrix_hour = MD_dpt['start_hour'].to_numpy()
+hd_inrix_trip = HD_dpt['Trip_rate'].to_numpy()
+hd_inrix_hour = HD_dpt['start_hour'].to_numpy()
+
+md_sim_Spline = make_interp_spline(md_sim_hour, md_sim_trip)
+hd_sim_Spline = make_interp_spline(hd_sim_hour, hd_sim_trip)
+md_inrix_Spline = make_interp_spline(md_inrix_hour, md_inrix_trip)
+hd_inrix_Spline = make_interp_spline(md_inrix_hour, md_inrix_trip)
+
+
+md2b_sim_Spline = make_interp_spline(md2b_sim_hour, md2b_sim_trip)
+md2c_sim_Spline = make_interp_spline(md2c_sim_hour, md2c_sim_trip)
+
+md_sim_hour = np.linspace(md_sim_hour.min(), md_sim_hour.max(), 24*10)
+md_sim_trip = md_sim_Spline(md_sim_hour)
+hd_sim_hour = np.linspace(hd_sim_hour.min(), hd_sim_hour.max(), 24*10)
+hd_sim_trip = hd_sim_Spline(hd_sim_hour)
+
+md2b_sim_hour = np.linspace(md2b_sim_hour.min(), md2b_sim_hour.max(), 24*10)
+md2b_sim_trip = md_sim_Spline(md2b_sim_hour)
+md2c_sim_hour = np.linspace(md2c_sim_hour.min(), md2c_sim_hour.max(), 24*10)
+md2c_sim_trip = hd_sim_Spline(md2c_sim_hour)
+ 
+md_inrix_hour = np.linspace(md_inrix_hour.min(), hd_inrix_hour.max(), 24*10)
+md_inrix_trip = md_inrix_Spline(md_inrix_hour)
+hd_inrix_hour = np.linspace(hd_inrix_hour.min(), hd_inrix_hour.max(), 24*10)
+hd_inrix_trip = hd_inrix_Spline(hd_inrix_hour)
+
 plt.figure(figsize = (8,6))
-plt.plot("start_hour", "Trip", data=MD_dpt,color ="blue", label="MD")
-plt.plot("start_hour", "Trip", data=HD_dpt, color ="red", label="HD")
-plt.title("Distrubtion of stop activities  by time of day (INRIX)")
+plt.plot(md_inrix_hour,md_inrix_trip,color ="blue", alpha = 0.2,)
+plt.plot(md_sim_hour,md_sim_trip , color ="red", alpha = 0.2,)
+plt.fill_between(md_inrix_hour,md_inrix_trip,color ="blue", label="Observed (INRIX)", alpha = 0.2,)
+plt.fill_between(md_sim_hour,md_sim_trip , color ="red", label="Simulated (FRISM)", alpha = 0.2,)
+plt.title("Distrubtion of MD stop activities  by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output/Sim_outputs/INRIX_truck_dist.png')
+plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+
+plt.figure(figsize = (8,6))
+plt.plot(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,)
+plt.plot(hd_sim_hour,hd_sim_trip , color ="red", alpha = 0.2,)
+plt.fill_between(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,label="Observed (INRIX)")
+plt.fill_between(hd_sim_hour,hd_sim_trip , color ="red", alpha = 0.2,label="Simulated (FRISM)")
+plt.title("Distrubtion of HD stop activities by time of day")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_HD.png')
+
+plt.figure(figsize = (8,6))
+plt.plot(md2b_sim_hour,md2b_sim_trip , color ="red", alpha = 0.3, linestyle= 'loosely dotted')
+plt.plot(md2c_sim_hour,md2c_sim_trip , color ="red", alpha = 0.3,)
+plt.fill_between(md2b_sim_hour,md2b_sim_trip , color ="red", label="B2B Simulated (FRISM)", alpha = 0.3,)
+plt.fill_between(md2c_sim_hour,md2c_sim_trip , color ="red", label="B2C Simulated (FRISM)", alpha = 0.3,)
+plt.title("Distrubtion of MD stop activities  by time of day")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD_by_type.png')
+
+
+# plt.figure(figsize = (8,6))
+# plt.plot("start_hour", "Trip_rate", data=MD_dpt,color ="blue", label="Observed (INRIX)", alpha = 0.3,)
+# plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2BC, color ="red", label="Simulated (FRISM)", alpha = 0.3,)
+# plt.title("Distrubtion of MD stop activities  by time of day")
+# plt.legend(loc="upper right")
+# plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+
+# plt.figure(figsize = (8,6))
+# plt.plot("start_hour", "Trip_rate", data=HD_dpt,color ="blue", label="Observed (INRIX)", alpha = 0.3,)
+# plt.plot("start_hour", "Trip_rate", data=HD_dpt_B2B, color ="red", label="Simulated (FRISM)", alpha = 0.3,)
+# plt.title("Distrubtion of HD stop activities by time of day")
+# plt.legend(loc="upper right")
+# plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_HD.png')
+
+# # %% 
+# ####################### temp solution adjust time in B2C shifting
+# county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+# f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+# v_type= "B2C"
+# for county in county_list:
+#     df_payload = pd.read_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)))
+#     df_tour = pd.read_csv(f_dir+"{}_county{}_freight_tours.csv".format(v_type,str(county)))
+#     df_payload["estimatedTimeOfArrivalInSec"] = df_payload["estimatedTimeOfArrivalInSec"].apply(lambda x: x -2.5*3600)
+#     df_tour["departureTimeInSec"] =df_tour["departureTimeInSec"].apply(lambda x: x -2.5 *3600)
+#     df_payload.to_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)), index = False, header=True)
+#     df_tour.to_csv(f_dir+"{}_county{}_freight_tours.csv".format(v_type,str(county)), index = False, header=True)
+
+
 # %%
-################################# QC V1 #####################
-f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC/Tour_plan/"
-
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-b2b_carrier=0
-b2b_veh =0
-
-b2c_carrier=0
-b2c_veh =0
-
-for county in county_list:
-    df = pd.read_csv(f_dir+"B2B_county{}_carrier_xy.csv".format(county))
-    b2b_carrier += df['carrierId'].nunique()
-    b2b_veh +=df['tourId'].nunique()
-
-for county in county_list:
-    df = pd.read_csv(f_dir+"B2C_county{}_carrier_xy.csv".format(county))
-    b2c_carrier += df['carrierId'].nunique()
-    b2c_veh +=df['tourId'].nunique()
-
-print ("num_carrier sum: {0}, b2b: {1}, b2c: {2}".format(b2b_carrier+b2c_carrier,b2b_carrier,b2c_carrier))
-print ("num_veh sum: {0}, b2b: {1}, b2c: {2}".format(b2b_veh+b2c_veh,b2b_veh,b2c_veh))
-# %%
-################################# QC V2 #####################
-f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/"
-
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-
-df_for_qc=pd.DataFrame(county_list, columns =["county"])
-# df_for_qc["B2B_ship_v1"]=0
-# df_for_qc["B2B_carr_v1"]=0
-# df_for_qc["B2B_veh_v1"]=0
-# df_for_qc["B2C_ship_v1"]=0
-# df_for_qc["B2C_carr_v1"]=0
-# df_for_qc["B2C_veh_v1"]=0
-
-# df_for_qc["B2B_ship_v2"]=0
-# df_for_qc["B2B_carr_v2"]=0
-# df_for_qc["B2B_veh_v2"]=0
-# df_for_qc["B2C_ship_v2"]=0
-# df_for_qc["B2C_carr_v2"]=0
-# df_for_qc["B2C_veh_v2"]=0
-
-df_for_qc["B2B_ship_v1"]=0
-df_for_qc["B2B_ship_v2"]=0
-df_for_qc["B2B_carr_v1"]=0
-df_for_qc["B2B_carr_v2"]=0
-df_for_qc["B2B_veh_v1"]=0
-df_for_qc["B2B_veh_v2"]=0
-df_for_qc["B2C_ship_v1"]=0
-df_for_qc["B2C_ship_v2"]=0
-df_for_qc["B2C_carr_v1"]=0
-df_for_qc["B2C_carr_v2"]=0
-df_for_qc["B2C_veh_v1"]=0
-df_for_qc["B2C_veh_v2"]=0
-
-for i in range (0, df_for_qc.shape[0]):
-    county=df_for_qc.loc[i,"county"]
-    for s_type in ["B2B", "B2C"]:
-        try:
-            df_ship_v1= pd.read_csv(f_dir+"Results_from_HPC_v1/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
-            df_for_qc.loc[i,s_type+"_ship_v1"]=df_ship_v1.shape[0]
-            df_car_v1= pd.read_csv(f_dir+"Results_from_HPC_v1/Tour_plan/"+"{}_county{}_carrier_xy.csv".format(s_type,county))
-            df_for_qc.loc[i,s_type+"_carr_v1"]= df_car_v1['carrierId'].nunique()
-            df_for_qc.loc[i,s_type+"_veh_v1"]=df_car_v1['tourId'].nunique()
-        except:
-            print ("no file v1 for {}_county {}".format(s_type,county))
-        try: 
-            df_ship_v2= pd.read_csv(f_dir+"Results_from_HPC_v3/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
-            df_for_qc.loc[i,s_type+"_ship_v2"]=df_ship_v2.shape[0]
-            df_car_v2= pd.read_csv(f_dir+"Results_from_HPC_v3/Tour_plan/"+"{}_county{}_carrier.csv".format(s_type,county))
-            df_for_qc.loc[i,s_type+"_carr_v2"]= df_car_v2['carrierId'].nunique()
-            df_for_qc.loc[i,s_type+"_veh_v2"]=df_car_v2['tourId'].nunique()
-        except:
-            print ("no file v2 for {}_county {}".format(s_type,county))    
-
-df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0416.csv")
-# %%
+############################################# Validation TOD distribution against INRIX #####################
 #[1, 13, 41, 55, 75, 81, 85, 95, 97]
 f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC_v3/Shipment2Fleet/"
 county=85
@@ -298,4 +362,22 @@ fdir_in_out= "../../../FRISM_input_output_SF/Sim_inputs/Synth_firm_pop/"
 f_nm="xysynthfirms_all_Sep.csv"
 
 firms = pd.read_csv(fdir_in_out+f_nm)
+# %%
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan_inputs/"
+for s in ["B2B", "B2C"]:
+    for county in county_list:
+        df_carr=pd.read_csv(f_dir+"{}_county{}_carrier.csv".format(s,str(county)))
+        df_pay=pd.read_csv(f_dir+"{}_county{}_payload.csv".format(s,str(county)))
+        df_tour=pd.read_csv(f_dir+"{}_county{}_freight_tours.csv".format(s,str(county)))
+
+        if df_carr[df_carr["depot_zone_x"]<-150.0].shape[0] >0:
+            print ("{} carrier county {}".format(s,str(county)))
+
+        if df_pay[df_pay["locationZone_x"]<-150.0].shape[0]>0:
+            print ("{} payload county {}".format(s,str(county)))
+
+        if df_tour[df_tour["departureLocation_x"]<-150.0].shape[0]>0:
+            print ("{} tour county {}".format(s,str(county)))
+
 # %%
