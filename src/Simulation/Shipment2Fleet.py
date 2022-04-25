@@ -1355,13 +1355,13 @@ def main(args=None):
                 bar()
 
         file_num=10
-        new_carriers.to_csv(config.fdir_main_output+config.fnm_B2B_carrier+"_carrier_county{}_ship{}_A.csv".format(args.sel_county, args.ship_direction), index = False, header=True)
-        new_payloads.to_csv(config.fdir_main_output+config.fnm_B2B_payload+"_payload_county{}_ship{}_A.csv".format(args.sel_county, args.ship_direction), index = False, header=True)
+        new_carriers.to_csv(config.fdir_main_output+config.fnm_B2B_carrier+"_county{}_ship{}_A.csv".format(args.sel_county, args.ship_direction), index = False, header=True)
+        new_payloads.to_csv(config.fdir_main_output+config.fnm_B2B_payload+"_county{}_ship{}_A.csv".format(args.sel_county, args.ship_direction), index = False, header=True)
         carrier_list=new_payloads["carrier_id"].unique()
 
         for i in range(0, file_num):
             new_payloads_break= new_payloads[new_payloads["carrier_id"].isin(carrier_list[i::file_num])]
-            new_payloads_break.to_csv(config.fdir_main_output+config.fnm_B2B_payload+"_payload_county{}_ship{}_{}.csv".format(args.sel_county, args.ship_direction, str(i)), index = False, header=True)
+            new_payloads_break.to_csv(config.fdir_main_output+config.fnm_B2B_payload+"_county{}_ship{}_{}.csv".format(args.sel_county, args.ship_direction, str(i)), index = False, header=True)
     vehicle_types = veh_type_create()
     vehicle_types.to_csv (config.fdir_main_output+config.fnm_vtype, index = False, header=True)
 
