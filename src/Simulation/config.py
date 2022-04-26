@@ -111,10 +111,11 @@ selected_x_var_delivery=[
 #"WEBUSE17_2"    
 ]
 
-# input for B2C
+# input for B2C day sim
 b2c_delivery_frequency=20
 hh_aggregation_size=10
-
+# input for B2B day sim
+b2b_day_factor =7
 fdir_in_out= "../../../FRISM_input_output_SF"
 
 # input for B2B/Geo_data

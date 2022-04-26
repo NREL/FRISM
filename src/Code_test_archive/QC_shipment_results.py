@@ -72,23 +72,23 @@ for i in range (0, df_for_qc.shape[0]):
     county=df_for_qc.loc[i,"county"]
     for s_type in ["B2B", "B2C"]:
         try:
-            #df_ship_v1= pd.read_csv(f_dir+"Results_from_HPC_v1/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
-            #df_for_qc.loc[i,s_type+"_ship_v1"]=df_ship_v1.shape[0]
-            df_car_v1= pd.read_csv(f_dir+"Results_from_HPC_v1/Tour_plan/"+"{}_county{}_carrier_xy.csv".format(s_type,county))
+            df_ship_v1= pd.read_csv(f_dir+"Results_from_HPC_v5/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
+            df_for_qc.loc[i,s_type+"_ship_v1"]=df_ship_v1.shape[0]
+            df_car_v1= pd.read_csv(f_dir+"Results_from_HPC_v5/Tour_plan/"+"{}_county{}_carrier.csv".format(s_type,county))
             df_for_qc.loc[i,s_type+"_carr_v1"]= df_car_v1['carrierId'].nunique()
             df_for_qc.loc[i,s_type+"_veh_v1"]=df_car_v1['tourId'].nunique()
         except:
             print ("no file v1 for {}_county {}".format(s_type,county))
         try: 
-            #df_ship_v2= pd.read_csv(f_dir+"FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"+"{}_payload_county{}_shipall_A.csv".format(s_type,county))
-            #df_for_qc.loc[i,s_type+"_ship_v2"]=df_ship_v2.shape[0]
+            df_ship_v2= pd.read_csv(f_dir+"FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"+"{}_payload_county{}_shipall.csv".format(s_type,county))
+            df_for_qc.loc[i,s_type+"_ship_v2"]=df_ship_v2.shape[0]
             df_car_v2= pd.read_csv(f_dir+"FRISM_input_output_SF/Sim_outputs/Tour_plan/"+"{}_county{}_carrier.csv".format(s_type,county))
             df_for_qc.loc[i,s_type+"_carr_v2"]= df_car_v2['carrierId'].nunique()
             df_for_qc.loc[i,s_type+"_veh_v2"]=df_car_v2['tourId'].nunique()
         except:
             print ("no file v2 for {}_county {}".format(s_type,county))    
 
-df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0420.csv")
+df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0425.csv")
 
 # %%
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
