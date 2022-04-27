@@ -619,8 +619,8 @@ def main(args=None):
     error_list.append(['carrier', 'veh', 'reason'])
 
 
-    # for carr_id in p_df['carrier_id'].unique():
-    for carr_id in ['B2B_2353366']:
+    for carr_id in p_df['carrier_id'].unique():
+    # for carr_id in ['B2B_2353366']:
         # Initialize parameters used for probelm setting
         
         # Depot location
