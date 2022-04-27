@@ -226,45 +226,57 @@ def carrier_sel(SellerZone, D_truckload, tt_time, veh_type, dist_df, truckings, 
 
 def depot_time_depart(zone_id,df_dpt_dist,ship_type):
     if ship_type == 'B2C':     
-        try:
-            df_temp = df_dpt_dist[df_dpt_dist['MESOZONE']==zone_id].reset_index()
-            df_temp['cdf_low']=0.0
-            df_temp['cdf_up']=0.0
-            for i in range(1,df_temp.shape[0]):
-                df_temp.loc[i,'cdf_up']=df_temp.loc[i-1,'cdf_up']+df_temp.loc[i,'Trip_pdf']
-                df_temp.loc[i,'cdf_low']=df_temp.loc[i-1,'cdf_up']
-            pro_time= random.uniform(0, 0.9999999)    
-            d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
-            d_time=random.randrange(d_time*60, (d_time+1)*60, 10)
-            if d_time >16*60:
-                d_time =random.randrange(12*60, 16*60, 10)
-        except:
-            d_time= random.randrange(7*60, 15*60, 10)
+        # try:
+        #     df_temp = df_dpt_dist[df_dpt_dist['MESOZONE']==zone_id].reset_index()
+        #     df_temp['cdf_low']=0.0
+        #     df_temp['cdf_up']=0.0
+        #     for i in range(1,df_temp.shape[0]):
+        #         df_temp.loc[i,'cdf_up']=df_temp.loc[i-1,'cdf_up']+df_temp.loc[i,'Trip_pdf']
+        #         df_temp.loc[i,'cdf_low']=df_temp.loc[i-1,'cdf_up']
+        #     pro_time= random.uniform(0, 0.9999999)    
+        #     d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
+        #     d_time=random.randrange(d_time*60, (d_time+1)*60, 10) - random.randrange(3*60, 4*60, 10)
+        #     if d_time >14*60:
+        #         d_time =time_normal(10, 5, 6, 14)
+        #     elif d_time <5*60:
+        #         d_time =time_normal(7, 4, 4, 10)     
+        # except:
+        #     d_time= time_normal(8, 5, 4, 10)
+        if random.uniform(0, 1) <= 0.65:
+            d_time =time_normal(8, 2, 5, 12)
+        else:     
+            d_time =time_normal(13, 2, 10, 16)
     elif ship_type == 'B2B':
-        try:
-            df_temp = df_dpt_dist[df_dpt_dist['MESOZONE']==zone_id].reset_index()
-            df_temp['cdf_low']=0.0
-            df_temp['cdf_up']=0.0
-            for i in range(1,df_temp.shape[0]):
-                df_temp.loc[i,'cdf_up']=df_temp.loc[i-1,'cdf_up']+df_temp.loc[i,'Trip_pdf']
-                df_temp.loc[i,'cdf_low']=df_temp.loc[i-1,'cdf_up']
-            pro_time= random.uniform(0, 0.9999999)    
-            d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
-            d_time=random.randrange(d_time*60, (d_time+1)*60, 10) - random.randrange(2*60, 3.5*60, 10)
-        except:
-            d_time= time_normal(6, 3, 3, 10)
-        if d_time >17*60:
-            d_time = time_normal(11, 4, 9, 15)
+        # try:
+        #     df_temp = df_dpt_dist[df_dpt_dist['MESOZONE']==zone_id].reset_index()
+        #     df_temp['cdf_low']=0.0
+        #     df_temp['cdf_up']=0.0
+        #     for i in range(1,df_temp.shape[0]):
+        #         df_temp.loc[i,'cdf_up']=df_temp.loc[i-1,'cdf_up']+df_temp.loc[i,'Trip_pdf']
+        #         df_temp.loc[i,'cdf_low']=df_temp.loc[i-1,'cdf_up']
+        #     pro_time= random.uniform(0, 0.9999999)    
+        #     d_time=df_temp[(df_temp['cdf_low']<= pro_time) & (df_temp['cdf_up'] >  pro_time)]['start_hour'].values[0]
+        #     d_time=random.randrange(d_time*60, (d_time+1)*60, 10) - random.randrange(3*60, 5*60, 10)
+        #     if d_time >15*60:
+        #         d_time =time_normal(12, 6, 6, 16)
+        #     elif d_time <1*60:
+        #         d_time =time_normal(6, 4, 1, 9)             
+        # except:
+        #     d_time= time_normal(6, 3, 3, 10)
+        if random.uniform(0, 1) <= 0.5:
+            d_time =time_normal(7, 2, 3, 12)
+        else:     
+            d_time =time_normal(13, 3, 9, 16)
     else:
         print ("Please define shipment type: B2B or B2C")        
     return d_time   
 
 def depot_time_close(d_time):
-    c_time = d_time+8*60
+    c_time = d_time+10*60
     if c_time >=23*60: 
         c_time = 23*60
     elif c_time <= 15*60:
-        c_time= random.randrange(15*60, 19*60, 20)
+        c_time= random.randrange(15*60, 20*60, 20)
     else:     
         c_time=c_time
     return c_time
@@ -278,9 +290,9 @@ def random_points_in_polygon(polygon):
     return [point.x, point.y]
 
 def time_normal(mean, std, min_time,max_time):
-    time = np.random.normal(mean,std)*60
-    if time < min_time or time > max_time :
-        time= random.randrange(min_time*60,max_time*60, 10)
+    time = (np.random.normal(0,std)+mean)*60
+    if time < min_time*60 or time > max_time*60 :
+        time= random.randrange((mean)*60,max_time*60, 10)
     return int(time)        
 
 def veh_type_create():
@@ -480,7 +492,7 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
     #payloads['del_stop_duration'] =
     #payloads['pu_tw_lower']=
     #payloads['pu_tw_upper']=
-    payloads['del_tw_lower']=60*6
+    payloads['del_tw_lower']=60*8
     payloads['del_tw_upper']=60*20
     #payloads['pu_arrival_time']=
     #payloads['del_arrival_time']=
@@ -895,7 +907,7 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     carriers['num_veh_type_1']=PV_T_D['md_veh']
     carriers['num_veh_type_2']=PV_T_D['hd_veh']
     #carriers['depot_lower']= carriers['depot_zone'].apply(lambda x: depot_time_depart(x,df_dpt_dist,ship_type))
-    carriers['depot_lower']= PV_T_D.apply(lambda x: depot_time_depart(x['MESOZONE'],df_dpt_dist,ship_type) if x['inbound_index']==0 else time_normal(5, 5, 2,12), axis=1)
+    carriers['depot_lower']= PV_T_D.apply(lambda x: depot_time_depart(x['MESOZONE'],df_dpt_dist,ship_type) if x['inbound_index']==0 else time_normal(5, 3, 1,12), axis=1)
     carriers['depot_upper']= PV_T_D['outbound_index'].apply(lambda x: 2*24*60 if x ==1 else time_normal(24, 3, 21,28))#carriers['depot_lower'].apply(depot_time_close)
     carriers['depot_time_before']= [random.randrange(5,30, 5) for j in carriers.index]
     carriers['depot_time_after']= [random.randrange(5,30, 5) for j in carriers.index]
@@ -936,7 +948,7 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     temp['contract_firms']=temp_FH_T_D['contract_firms']
     temp['num_veh_type_1']=temp_FH_T_D['md_veh']
     temp['num_veh_type_2']=temp_FH_T_D['hd_veh']
-    temp['depot_lower']= temp_FH_T_D.apply(lambda x: depot_time_depart(x['MESOZONE'],df_dpt_dist,ship_type) if x['inbound_index']==0 else time_normal(5, 5, 2,12), axis=1)
+    temp['depot_lower']= temp_FH_T_D.apply(lambda x: depot_time_depart(x['MESOZONE'],df_dpt_dist,ship_type) if x['inbound_index']==0 else time_normal(5, 3, 1,11), axis=1)
     # temp['depot_lower']= temp['depot_zone'].apply(lambda x: depot_time_depart(x,df_dpt_dist,ship_type))
     # temp['depot_upper']= temp_FH_T_D['inbound_index'].apply(lambda x: 2*24*60 if x ==1 else 40*24*60) #temp['depot_lower'].apply(depot_time_close)
     temp['depot_upper']= temp_FH_T_D['outbound_index'].apply(lambda x: 2*24*60 if x ==1 else time_normal(24, 3, 21,28))
@@ -1040,9 +1052,9 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     payloads_FH['del_stop_duration']=B2BF_FH.apply(lambda x: int(np.random.gamma(2, 1, 1)[0]*((x['D_truckload'] -load_min)/(load_max-load_min))*120) if x['outbound_index'] ==0 else 60*10, axis=1)
     payloads_FH['del_stop_duration'] =payloads_FH['del_stop_duration'].apply(lambda x: random.randint(5,20) if x <5 else x)                                           
     #payloads_FH['del_stop_duration']=payloads_FH['del_stop_duration'].apply(lambda x: 90 if x >90 else x)
-    payloads_FH['pu_tw_lower']=B2BF_FH['inbound_index'].apply(lambda x: random.randrange(0*60,5*60, 10) if x==1 else time_normal(7, 3, 4,11))
+    payloads_FH['pu_tw_lower']=B2BF_FH['inbound_index'].apply(lambda x: random.randrange(0*60,6*60, 10) if x==1 else time_normal(7, 3, 5,11))
     payloads_FH['pu_tw_upper']=B2BF_FH['inbound_index'].apply(lambda x: 24*60 if x==1 else 22*60)
-    payloads_FH['del_tw_lower']=B2BF_FH['outbound_index'].apply(lambda x: random.randrange(0*60,5*60, 10) if x==1 else time_normal(8, 3, 5,12))
+    payloads_FH['del_tw_lower']=B2BF_FH['outbound_index'].apply(lambda x: random.randrange(0*60,6*60, 10) if x==1 else time_normal(8, 3, 5,12))
     payloads_FH['del_tw_upper']=B2BF_FH['outbound_index'].apply(lambda x: (24+4)*60 if x==1 else 24*60)
     #payloads_FH['del_zone'].apply(lambda x: (24+3)*60 if x in ex_zone_list else 60*20)
     #payloads['pu_arrival_time']=
