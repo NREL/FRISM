@@ -333,6 +333,11 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             # Node of depot
             node_index = manager.IndexToNode(index)
+            time_var = time_dimension.CumulVar(index)
+            
+            ['payloadId','sequenceRank','tourId','payloadType','weightInlb','cummulativeWeightInlb',
+                                         'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
+                                         'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x', 'locationZone_y']
             payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
                                          int(1),
                                          int(data['demands'][node_index]), int(route_load), 1,
@@ -368,7 +373,6 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                 #Increment the load index
             payload_i +=1
 
-            time_var = time_dimension.CumulVar(index)
             plan_output += '{0} Time({1},{2})'.format(manager.IndexToNode(index),
                                                         solution.Min(time_var),
                                                         solution.Max(time_var))
@@ -615,8 +619,8 @@ def main(args=None):
     error_list.append(['carrier', 'veh', 'reason'])
 
 
-    for carr_id in p_df['carrier_id'].unique():
-    # for carr_id in ["B2B_1460_0h",'B2B_692792_316m']:
+    # for carr_id in p_df['carrier_id'].unique():
+    for carr_id in ['B2B_2353366']:
         # Initialize parameters used for probelm setting
         
         # Depot location
