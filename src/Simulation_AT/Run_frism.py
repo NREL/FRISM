@@ -60,9 +60,9 @@ print (head_text)
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
 print (ec_module_text)
 # Please replace W, O, D, WOD with one of thme you want to run
-os.system("python B2C_Generation.py \
-    -hf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/households.csv.zip \
-        -pf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/persons.csv.zip")
+# os.system("python B2C_Generation.py \
+#     -hf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/households.csv.zip \
+#         -pf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/persons.csv.zip")
 
 # 3. Distribution Channel Module Run
 print (dc_module_text)
@@ -72,17 +72,17 @@ print (dc_module_text)
 
 # os.system("python Shipment2Fleet.py \
 #     -st B2C \
-#         -ct 1 \
+#         -ct 21 \
 #             -sd all \
 #                 -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 # # B2B
 # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
 # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-# os.system("python Shipment2Fleet.py \
-#     -st B2B \
-#         -ct 1 \
-#             -sd out \
-#                 -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+os.system("python Shipment2Fleet.py \
+    -st B2B \
+        -ct 21 \
+            -sd all \
+                -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 
 # # 4. Carrier opration Module Run

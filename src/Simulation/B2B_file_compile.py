@@ -1,8 +1,10 @@
+#%
 import pandas as pd
 # %%
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 #ounty_list=[1]
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+#f_dir="../../../Results_from_HPC_v5/Tour_plan/"
 def change_payloadid(payloadId,tourId,c_nm):
     if "dB2B" in payloadId:
         if payloadId.endswith("_"):
@@ -16,7 +18,7 @@ for county in county_list:
     N_df_payload=pd.DataFrame()
     N_df_tour=pd.DataFrame()
     N_df_carrier=pd.DataFrame()
-    for file_nm in range(0,10):
+    for file_nm in range(0,10): # Should be 10 but temporary 9 assuming 7 day 
     #for file_nm in range(0,3):    
         df_payload = pd.read_csv(f_dir+"B2B_county{}_payload{}.csv".format(str(county), str(file_nm))).reset_index()
         df_tour = pd.read_csv(f_dir+"B2B_county{}_freight_tours{}.csv".format(str(county), str(file_nm))).reset_index()

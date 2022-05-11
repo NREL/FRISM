@@ -88,11 +88,11 @@ for i in range (0, df_for_qc.shape[0]):
         except:
             print ("no file v2 for {}_county {}".format(s_type,county))    
 
-df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0425.csv")
+df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Sim_result_QC_0426.csv")
 
 # %%
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
-v_type= "B2C"
+v_type= "B2B"
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 for county in county_list:
     print ("checking county {}".format(county))
@@ -100,3 +100,4 @@ for county in county_list:
     for i in range(0,df_payload.shape[0]):
         if pd.isnull(df_payload.loc[i,"locationZone_x"]):
             print("null exist in county {}".format(county))
+# %%

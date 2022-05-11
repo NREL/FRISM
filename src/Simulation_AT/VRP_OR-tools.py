@@ -16,7 +16,7 @@ import numpy as np
 from argparse import ArgumentParser
 from shapely.geometry import Point
 import random
-
+import config
 # Global Variables
 tour_id = 0
 payload_i = 0
@@ -289,8 +289,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                                  int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1,
                                                  int(data['loc_zones'][node_index]),
-                                                 int((solution.Min(time_var) - data['stop_durations'][
-                                                     node_index]) * 60),
+                                                 int(solution.Min(time_var) * 60),
                                                  int(0 * 60),
                                                  int(0 * 60),
                                                  int(0 * 60), depot_x, depot_y]
@@ -317,7 +316,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
                     payload_df.loc[payload_i] = [str(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
                                                  int(data['demands'][node_index]), int(route_load), 1, int(data['loc_zones'][node_index]),
-                                                int((solution.Min(time_var)-data['stop_durations'][node_index])*60),
+                                                int(solution.Min(time_var)*60),
                                                  int(data['time_windows'][node_index][0]*60),
                                                 int(data['time_windows'][node_index][1]*60),
                                                  int(data['stop_durations'][node_index]*60),
@@ -334,12 +333,16 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             # Node of depot
             node_index = manager.IndexToNode(index)
+            time_var = time_dimension.CumulVar(index)
+            
+            ['payloadId','sequenceRank','tourId','payloadType','weightInlb','cummulativeWeightInlb',
+                                         'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
+                                         'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x', 'locationZone_y']
             payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
                                          int(1),
                                          int(data['demands'][node_index]), int(route_load), 1,
                                          int(data['loc_zones'][node_index]),
-                                         int((solution.Min(time_var) - data['stop_durations'][
-                                             node_index]) * 60),
+                                         int(solution.Min(time_var) * 60),
                                          int(0 * 60),
                                          int(0 * 60),
                                          int(0 * 60),
@@ -370,7 +373,6 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                 #Increment the load index
             payload_i +=1
 
-            time_var = time_dimension.CumulVar(index)
             plan_output += '{0} Time({1},{2})'.format(manager.IndexToNode(index),
                                                         solution.Min(time_var),
                                                         solution.Max(time_var))
@@ -396,7 +398,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     # We need to know the depot using the carrier file
     c_df = pd.read_csv(carrier_file)
     c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
-    c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
+    #c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
 
     # reading payload definition
     p_df = pd.read_csv(payload_file)
@@ -409,7 +411,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     c_df = c_df.fillna(0); # Fill all nan with zeros
 
     # Removing nans
-    p_df['carrier_id'] = p_df['carrier_id'].astype(int)
+    p_df['carrier_id'] = p_df['carrier_id'].astype(str)
     p_df['sequence_id'] = np.nan
     p_df['tour_id'] = np.nan
     p_df['pu_arrival_time'] = np.nan
@@ -579,6 +581,13 @@ def main(args=None):
                         help="payload file in csv format", required=True, type=str)
     parser.add_argument("-vt", "--vehicle_type_file", dest="vehicleType_file",
                         help="vehicle type file in csv format", required=True, type=str)
+    parser.add_argument("-fn", "--separate_file index", dest="file_idx",
+                        help="an inteager", default=9999, type=str)                        
+
+    args = parser.parse_args()
+    file_index=args.file_idx
+
+    count_num = args.county_num
 
     args = parser.parse_args()
 
@@ -609,14 +618,16 @@ def main(args=None):
     error_list = []
     error_list.append(['carrier', 'veh', 'reason'])
 
-    for carr_id in c_df['carrier_id'].unique():
-        # Initialize parameters used for probelm setting
 
+    for carr_id in p_df['carrier_id'].unique():
+    # for carr_id in ['B2B_2353366']:
+        # Initialize parameters used for probelm setting
+        
         # Depot location
         depot_loc = c_df.loc[c_df['carrier_id'] == carr_id]['depot_zone'].values[0]
 
         veh_types = p_df[(p_df['carrier_id'] == carr_id)].veh_type.unique()
-        print('veh_types is: ', veh_types)
+        #print('veh_types is: ', veh_types)
 
         for veh in veh_types:
             try:
@@ -635,36 +646,58 @@ def main(args=None):
 
                 total_load = sum(df_prob[(df_prob.carrier_id == carr_id) & (df_prob.veh_type == veh)]['weight'])
                 veh_capacity = 0
+                valid = True    # Boolean to indicate if the problem is valid
                 veh_num = 0
                 if veh == 'md':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'MD']['payload_capacity_weight'].values[0])
-                    veh_num = int(vc_df['md_veh'].values[0])
+                    veh_num = int(vc_prob['md_veh'].values[0])
                 elif veh =='hd':
                     veh_capacity = int(v_df[v_df['veh_category'] == 'HD']['payload_capacity_weight'].values[0])
-                    veh_num = int(vc_df['hd_veh'].values[0])
+                    veh_num = int(vc_prob['hd_veh'].values[0])
+
+                # temporary QC check
+                print ("Carrier Id: {}".format(carr_id))    
+                print ("veh_type: {0} veh_capacity: {1} veh_num: {2}".format(veh,veh_capacity,veh_num))    
+
+                max_veh_cap = veh_num*veh_capacity  # variable for saving the vehicle capacity
 
                 if len(df_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO PAYLOAD INFO'])
+                    valid = False
 
                 elif len(f_prob) == 0 or len(vc_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO VEHICLE TYPE INFO'])
+                    valid = False
 
                 elif len(c_prob) == 0:
                     print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
                     print('\n')
                     error_list.append([carr_id, veh, 'NO CARRIER INFO'])
+                    valid = False
                 
-                elif (total_load > (veh_num*veh_capacity)):
-                    print('Could not solve problem for carrier ', carr_id, ': TOTAL LOAD GREATER THAN VEHICLES CAPACITY')
-                    print('Load is: ', total_load, ' total veh capacity is: ', veh_num*veh_capacity)
-                    print('\n')
-                    error_list.append([carr_id, veh, 'TOTAL LOAD GREATER THAN VEHICLES CAPACITY'])
+                elif total_load > max_veh_cap:
+                    df_prob.sort_values(by=['weight'])
+                    valid = False
+                    print("Load is larger than vehicle capacity")
+                    print('Load is: ', total_load, ' num of veh: ', veh_num, ' total veh capacity is: ', max_veh_cap)
+                    while valid == False and (len(df_prob) > 0):
+                        message = 'Dropped payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight']
+                        error_list.append([carr_id, veh, message])
+                        print(message)
+                        df_prob = df_prob.iloc[:-1 , :]
+                        if  sum(df_prob['weight']) <= max_veh_cap:
+                            valid = True
+                    
+                    if not valid:
+                        print('Could not solve problem for carrier ', carr_id, ': SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY')
+                        print('\n')
+                        error_list.append([carr_id, veh, 'SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY'])
 
-                else:
+                if valid:
 
                     md_start_id = int(vc_prob['md_start_id'].values[0])
                     hd_start_id = int(vc_prob['hd_start_id'].values[0])
@@ -690,7 +723,7 @@ def main(args=None):
                         # Convert from routing variable Index to time matrix NodeIndex.
                         from_node = manager.IndexToNode(from_index)
                         to_node = manager.IndexToNode(to_index)
-                        return data['time_matrix'][from_node][to_node] + data['stop_durations'][to_node]
+                        return data['time_matrix'][from_node][to_node] + data['stop_durations'][from_node]
 
                     # Add Capacity constraint.
                     def demand_callback(from_index):
@@ -762,7 +795,7 @@ def main(args=None):
 
                     # Setting first solution heuristic.
                     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-                    search_parameters.time_limit.seconds = 300   #set a time limit of 300 seconds for a search
+                    search_parameters.time_limit.seconds = 900   #set a time limit of 300 seconds for a search
 
                     s_time = time()
                     search_parameters.first_solution_strategy = (
@@ -789,6 +822,7 @@ def main(args=None):
                             message = 'PROBLEM NOT YET SOLVED'
                         elif st == 2:
                             message = 'NO SOLUTION FOUND FOR PROBLEM'
+                            # print(data)
                         elif st == 3:
                             message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
                         elif st ==4:
@@ -810,30 +844,35 @@ def main(args=None):
 
 
     #  Saving the carrier ids with errors
-    with open("../../../FRISM_input_output/Sim_outputs/%s_county%s_error.csv"%(ship_type, str(count_num)), "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(error_list)
+    if len(error_list) > 0:
+        with open(config.fdir_in_out+"/Sim_outputs/%s_county%s_error_%s.csv"%(ship_type, str(count_num), str(file_index) ), "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(error_list)
 
     # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
-
+    if file_index == 9999:
+        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours.csv".format(ship_type, count_num), index=False)
+        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier.csv".format(ship_type, count_num), index=False)
+        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload.csv".format(ship_type, count_num), index=False)
+    else:    
+        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours{2}.csv".format(ship_type, count_num, str(file_index)), index=False)
+        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier{2}.csv".format(ship_type, count_num,str(file_index)), index=False)
+        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload{2}.csv".format(ship_type, count_num, str(file_index)), index=False)
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
-    dir_geo='../../../FRISM_input_output/Sim_inputs/Geo_data/'
-    #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
-    ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
-    if (ship_type =='B2B') :
-        print ("Starting external zone processing for B2B")
-        tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
+    # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
+    # #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
+    # ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
+    # if (ship_type =='B2B') :
+    #     print ("Starting external zone processing for B2B")
+    #     tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
 
-    #print ("Assigning x_y coordinate into depots and delivery locations")
-    #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    tour_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
-    carrier_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
-    payload_df.to_csv("../../../FRISM_input_output/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
-    print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
+    # #print ("Assigning x_y coordinate into depots and delivery locations")
+    # #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
+    # tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
+    # carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
+    # payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
+    # print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
 
 
 

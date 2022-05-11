@@ -111,21 +111,25 @@ selected_x_var_delivery=[
 #"WEBUSE17_2"    
 ]
 
-# input for B2C
-b2c_delivery_frequency=30
-hh_aggregation_size=15
-
+# input for B2C day sim
+b2c_delivery_frequency=20
+hh_aggregation_size=10
+# input for B2B day sim
+b2b_day_factor =7
 fdir_in_out= "../../../FRISM_input_output_AT"
+
 # input for B2B/Geo_data
-firm_file= 'synthetic_firms.csv'
-warehouse_file= 'synthetic_carriers.csv'
+firm_file= 'synthetic_firms_with_fleet.csv'
+warehouse_file= 'synthetic_for_hire_carriers.csv'
 dist_file= 'Austin_od_dist.csv'
 CBG_file= 'Austin_freight.geojson'
 ##ship_direction = 'out' # ['out','in', 'all']
 commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97] ## this should be updated 
+county_list=[453, 491, 209, 55, 21] ## this should be updated 
 list_error_zone=[] # this should be updated
 weight_theshold=40000
+md_cap=8000
+hd_cap=35000
 
 # output data structure
 fnm_B2C_payload="B2C_payload"
@@ -136,10 +140,7 @@ fnm_vtype="vehicle_types.csv"
 fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
 
 #ship_direction = 'out' # ['out','in', 'all']
-commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-list_error_zone=[1047.0, 1959.0, 1979.0, 2824.0, 3801.0, 3897.0, 4303.0, 6252.0, 6810.0, 7273.0, 8857.0, 9702.0]
-weight_theshold=40000
+
 
 """
 # HH sf_2010 variables vs 2018 data
@@ -173,4 +174,10 @@ student         int64       student             int64
 work_at_home    int64       work_at_home        int64
 worker          int64       worker          int64       
 
+"""
+"""
+zone_lu=pd.read_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_inputs/Geo_data/"+"zonal_id_lookup_final.csv")
+zone_lu["GEOID"]=zone_lu["GEOID"].astype(str)
+zone_lu["County"]=zone_lu["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
+county_list =zone_lu[zone_lu["FAFNAME"]=="Austin"]["County"].unique()
 """

@@ -146,7 +146,7 @@ HD_dpt.to_csv(f_dir_val+"hd_tod_inrix_observed.csv", index = False, header=True 
 # %%
 ## Result data
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
-
+#f_dir="../../../Results_from_HPC_v5/Tour_plan/"
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 MD_df_b2c=pd.DataFrame()
 v_type= "B2C"
@@ -174,10 +174,10 @@ for county in county_list:
     HD_df_b2b=pd.concat([HD_df_b2b,df_payload_hd], ignore_index=True).reset_index(drop=True)
 MD_df_b2bC = pd.concat([MD_df_b2b,MD_df_b2c], ignore_index=True).reset_index(drop=True)
 #MD_df_b2bC = MD_df_b2c
-MD_dpt_B2B=  MD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
-MD_dpt_B2C=  MD_df_b2c.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
-MD_dpt_B2BC=  MD_df_b2bC.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
-HD_dpt_B2B=  HD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="sum").reset_index()
+MD_dpt_B2B=  MD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+MD_dpt_B2C=  MD_df_b2c.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+MD_dpt_B2BC=  MD_df_b2bC.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+HD_dpt_B2B=  HD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
 
 MD_dpt_B2B['Trip_rate']=MD_dpt_B2B['Trip']/MD_dpt_B2B['Trip'].sum()
 MD_dpt_B2C['Trip_rate']=MD_dpt_B2C['Trip']/MD_dpt_B2C['Trip'].sum()
@@ -207,7 +207,7 @@ hd_inrix_hour = HD_dpt['start_hour'].to_numpy()
 md_sim_Spline = make_interp_spline(md_sim_hour, md_sim_trip)
 hd_sim_Spline = make_interp_spline(hd_sim_hour, hd_sim_trip)
 md_inrix_Spline = make_interp_spline(md_inrix_hour, md_inrix_trip)
-hd_inrix_Spline = make_interp_spline(md_inrix_hour, md_inrix_trip)
+hd_inrix_Spline = make_interp_spline(hd_inrix_hour, hd_inrix_trip)
 
 
 md2b_sim_Spline = make_interp_spline(md2b_sim_hour, md2b_sim_trip)
@@ -219,11 +219,11 @@ hd_sim_hour = np.linspace(hd_sim_hour.min(), hd_sim_hour.max(), 24*10)
 hd_sim_trip = hd_sim_Spline(hd_sim_hour)
 
 md2b_sim_hour = np.linspace(md2b_sim_hour.min(), md2b_sim_hour.max(), 24*10)
-md2b_sim_trip = md_sim_Spline(md2b_sim_hour)
+md2b_sim_trip = md2b_sim_Spline(md2b_sim_hour)
 md2c_sim_hour = np.linspace(md2c_sim_hour.min(), md2c_sim_hour.max(), 24*10)
-md2c_sim_trip = hd_sim_Spline(md2c_sim_hour)
+md2c_sim_trip = md2c_sim_Spline(md2c_sim_hour)
  
-md_inrix_hour = np.linspace(md_inrix_hour.min(), hd_inrix_hour.max(), 24*10)
+md_inrix_hour = np.linspace(md_inrix_hour.min(), md_inrix_hour.max(), 24*10)
 md_inrix_trip = md_inrix_Spline(md_inrix_hour)
 hd_inrix_hour = np.linspace(hd_inrix_hour.min(), hd_inrix_hour.max(), 24*10)
 hd_inrix_trip = hd_inrix_Spline(hd_inrix_hour)
@@ -380,4 +380,120 @@ for s in ["B2B", "B2C"]:
         if df_tour[df_tour["departureLocation_x"]<-150.0].shape[0]>0:
             print ("{} tour county {}".format(s,str(county)))
 
+# %%
+## Draw stop ditribution by shipment type
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan_inputs/"
+for s in ["B2B", "B2C"]:
+    df_pay_agg= pd.DataFrame()
+    for county in county_list:
+        df_pay=pd.read_csv(f_dir+"{}_county{}_payload.csv".format(s,str(county)))
+        df_pay["end_depot"] = df_pay["payloadId"].apply(lambda x: 1 if x.endswith("_") else 0 )
+        df_pay= df_pay[df_pay["end_depot"]==1].reset_index(drop=True)
+        df_pay["sequenceRank"]=df_pay["sequenceRank"].apply(lambda x: x-2)
+        df_pay_agg=pd.concat([df_pay_agg,df_pay], ignore_index=True).reset_index(drop=True)
+    #df_stop_activity=df_pay_agg.groupby(['sequenceRank'])['sequenceRank'].agg(Stops="sum").reset_index()
+    plt.figure(figsize = (8,6))
+    plt.hist(df_pay_agg['sequenceRank'], color ="blue", density=True, bins=df_pay_agg['sequenceRank'].max(), alpha = 0.5)
+    #sns.distplot(df_pay_agg['sequenceRank'], color ="blue", kde=True, bins=df_pay_agg['sequenceRank'].max())
+    plt.title("# Stops in a tour for {0} shipments".format(s))
+    plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Stop_hist_for_{}.png'.format(s))
+
+# %%
+## Result data
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+#f_dir="../../../Results_from_HPC_v5/Tour_plan/"
+# county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+county_list=[1]
+MD_df_b2c=pd.DataFrame()
+MD_df_b2c_sdepot=pd.DataFrame()
+v_type= "B2C"
+for county in county_list:
+    df_payload = pd.read_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)))
+    df_payload["end_depot"] = df_payload["payloadId"].apply(lambda x: 1 if x.endswith("_") else 0 )
+    df_payload= df_payload[df_payload["end_depot"]==0].reset_index()
+    df_payload['start_hour'] = df_payload['estimatedTimeOfArrivalInSec'].apply(lambda x: int(x/3600))
+    MD_df_b2c=pd.concat([MD_df_b2c,df_payload], ignore_index=True).reset_index(drop=True)
+    df_tour = pd.read_csv(f_dir+"{}_county{}_freight_tours.csv".format(v_type,str(county)))
+    df_tour['start_hour'] = df_tour['departureTimeInSec'].apply(lambda x: int(x/3600))
+    MD_df_b2c_sdepot=pd.concat([MD_df_b2c_sdepot,df_tour], ignore_index=True).reset_index(drop=True)
+
+MD_df_b2b=pd.DataFrame()
+HD_df_b2b=pd.DataFrame()
+MD_df_b2b_sdepot=pd.DataFrame()
+HD_df_b2b_sdepot=pd.DataFrame()
+v_type= "B2B"
+for county in county_list:
+    df_payload = pd.read_csv(f_dir+"{}_county{}_payload.csv".format(v_type,str(county)))
+    df_carr =pd.read_csv(f_dir+"{}_county{}_carrier.csv".format(v_type,str(county)))
+    df_payload["end_depot"] = df_payload["payloadId"].apply(lambda x: 1 if x.endswith("_") else 0 )
+    df_payload= df_payload[df_payload["end_depot"]==0].reset_index()
+    df_payload['start_hour'] = df_payload['estimatedTimeOfArrivalInSec'].apply(lambda x: int(x/3600))
+    df_payload['start_hour'] = df_payload['start_hour'].apply(lambda x: x-24 if x >=24 else x)
+    df_payload_md = df_payload[df_payload["tourId"].isin(df_carr[df_carr["vehicleTypeId"]==1]["tourId"].unique())]#.reset_index()
+    df_payload_hd = df_payload[df_payload["tourId"].isin(df_carr[df_carr["vehicleTypeId"]==2]["tourId"].unique())]#.reset_index()
+    MD_df_b2b=pd.concat([MD_df_b2b,df_payload_md], ignore_index=True).reset_index(drop=True)
+    HD_df_b2b=pd.concat([HD_df_b2b,df_payload_hd], ignore_index=True).reset_index(drop=True)
+    df_tour = pd.read_csv(f_dir+"{}_county{}_freight_tours.csv".format(v_type,str(county)))
+    df_tour['start_hour'] = df_tour['departureTimeInSec'].apply(lambda x: int(x/3600))
+    df_tour_md = df_tour[df_tour["tour_id"].isin(df_carr[df_carr["vehicleTypeId"]==1]["tourId"].unique())]#.reset_index()
+    df_tour_hd = df_tour[df_tour["tour_id"].isin(df_carr[df_carr["vehicleTypeId"]==2]["tourId"].unique())]
+    MD_df_b2b_sdepot=pd.concat([MD_df_b2b_sdepot,df_tour_md], ignore_index=True).reset_index(drop=True)
+    HD_df_b2b_sdepot=pd.concat([HD_df_b2b_sdepot,df_tour_hd], ignore_index=True).reset_index(drop=True)
+
+
+MD_df_b2bC = pd.concat([MD_df_b2b,MD_df_b2c], ignore_index=True).reset_index(drop=True)
+#MD_df_b2bC = MD_df_b2c
+MD_dpt_B2B=  MD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+MD_dpt_B2C=  MD_df_b2c.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+MD_dpt_B2BC=  MD_df_b2bC.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+HD_dpt_B2B=  HD_df_b2b.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+
+MD_dpt_B2B_sdepot=  MD_df_b2b_sdepot.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+MD_dpt_B2C_sdepot=  MD_df_b2c_sdepot.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+HD_dpt_B2B_sdepot=  HD_df_b2b_sdepot.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+
+MD_dpt_B2B['Trip_rate']=MD_dpt_B2B['Trip']/MD_dpt_B2B['Trip'].sum()
+MD_dpt_B2C['Trip_rate']=MD_dpt_B2C['Trip']/MD_dpt_B2C['Trip'].sum()
+MD_dpt_B2BC['Trip_rate']=MD_dpt_B2BC['Trip']/MD_dpt_B2BC['Trip'].sum()
+HD_dpt_B2B['Trip_rate']=HD_dpt_B2B['Trip']/HD_dpt_B2B['Trip'].sum()
+
+MD_dpt_B2B_sdepot['Trip_rate']=MD_dpt_B2B_sdepot['Trip']/MD_dpt_B2B_sdepot['Trip'].sum()
+MD_dpt_B2C_sdepot['Trip_rate']=MD_dpt_B2C_sdepot['Trip']/MD_dpt_B2C_sdepot['Trip'].sum()
+HD_dpt_B2B_sdepot['Trip_rate']=HD_dpt_B2B_sdepot['Trip']/HD_dpt_B2B_sdepot['Trip'].sum()
+
+plt.figure(figsize = (8,6))
+plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2B,color ="blue", label="all activity", alpha = 0.3,)
+plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2B_sdepot, color ="red", label="starting depot", alpha = 0.3,)
+plt.title("B2B MD")
+plt.legend(loc="upper right")
+#plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+
+plt.figure(figsize = (8,6))
+plt.plot("start_hour", "Trip_rate", data=HD_dpt_B2B,color ="blue", label="all activity", alpha = 0.3,)
+plt.plot("start_hour", "Trip_rate", data=HD_dpt_B2B_sdepot, color ="red", label="starting depot", alpha = 0.3,)
+plt.title("B2B HD")
+plt.legend(loc="upper right")
+#plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+
+plt.figure(figsize = (8,6))
+plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2C,color ="blue", label="all activity", alpha = 0.3,)
+plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2C_sdepot, color ="red", label="starting depot", alpha = 0.3,)
+plt.title("B2C MD")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+
+# %%
+f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
+#f_dir="../../../Results_from_HPC_v5/Tour_plan/"
+# county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+county=1
+#v_type= "B2C" # "B2B"
+for v_type in ["B2C", "B2B"]:
+    df_carr =pd.read_csv(f_dir+"{}_carrier_county{}_shipall.csv".format(v_type,str(county)))
+    df_carr['start_hour'] = df_carr['depot_lower'].apply(lambda x: int(x/60))
+    df_carr_dpt=  df_carr.groupby(['start_hour'])['start_hour'].agg(Trip="count").reset_index()
+
+    plt.figure(figsize = (8,6))
+    plt.plot("start_hour", "Trip", data=df_carr_dpt, color ="blue", label="all activity", alpha = 0.3,)
 # %%
