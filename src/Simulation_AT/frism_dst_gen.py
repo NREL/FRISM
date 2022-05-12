@@ -46,14 +46,17 @@ def create_dst_veh(cbg,file_dir, v_type):
     for key,value in date.items():
         for i in range(0,24):
             file_nm=file_dir+'start_date=%s/start_dow=%s/start_hour=%02d/' % (key, value,i)
-            file_nm2 = glob.glob(file_nm+'*')[0]
-            df_temp= pd.read_csv(file_nm2, compression='gzip', header=None, sep=',', quotechar='"', error_bad_lines=False)
-            df_temp=df_temp.rename(columns={0:'Ori',1:'Dest',2:'Trip'})
-            df_temp=df_temp[df_temp['Ori'].isin(cbg_list)]
-            df_temp['start_date']=key
-            df_temp['start_dow']=value
-            df_temp['start_hour']=i
-            df=df.append(df_temp)
+            try:
+                file_nm2 = glob.glob(file_nm+'*')[0]
+                df_temp= pd.read_csv(file_nm2, compression='gzip', header=None, sep=',', quotechar='"', error_bad_lines=False)
+                df_temp=df_temp.rename(columns={0:'Ori',1:'Dest',2:'Trip'})
+                df_temp=df_temp[df_temp['Ori'].isin(cbg_list)]
+                df_temp['start_date']=key
+                df_temp['start_dow']=value
+                df_temp['start_hour']=i
+                df=df.append(df_temp)
+            except:
+                print ("no file")    
     temp_3=df.groupby(['start_hour'])['Trip'].sum().reset_index()
     dep_dist= pd.DataFrame()
     for cbg_id in cbg_list:
@@ -73,9 +76,9 @@ def create_dst_veh(cbg,file_dir, v_type):
     save_dir="../../../FRISM_input_output_{}/Model_carrier_op/INRIX_processing/".format(study_region)     
     dep_dist.to_csv (save_dir+'depature_dist_by_cbg_{}.csv'.format(v_type), index = False, header=True)
 
-v_type="MD"
-file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=2/'
-create_dst_veh(CBGzone_df,file_dir, v_type)
+# v_type="MD"
+# file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=2/'
+# create_dst_veh(CBGzone_df,file_dir, v_type)
 
 v_type="HD"
 file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=3/'
