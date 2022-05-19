@@ -29,7 +29,7 @@ date ={'2020-01-06':'1','2020-01-07':'2','2020-01-08':'3', '2020-01-09':'4', '20
        '2020-05-25':'1','2020-05-26':'2','2020-05-27':'3', '2020-05-28':'4', '2020-05-29':'5'
       }
 # %%
-study_region=str(sys.argv[1])
+study_region=config.study_region
 fdir_geo= "../../../FRISM_input_output_{}/Sim_inputs/Geo_data/".format(study_region)
 CBGzone_df = gpd.read_file(fdir_geo+config.CBG_file) # file include, GEOID(12digit), MESOZONE, area
 #CBGzone_df=CBGzone_df[['GEOID','CBPZONE','MESOZONE','area']]
@@ -37,7 +37,7 @@ CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
 ## Add county id from GEOID
 CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
 CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
-#CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
 CBGzone_df=CBGzone_df[CBGzone_df["County"]!=0].reset_index()
 
 def create_dst_veh(cbg,file_dir, v_type):
@@ -76,10 +76,17 @@ def create_dst_veh(cbg,file_dir, v_type):
     save_dir="../../../FRISM_input_output_{}/Model_carrier_op/INRIX_processing/".format(study_region)     
     dep_dist.to_csv (save_dir+'depature_dist_by_cbg_{}.csv'.format(v_type), index = False, header=True)
 
-# v_type="MD"
-# file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=2/'
-# create_dst_veh(CBGzone_df,file_dir, v_type)
+v_type="MD"
+file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=2/'
+create_dst_veh(CBGzone_df,file_dir, v_type)
 
 v_type="HD"
 file_dir='/projects/inrixdata/processed/nrel-csc-inrix-national-processed_20200723/od_pairs/census_block_group/hourly/vehicle_weight_class=3/'
-create_dst_veh(CBGzone_df,file_dir, v_type)  
+create_dst_veh(CBGzone_df,file_dir, v_type) 
+
+
+
+# # %%
+# file_nm="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC_at/start_dow=1/"
+# file_nm=file_nm+"start_hour=09/"
+# file_nm2 = glob.glob(file_nm+'*')[0]

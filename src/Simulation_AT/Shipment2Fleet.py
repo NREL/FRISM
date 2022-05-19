@@ -31,6 +31,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
 
     dist_df=pd.read_csv(fdir_geo+dist_file, header=0, sep=',')
     dist_df.columns=['Origin','Destination','dist']
+    #dist_df.to_csv(fdir_geo+dist_file, index = False, header=True)
     CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
     #CBGzone_df=CBGzone_df[['GEOID','CBPZONE','MESOZONE','area']]
     CBGzone_df= CBGzone_df.to_crs({'proj': 'cea'})
