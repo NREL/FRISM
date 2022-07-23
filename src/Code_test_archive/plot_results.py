@@ -127,7 +127,7 @@ CBG_file= 'Austin_freight.geojson' #'freight_centroids.geojson'
 # SF
 #county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 # AT
-county_list=[21,55,209.453,491]
+county_list=[453, 491, 209, 55, 21, 53]
 ## INRIX data
 fdir_truck='../../../FRISM_input_output_{}/Model_carrier_op/INRIX_processing/'.format(s_region)
 df_dpt_dist_MD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
@@ -213,6 +213,15 @@ HD_dpt_B2B.to_csv(f_dir_val+"hd_tod_frism_simulated.csv", index = False, header=
 
 from scipy.interpolate import make_interp_spline
 
+# %%
+# Read TOD from INRIX  
+MD_dpt=pd.read_csv(f_dir_val+"md_tod_inrix_observed.csv")
+HD_dpt=pd.read_csv(f_dir_val+"hd_tod_inrix_observed.csv" )
+# Read TOD from Simulation
+MD_dpt_B2BC=pd.read_csv(f_dir_val+"md_tod_frism_simulated.csv")
+HD_dpt_B2B=pd.read_csv(f_dir_val+"hd_tod_frism_simulated_mod.csv")
+
+
 md_sim_trip = MD_dpt_B2BC['Trip_rate'].to_numpy()
 md_sim_hour = MD_dpt_B2BC['start_hour'].to_numpy()
 hd_sim_trip = HD_dpt_B2B['Trip_rate'].to_numpy()
@@ -259,7 +268,7 @@ plt.fill_between(md_inrix_hour,md_inrix_trip,color ="blue", label="Observed (INR
 plt.fill_between(md_sim_hour,md_sim_trip , color ="red", label="Simulated (FRISM)", alpha = 0.2,)
 plt.title("Distrubtion of MD stop activities  by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Val_truck_dist_MD.png'.format(s_region))
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_MD.png'.format(s_region))
 
 plt.figure(figsize = (8,6))
 plt.plot(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,)
@@ -268,7 +277,7 @@ plt.fill_between(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,label="O
 plt.fill_between(hd_sim_hour,hd_sim_trip , color ="red", alpha = 0.2,label="Simulated (FRISM)")
 plt.title("Distrubtion of HD stop activities by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Val_truck_dist_HD.png'.format(s_region))
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_HD.png'.format(s_region))
 
 plt.figure(figsize = (8,6))
 plt.plot(md2b_sim_hour,md2b_sim_trip , color ="blue", alpha = 0.3,)
@@ -277,7 +286,7 @@ plt.fill_between(md2b_sim_hour,md2b_sim_trip , color ="blue", label="B2B Simulat
 plt.fill_between(md2c_sim_hour,md2c_sim_trip , color ="red", label="B2C Simulated (FRISM)", alpha = 0.3,)
 plt.title("Distrubtion of MD stop activities  by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Val_truck_dist_MD_by_type.png'.format(s_region))
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_MD_by_type.png'.format(s_region))
 
 
 # plt.figure(figsize = (8,6))
