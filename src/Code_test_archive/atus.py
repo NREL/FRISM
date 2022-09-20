@@ -3,33 +3,16 @@
 ### if args.ship_type == "B2C": ... #for i in range(0,df_hh_D_GrID.shape[0]):
 ### elif args.ship_type == "B2B": ...#for i in range(0,FH_Seller.shape[0]): 
 # %%
+# %%
 import pandas as pd
+import biogeme.database as db
+import biogeme.biogeme as bio
+from biogeme import models
+import biogeme.messaging as msg
+from biogeme.expressions import Beta, DefineVariable
 import numpy as np
-import geopandas as gpd
-from argparse import ArgumentParser
-import random
-import config
-import glob
-from os.path import exists as file_exists
-from alive_progress import alive_bar
-import time
-from shapely.geometry import Point
-
-# library for models 
-import joblib
-import statsmodels.api as sm
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import mean_squared_error
-from sklearn.calibration import CalibratedClassifierCV
-from imblearn.over_sampling import SMOTE
-import statsmodels.formula.api as smf
-import seaborn as sns
-import matplotlib.pyplot as plt
+import config_b2c as config
+from statsmodels.stats.weightstats import DescrStatsW
 # %%
 fdir_input= "../../../FRISM_input_output_SF/Model_inputs/ATUS/2019/"
 atus_act= pd.read_csv(fdir_input+'atusact_2019.dat', sep=',', engine='python')
@@ -57,7 +40,7 @@ var_resp= ['TUCASEID',
 "TEERN",
 "TEERNWKP",
 "TEHRUSLT",
-"TESCHENR", #
+"TESCHENR", # Are you enrolled in HS, college, or university; 1 yes, 2 no
 "TESCHFT",
 "TESCHLVL",
 "TRDTIND1",
@@ -76,17 +59,20 @@ var_rost= ['TUCASEID',
 'TESEX'
 ]
 var_cps= [
-"HEFAMINC", #
+"GEREG", # region definition 
+"GTMETSTA", # MSA
+"HEFAMINC", # income
 "HEHOUSUT", 
-"HETENURE", #
+"HETENURE", # Edited: are your living quarters owned, rented for cash, or occupied without payment of cash rent?; 1 owned, 2 rented, 3, occupied without payment
 "HRHTYPE", 
-"HRNUMHOU", #
-"PEEDUCA", #
+"HRNUMHOU", # Total number of persons in the household (household members)
+"PEEDUCA", # Education
 "PESCHFT",
 "PESCHLVL",
-"PESEX", #
-"PRTAGE", #
-"PTDTRACE", #
+"PESEX", # sex
+"PRTAGE", # age
+"PTDTRACE", # race
+"PREXPLF", # employment
 "TRATUSR",
 "TUCASEID",
 "TULINENO"    
@@ -99,8 +85,6 @@ atus_cps  = atus_cps[var_cps]
 
 atus_resp =atus_resp.merge(atus_cps, on=["TUCASEID","TULINENO"], how="left")
 atus_resp =atus_resp[atus_resp["TULINENO"]==1]
-
-
 
 # %%
 '''
@@ -150,51 +134,83 @@ atus_resp =atus_resp[atus_resp["TULINENO"]==1]
 89 Unspecified place
 99 Unspecified mode of transportation
 '''
-def offline_identifier(TEWHERE, TRCODE):
-    if TRCODE in [70101,70104,70199,70299,79999] and TEWHERE in [4,6,7] :
+# def offline_identifier(TEWHERE, TRCODE):
+#     if TRCODE in [70101,70104,70199,70299,79999] and TEWHERE in [4,6,7] :
+#         return 1
+#     else: 
+#         return 0
+# def online_identifier(TEWHERE, TRCODE):
+#     if TRCODE in [70101,70104,70199,70299,79999] and TEWHERE not in [4,6,7] :
+#         return 1
+#     else: 
+#         return 0
+# def offline_grocery_identifier(TEWHERE, TRCODE):
+#     if TRCODE == 70101 and TEWHERE in [6,7] :
+#         return 1
+#     else: 
+#         return 0
+# def online_grocery_identifier(TEWHERE, TRCODE):
+#     if TRCODE == 70101 and TEWHERE not in [6,7] :
+#         return 1
+#     else: 
+#         return 0
+# def ondemand_identifier(TEWHERE, TRCODE):
+#     if TRCODE in [70101,70103, 110201] and TEWHERE not in [4,6,7] :
+#         return 1
+#     else: 
+#         return 0
+
+def offline_shop(TEWHERE, TRCODE):
+    if TRCODE in [70104,70199,70299,79999] and TEWHERE in [4,6,7] :
         return 1
     else: 
         return 0
-def online_identifier(TEWHERE, TRCODE):
-    if TRCODE in [70101,70104,70199,70299,79999] and TEWHERE not in [4,6,7] :
+def online_shop(TEWHERE, TRCODE):
+    if TRCODE in [70104,70199,70299,79999] and TEWHERE not in [4,6,7] :
         return 1
     else: 
         return 0
-def offline_grocery_identifier(TEWHERE, TRCODE):
-    if TRCODE == 70101 and TEWHERE in [6,7] :
+def offline_ondemand(TEWHERE, TRCODE):
+    if TRCODE in [70101,70103, 110201] and TEWHERE in [4,6,7] :
         return 1
     else: 
         return 0
-def online_grocery_identifier(TEWHERE, TRCODE):
-    if TRCODE == 70101 and TEWHERE not in [6,7] :
-        return 1
-    else: 
-        return 0
-def ondemand_identifier(TEWHERE, TRCODE):
-    if TRCODE in [70101,70103, 110201] and TEWHERE not in [4,6,7] :
+def online_ondemand(TEWHERE, TRCODE):
+    if TRCODE in [70101,70103, 110201] and TEWHERE not in [4,6,7]  :
         return 1
     else: 
         return 0
 
 def shop_choice(offline_shop_sum, online_shop_sum):
     if offline_shop_sum ==0 and online_shop_sum ==0 :
-        return 0
+        return 0    # no shop
     elif offline_shop_sum > 0 and online_shop_sum ==0 :
-        return 1
+        return 1 # off
     elif offline_shop_sum ==0 and online_shop_sum > 0 :
-        return 2
+        return 2 # on
     elif offline_shop_sum >0 and online_shop_sum >0 :
-        return 3
+        return 3 # both
+def ondemand_choice(offline_od_sum, online_od_sum):
+    if offline_od_sum ==0 and online_od_sum ==0 :
+        return 0 # no gro   
+    elif offline_od_sum > 0 and online_od_sum ==0 :
+        return 1 # off gro
+    elif offline_od_sum ==0 and online_od_sum > 0 :
+        return 2 # on gro
+    elif offline_od_sum >0 and online_od_sum >0 :
+        return 3 # both       
 
-atus_act['offline_shop']=atus_act.apply(lambda x: offline_identifier(x['TEWHERE'], x['TRCODE']), axis=1)
-atus_act['online_shop']=atus_act.apply(lambda x: online_identifier(x['TEWHERE'], x['TRCODE']), axis=1)
-atus_act['offline_gro_shop']=atus_act.apply(lambda x: offline_grocery_identifier(x['TEWHERE'], x['TRCODE']), axis=1)
-atus_act['online_gro_shop']=atus_act.apply(lambda x: online_grocery_identifier(x['TEWHERE'], x['TRCODE']), axis=1)
-atus_act['ondemand']=atus_act.apply(lambda x: ondemand_identifier(x['TEWHERE'], x['TRCODE']), axis=1)
-atus_df=atus_act.groupby(['TUCASEID']).agg({'offline_shop':[sum],'online_shop':[sum],'offline_gro_shop':[sum],'online_gro_shop':[sum], 'ondemand':[sum]})
+atus_act['offline_shop']=atus_act.apply(lambda x: offline_shop(x['TEWHERE'], x['TRCODE']), axis=1)
+atus_act['online_shop']=atus_act.apply(lambda x: online_shop(x['TEWHERE'], x['TRCODE']), axis=1)
+atus_act['offline_od']=atus_act.apply(lambda x: offline_ondemand(x['TEWHERE'], x['TRCODE']), axis=1)
+atus_act['online_od']=atus_act.apply(lambda x: online_ondemand(x['TEWHERE'], x['TRCODE']), axis=1)
+atus_df=atus_act.groupby(['TUCASEID']).agg({'offline_shop':[sum],'online_shop':[sum],'offline_od':[sum],'online_od':[sum]})
 atus_df.columns = ["_".join(x) for x in atus_df.columns.ravel()]
 atus_df.reset_index(level=(0), inplace=True)                
 atus_df['shop_choice']=atus_df.apply(lambda x: shop_choice(x['offline_shop_sum'], x['online_shop_sum']), axis=1)
+atus_df['shop']=atus_df['shop_choice'].apply(lambda x: 1 if x>=1 else 0 )
+atus_df['ondemand_choice']=atus_df.apply(lambda x: shop_choice(x['offline_od_sum'], x['online_od_sum']), axis=1)
+atus_df['ondemand']=atus_df['ondemand_choice'].apply(lambda x: 1 if x>=1 else 0 )
 atus_df.to_csv(fdir_input+"atus_df_processed_jul.csv")
 atus_df =atus_df.merge(atus_resp, on=["TUCASEID"], how="left")
 
@@ -222,13 +238,13 @@ def edu_class(EDUC):
     elif EDUC in [44,45,46]:
         return 3 
 def age_est(R_AGE_IMP):
-    if R_AGE_IMP  <20 :
+    if R_AGE_IMP  <=25 :
         return 0
-    elif R_AGE_IMP  >=20 and R_AGE_IMP  <40:
+    elif R_AGE_IMP  >25 and R_AGE_IMP  <=40:
         return 1
-    elif R_AGE_IMP  >=40 and R_AGE_IMP  <60:
+    elif R_AGE_IMP  >40 and R_AGE_IMP  <=60:
         return 2
-    elif R_AGE_IMP  >=60:
+    elif R_AGE_IMP  >60:
         return 3
 
 def sex_class(R_SEX_IMP):
@@ -249,27 +265,44 @@ def student_class(SCHTYP):
     if SCHTYP in [1]:
         return 1
     else:
-        return 0 
+        return 0
+
+def msa_id(GTMETSTA):
+    if GTMETSTA ==1:
+        return 1
+    else: 
+        return 0  
+
+def employment(PREXPLF):
+    if PREXPLF ==1:
+        return 1
+    else: 
+        return 0  
+
 # %%
 atus_df['HEFAMINC']   =atus_df['HEFAMINC'].apply(income_group)
-atus_df['HETENURE']   =atus_df['HETENURE'].apply(home_class)
 atus_df['PEEDUCA']     =atus_df['PEEDUCA'].apply(edu_class)
+atus_df['AGE']      =atus_df['PRTAGE']
 atus_df['PRTAGE']      =atus_df['PRTAGE'].apply(age_est)
 atus_df['PESEX']      =atus_df['PESEX'].apply(sex_class)
 atus_df['PTDTRACE']      =atus_df['PTDTRACE'].apply(race_class)
 atus_df['TESCHENR']      =atus_df['TESCHENR'].apply(student_class)
-
+atus_df['GTMETSTA']      =atus_df['GTMETSTA'].apply(msa_id)
+atus_df['PREXPLF']      =atus_df['PREXPLF'].apply(employment)
+atus_df.rename(columns = {'HEFAMINC':'income_cls',
+'PEEDUCA':'EDUC',
+'PRTAGE':'R_AGE_IMP',
+'PESEX':'R_SEX_IMP',
+'PTDTRACE':'R_RACE',
+'TESCHENR':'SCHTYP',
+'GTMETSTA':'MSACAT',
+'PREXPLF':'WORKER',
+"GEREG":'CENSUS_R',
+'HRNUMHOU': 'HHSIZE'}, inplace = True)
 
 # list of variables that have class
     ## Need to update!!, if functions change used in "Process variables using function"  
-Class_vars= ['HEFAMINC',
-'HETENURE',
-'PEEDUCA',
-'PRTAGE',
-'PESEX', 
-'PTDTRACE',
-'TESCHENR'
-] 
+Class_vars= ['EDUC','SCHTYP', 'WORKER','R_AGE_IMP','R_RACE','R_SEX_IMP','income_cls','MSACAT','CENSUS_R','shop_choice', 'ondemand_choice']
 
 # Create class variables that has more than two classes
 cat_vars=[]
@@ -281,99 +314,327 @@ for var in cat_vars:
     cat_list = pd.get_dummies(atus_df[var], prefix=var)
     atus_df=atus_df.join(cat_list)
 
+atus_df["Avail"] =1
+for col in atus_df.columns:
+    print (col)
 
-# %%    
-selected_x= [ 'ondemand_sum',
-       'shop_choice',  'TESCHENR','TUFINLWGT', 'HETENURE',
-    'HRNUMHOU', 'PESEX', 'HEFAMINC_0', 'HEFAMINC_1',
-       'HEFAMINC_2', 'HEFAMINC_3', 'PEEDUCA_0', 'PEEDUCA_1', 'PEEDUCA_2',
-       'PEEDUCA_3', 'PRTAGE_0', 'PRTAGE_1', 'PRTAGE_2', 'PRTAGE_3',
-       'PTDTRACE_0', 'PTDTRACE_1', 'PTDTRACE_2', 'PTDTRACE_3']
 
-X_study=atus_df[selected_x]
-Y_study=atus_df['shop_choice']
-#trainX, testX, trainY, testY = train_test_split(X_study, Y_study, test_size = 0.7)
-
-# SMOTE approach for lower sample issue for less frequent data
-#oversample = SMOTE()
-#trainX,trainY = oversample.fit_resample(X_study,Y_study)
-trainX=X_study
-trainY=Y_study
-
-# initial model
-model_int = LogisticRegression(solver='newton-cg', multi_class='multinomial')
-model_int.fit(trainX, trainY)
-y_pred = model_int.predict(trainX)
-
-with open('atus_model.txt', 'a') as f:
-    print ('************* Webuse Model: inital model ****************', file=f)
-    print('Accuracy for initial model: {:.2f}'.format(accuracy_score(trainY, y_pred)), file=f)
-    print('Error rate for initial model: {:.2f}'.format(1 - accuracy_score(trainY, y_pred)), file=f)
-    print ('initial confusion matirix)', confusion_matrix(trainY.tolist(), y_pred), file=f)
-
+with open('Description of ATUS.txt', 'a') as f:
+    for col in atus_df.columns:
+        desc_df=DescrStatsW(atus_df[col], weights=atus_df.TUFINLWGT, ddof=1)
+        print ('{}'.format(col), file=f)
+        print ("{}".format(desc_df.mean), file=f)
+        print ("{}".format(desc_df.std), file=f)
+        print ("{}".format(atus_df[col].min()), file=f)
+        print ("{}".format(atus_df[col].max()), file=f)
+sample_sz= atus_df.TUFINLWGT.size
+sum_wgt=atus_df.TUFINLWGT.sum()    
+atus_df["TUFINLWGT"]=atus_df["TUFINLWGT"].apply(lambda x: x/sum_wgt*sample_sz)      
+#atus_df.groupby(['onlineshop'])['onlineshop'].count()  
 # %%
-filename = '../Simulation/atus_model.sav'
-joblib.dump(model_int, filename)
+## shopping nested 
+database = db.Database('shop', atus_df)
+
+# The following statement allows you to use the names of the
+# variable as Python variable.
+globals().update(database.variables)
+
+# Parameters to be estimated
+## Intercept
+ASC_NOS = Beta('ASC_NOS', 0, None, None, 1)
+ASC_OFF = Beta('ASC_OFF', 0, None, None, 0)
+ASC_ONS = Beta('ASC_ONS', 0, None, None, 0)
+ASC_BOT = Beta('ASC_BOT', 0, None, None, 0)
+## Beta
+B_SEX_V0= Beta('B_SEX_V0', 0, None, None, 1)
+B_SEX_V1= Beta('B_SEX_V1', 0, None, None, 0)
+B_SEX_V2= Beta('B_SEX_V2', 0, None, None, 0)
+B_SEX_V3= Beta('B_SEX_V3', 0, None, None, 0)
+###
+B_HHSIZE_V0= Beta('B_SEX_V0', 0, None, None, 1)
+B_HHSIZE_V1= Beta('B_SEX_V1', 0, None, None, 0)
+B_HHSIZE_V2= Beta('B_SEX_V2', 0, None, None, 0)
+B_HHSIZE_V3= Beta('B_SEX_V3', 0, None, None, 0)
+###
+B_WORKER_V0= Beta('B_WORKER_V0', 0, None, None, 1)
+B_WORKER_V1= Beta('B_WORKER_V1', 0, None, None, 0)
+B_WORKER_V2= Beta('B_WORKER_V2', 0, None, None, 0)
+B_WORKER_V3= Beta('B_WORKER_V3', 0, None, None, 0)
+
+###
+B_MSACAT_V0= Beta('B_MSACAT_V0', 0, None, None, 1)
+B_MSACAT_V1= Beta('B_MSACAT_V1', 0, None, None, 0)
+B_MSACAT_V2= Beta('B_MSACAT_V2', 0, None, None, 0)
+B_MSACAT_V3= Beta('B_MSACAT_V3', 0, None, None, 0)
+###
+B_EDUC_1_V0= Beta('B_EDUC_1_V0', 0, None, None, 1)
+B_EDUC_1_V1= Beta('B_EDUC_1_V1', 0, None, None, 0)
+B_EDUC_1_V2= Beta('B_EDUC_1_V2', 0, None, None, 0)
+B_EDUC_1_V3= Beta('B_EDUC_1_V3', 0, None, None, 0)
+###
+B_EDUC_2_V0= Beta('B_EDUC_2_V0', 0, None, None, 1)
+B_EDUC_2_V1= Beta('B_EDUC_2_V1', 0, None, None, 0)
+B_EDUC_2_V2= Beta('B_EDUC_2_V2', 0, None, None, 0)
+B_EDUC_2_V3= Beta('B_EDUC_2_V3', 0, None, None, 0)
+###
+B_EDUC_3_V0= Beta('B_EDUC_3_V0', 0, None, None, 1)
+B_EDUC_3_V1= Beta('B_EDUC_3_V1', 0, None, None, 0)
+B_EDUC_3_V2= Beta('B_EDUC_3_V2', 0, None, None, 0)
+B_EDUC_3_V3= Beta('B_EDUC_3_V3', 0, None, None, 0)
+
+###
+B_AGE_IMP_1_V0= Beta('B_AGE_IMP_1_V0', 0, None, None, 1)
+B_AGE_IMP_1_V1= Beta('B_AGE_IMP_1_V1', 0, None, None, 0)
+B_AGE_IMP_1_V2= Beta('B_AGE_IMP_1_V2', 0, None, None, 0)
+B_AGE_IMP_1_V3= Beta('B_AGE_IMP_1_V3', 0, None, None, 0)
+
+###
+B_AGE_IMP_2_V0= Beta('B_AGE_IMP_2_V0', 0, None, None, 1)
+B_AGE_IMP_2_V1= Beta('B_AGE_IMP_2_V1', 0, None, None, 0)
+B_AGE_IMP_2_V2= Beta('B_AGE_IMP_2_V2', 0, None, None, 0)
+B_AGE_IMP_2_V3= Beta('B_AGE_IMP_2_V3', 0, None, None, 0)
+###
+B_AGE_IMP_3_V0= Beta('B_AGE_IMP_3_V0', 0, None, None, 1)
+B_AGE_IMP_3_V1= Beta('B_AGE_IMP_3_V1', 0, None, None, 0)
+B_AGE_IMP_3_V2= Beta('B_AGE_IMP_3_V2', 0, None, None, 0)
+B_AGE_IMP_3_V3= Beta('B_AGE_IMP_3_V3', 0, None, None, 0)
+###
+B_RACE_1= Beta('B_RACE_1', 0, None, None, 0)
+###
+B_RACE_2= Beta('B_RACE_2', 0, None, None, 0)
+###
+B_RACE_3= Beta('B_RACE_3', 0, None, None, 0)
+###
+B_income_cls_1_V0= Beta('B_income_cls_1_V0', 0, None, None, 1)
+B_income_cls_1_V1= Beta('B_income_cls_1_V1', 0, None, None, 0)
+B_income_cls_1_V2= Beta('B_income_cls_1_V2', 0, None, None, 0)
+B_income_cls_1_V3= Beta('B_income_cls_1_V3', 0, None, None, 0)
+###
+B_income_cls_2_V0= Beta('B_income_cls_2_V0', 0, None, None, 1)
+B_income_cls_2_V1= Beta('B_income_cls_2_V1', 0, None, None, 0)
+B_income_cls_2_V2= Beta('B_income_cls_2_V2', 0, None, None, 0)
+B_income_cls_2_V3= Beta('B_income_cls_2_V3', 0, None, None, 0)
+###
+B_income_cls_3_V0= Beta('B_income_cls_3_V0', 0, None, None, 1)
+B_income_cls_3_V1= Beta('B_income_cls_3_V1', 0, None, None, 0)
+B_income_cls_3_V2= Beta('B_income_cls_3_V2', 0, None, None, 0)
+B_income_cls_3_V3= Beta('B_income_cls_3_V3', 0, None, None, 0)
+###
+B_CENSUS_R_2_V0= Beta('B_CENSUS_R_2_V0', 0, None, None, 1)
+B_CENSUS_R_2_V1= Beta('B_CENSUS_R_2_V1', 0, None, None, 0)
+B_CENSUS_R_2_V2= Beta('B_CENSUS_R_2_V2', 0, None, None, 0)
+B_CENSUS_R_2_V3= Beta('B_CENSUS_R_2_V3', 0, None, None, 0)
+###
+B_CENSUS_R_3_V0= Beta('B_CENSUS_R_3_V0', 0, None, None, 1)
+B_CENSUS_R_3_V1= Beta('B_CENSUS_R_3_V1', 0, None, None, 0)
+B_CENSUS_R_3_V2= Beta('B_CENSUS_R_3_V2', 0, None, None, 0)
+B_CENSUS_R_3_V3= Beta('B_CENSUS_R_3_V3', 0, None, None, 0)
+###
+B_CENSUS_R_4_V0= Beta('B_CENSUS_R_4_V0', 0, None, None, 1)
+B_CENSUS_R_4_V1= Beta('B_CENSUS_R_4_V1', 0, None, None, 0)
+B_CENSUS_R_4_V2= Beta('B_CENSUS_R_4_V2', 0, None, None, 0)
+B_CENSUS_R_4_V3= Beta('B_CENSUS_R_4_V3', 0, None, None, 0)
 
 
-# %%
-fdir_in_out= "../../../FRISM_input_output_SF"
-fdir_firms=fdir_in_out+'/Sim_inputs/Synth_firm_pop/'
-firm_file='synthfirms_all_Sep.csv'
-# firm and warehouse(for-hire carrier)
-firm_file_xy=fdir_firms+"xy"+firm_file
-if file_exists(firm_file_xy):
-    firms=pd.read_csv(firm_file_xy, header=0, sep=',')
-    if "BusID" in firms.columns:
-        firms=firms.rename({'BusID':'SellerID'}, axis='columns')
-    if "lat" in firms.columns:
-        firms=firms.rename({'lat':'y', 'lon': 'x'}, axis='columns')
-# %%
-firms_group= firms.groupby(['Industry_NAICS6_Make'])['Industry_NAICS6_Make'].agg(num_firms='count').reset_index()
-firms_group.to_csv(fdir_firms+"naics_in_firmfile.csv")
-# %%
-import overpy
-api = overpy.Overpass()
-# small_test = (37.779125,-122.295224,37.889793,-122.151232)
-# full region = (37.221225, -123.115864, 38.469739, -121.496602)
-# eating: ammenity= restaurant;bar;fast_food
-# Grocery: shop=supermarket; wholesale
-eating_result = api.query("node[amenity=restaurant](37.221225, -123.115864, 38.469739, -121.496602);out;")
-#grocery_result = api.query("node[shop=supermarket](37.221225, -123.115864, 38.469739, -121.496602);out;")
-# %%
-#len(eating_result.nodes)
+# Definition of the utility functions
+V0 = ASC_NOS + B_SEX_V0 * R_SEX_IMP + B_HHSIZE_V0 * HHSIZE + B_WORKER_V0 *WORKER + B_EDUC_1_V0 *EDUC_1 + B_EDUC_2_V0 *EDUC_2 + B_EDUC_3_V0 *EDUC_3 + B_AGE_IMP_1_V0 *R_AGE_IMP_1+ B_AGE_IMP_2_V0 *R_AGE_IMP_2+B_AGE_IMP_3_V0 *R_AGE_IMP_3+\
+    B_income_cls_1_V0 *income_cls_1+B_income_cls_2_V0 *income_cls_2+B_income_cls_3_V0 *income_cls_3 +B_CENSUS_R_2_V0 *CENSUS_R_2 +B_CENSUS_R_3_V0 *CENSUS_R_3+B_CENSUS_R_4_V0 *CENSUS_R_4 +B_MSACAT_V0 *MSACAT
+V1 = ASC_OFF + B_SEX_V1 * R_SEX_IMP + B_HHSIZE_V1 * HHSIZE + B_WORKER_V1 *WORKER + B_EDUC_1_V1 *EDUC_1 + B_EDUC_2_V1 *EDUC_2 + B_EDUC_3_V1 *EDUC_3 + B_AGE_IMP_1_V1 *R_AGE_IMP_1+ B_AGE_IMP_2_V1 *R_AGE_IMP_2+B_AGE_IMP_3_V1 *R_AGE_IMP_3+\
+    B_income_cls_1_V1 *income_cls_1+B_income_cls_2_V1 *income_cls_2+B_income_cls_3_V1 *income_cls_3 +B_CENSUS_R_2_V1 *CENSUS_R_2 +B_CENSUS_R_3_V1 *CENSUS_R_3+B_CENSUS_R_4_V1 *CENSUS_R_4 +B_MSACAT_V1 *MSACAT
+V2 = ASC_ONS + B_SEX_V2 * R_SEX_IMP + B_HHSIZE_V2 * HHSIZE + B_WORKER_V2 *WORKER + B_EDUC_1_V2 *EDUC_1 + B_EDUC_2_V2 *EDUC_2 + B_EDUC_3_V2 *EDUC_3 + B_AGE_IMP_1_V2 *R_AGE_IMP_1+ B_AGE_IMP_2_V2 *R_AGE_IMP_2+B_AGE_IMP_3_V2 *R_AGE_IMP_3+\
+    B_income_cls_1_V2 *income_cls_1+B_income_cls_2_V2 *income_cls_2+B_income_cls_3_V2 *income_cls_3 +B_CENSUS_R_2_V2 *CENSUS_R_2 +B_CENSUS_R_3_V2 *CENSUS_R_3+B_CENSUS_R_4_V2 *CENSUS_R_4 +B_MSACAT_V2 *MSACAT
+V3 = ASC_BOT + B_SEX_V3 * R_SEX_IMP + B_HHSIZE_V3 * HHSIZE + B_WORKER_V3 *WORKER + B_EDUC_1_V3 *EDUC_1 + B_EDUC_2_V3 *EDUC_2 + B_EDUC_3_V3 *EDUC_3 + B_AGE_IMP_1_V3 *R_AGE_IMP_1+ B_AGE_IMP_2_V3 *R_AGE_IMP_2+B_AGE_IMP_3_V3 *R_AGE_IMP_3+\
+    B_income_cls_1_V3 *income_cls_1+B_income_cls_2_V3 *income_cls_2+B_income_cls_3_V3 *income_cls_3 +B_CENSUS_R_2_V3 *CENSUS_R_2 +B_CENSUS_R_3_V3 *CENSUS_R_3+B_CENSUS_R_4_V3 *CENSUS_R_4 +B_MSACAT_V3 *MSACAT
+# Associate utility functions with the numbering of alternatives
+V = {0: V0,1: V1, 2: V2, 3: V3}
 
-tag1 = pd.Series()
-tag2 = pd.Series()
-tag3 = pd.Series()
-tag4 = pd.Series()
-tag5 = pd.Series()
+# Associate the availability conditions with the alternatives
+av = {0: Avail, 1: Avail, 2: Avail, 3: Avail}
 
-for i in range(len(eating_result.nodes)):
-    tag1.at[i] = eating_result.nodes[i].id
-    tag2.at[i] = eating_result.nodes[i].tags.get('amenity')
-    tag3.at[i] = eating_result.nodes[i].tags.get('name')
-    tag4.at[i] = eating_result.nodes[i].lat
-    tag5.at[i] = eating_result.nodes[i].lon
-    
-df_eating_result = pd.concat([tag1, tag2,tag3, tag4,tag5], axis=1)
-df_eating_result.columns = ['id', 'type', 'name', 'lat', 'lon']
+# nest parameters
+NEST_SHOP=Beta('NEST_SHOP',1,1.0,10,0)
+
+NO_SHOP =1.0, [0]
+SHOP=NEST_SHOP, [1,2,3]
+
+nests = NO_SHOP, SHOP
+# Definition of the model. This is the contribution of each
+# observation to the log likelihood function.
+logprob = models.lognested(V, av, nests, shop_choice)
+
+# Define level of verbosity
+logger = msg.bioMessage()
+# logger.setSilent()
+# logger.setWarning()
+logger.setGeneral()
+# logger.setDetailed()
+
+# Create the Biogeme object
+biogeme = bio.BIOGEME(database, logprob)
+biogeme.modelName = "shoping_nested"
+
+# Calculate the null log likelihood for reporting.
+biogeme.calculateNullLoglikelihood(av)
+
+# Estimate the parameters
+results = biogeme.estimate()
+pandasResults = results.getEstimatedParameters()
+print(pandasResults)
+
+# Get the results in a pandas table
+pandasResults = results.getEstimatedParameters()
+print(pandasResults)    
 # %%
-api = overpy.Overpass()
-grocery_result = api.query("node[shop=supermarket](37.221225, -123.115864, 38.469739, -121.496602);out;")
-tag1 = pd.Series()
-tag2 = pd.Series()
-tag3 = pd.Series()
-tag4 = pd.Series()
-tag5 = pd.Series()
+## shopping nested 
+database = db.Database('ondemand', atus_df)
 
-for i in range(len(grocery_result.nodes)):
-    tag1.at[i] = grocery_result.nodes[i].id
-    tag2.at[i] = grocery_result.nodes[i].tags.get('shop')
-    tag3.at[i] = grocery_result.nodes[i].tags.get('name')
-    tag4.at[i] = grocery_result.nodes[i].lat
-    tag5.at[i] = grocery_result.nodes[i].lon
-    
-df_grocery_result = pd.concat([tag1, tag2,tag3, tag4,tag5], axis=1)
-df_grocery_result.columns = ['id', 'type', 'name', 'lat', 'lon']
+# The following statement allows you to use the names of the
+# variable as Python variable.
+globals().update(database.variables)
+
+# Parameters to be estimated
+## Intercept
+ASC_NOS = Beta('ASC_NOS', 0, None, None, 1)
+ASC_OFF = Beta('ASC_OFF', 0, None, None, 0)
+ASC_ONS = Beta('ASC_ONS', 0, None, None, 0)
+ASC_BOT = Beta('ASC_BOT', 0, None, None, 0)
+## Beta
+B_SEX_V0= Beta('B_SEX_V0', 0, None, None, 1)
+B_SEX_V1= Beta('B_SEX_V1', 0, None, None, 0)
+B_SEX_V2= Beta('B_SEX_V2', 0, None, None, 0)
+B_SEX_V3= Beta('B_SEX_V3', 0, None, None, 0)
+###
+B_HHSIZE_V0= Beta('B_SEX_V0', 0, None, None, 1)
+B_HHSIZE_V1= Beta('B_SEX_V1', 0, None, None, 0)
+B_HHSIZE_V2= Beta('B_SEX_V2', 0, None, None, 0)
+B_HHSIZE_V3= Beta('B_SEX_V3', 0, None, None, 0)
+###
+B_WORKER_V0= Beta('B_WORKER_V0', 0, None, None, 1)
+B_WORKER_V1= Beta('B_WORKER_V1', 0, None, None, 0)
+B_WORKER_V2= Beta('B_WORKER_V2', 0, None, None, 0)
+B_WORKER_V3= Beta('B_WORKER_V3', 0, None, None, 0)
+
+###
+B_MSACAT_V0= Beta('B_MSACAT_V0', 0, None, None, 1)
+B_MSACAT_V1= Beta('B_MSACAT_V1', 0, None, None, 0)
+B_MSACAT_V2= Beta('B_MSACAT_V2', 0, None, None, 0)
+B_MSACAT_V3= Beta('B_MSACAT_V3', 0, None, None, 0)
+###
+B_EDUC_1_V0= Beta('B_EDUC_1_V0', 0, None, None, 1)
+B_EDUC_1_V1= Beta('B_EDUC_1_V1', 0, None, None, 0)
+B_EDUC_1_V2= Beta('B_EDUC_1_V2', 0, None, None, 0)
+B_EDUC_1_V3= Beta('B_EDUC_1_V3', 0, None, None, 0)
+###
+B_EDUC_2_V0= Beta('B_EDUC_2_V0', 0, None, None, 1)
+B_EDUC_2_V1= Beta('B_EDUC_2_V1', 0, None, None, 0)
+B_EDUC_2_V2= Beta('B_EDUC_2_V2', 0, None, None, 0)
+B_EDUC_2_V3= Beta('B_EDUC_2_V3', 0, None, None, 0)
+###
+B_EDUC_3_V0= Beta('B_EDUC_3_V0', 0, None, None, 1)
+B_EDUC_3_V1= Beta('B_EDUC_3_V1', 0, None, None, 0)
+B_EDUC_3_V2= Beta('B_EDUC_3_V2', 0, None, None, 0)
+B_EDUC_3_V3= Beta('B_EDUC_3_V3', 0, None, None, 0)
+
+###
+B_AGE_IMP_1_V0= Beta('B_AGE_IMP_1_V0', 0, None, None, 1)
+B_AGE_IMP_1_V1= Beta('B_AGE_IMP_1_V1', 0, None, None, 0)
+B_AGE_IMP_1_V2= Beta('B_AGE_IMP_1_V2', 0, None, None, 0)
+B_AGE_IMP_1_V3= Beta('B_AGE_IMP_1_V3', 0, None, None, 0)
+
+###
+B_AGE_IMP_2_V0= Beta('B_AGE_IMP_2_V0', 0, None, None, 1)
+B_AGE_IMP_2_V1= Beta('B_AGE_IMP_2_V1', 0, None, None, 0)
+B_AGE_IMP_2_V2= Beta('B_AGE_IMP_2_V2', 0, None, None, 0)
+B_AGE_IMP_2_V3= Beta('B_AGE_IMP_2_V3', 0, None, None, 0)
+###
+B_AGE_IMP_3_V0= Beta('B_AGE_IMP_3_V0', 0, None, None, 1)
+B_AGE_IMP_3_V1= Beta('B_AGE_IMP_3_V1', 0, None, None, 0)
+B_AGE_IMP_3_V2= Beta('B_AGE_IMP_3_V2', 0, None, None, 0)
+B_AGE_IMP_3_V3= Beta('B_AGE_IMP_3_V3', 0, None, None, 0)
+###
+B_RACE_1= Beta('B_RACE_1', 0, None, None, 0)
+###
+B_RACE_2= Beta('B_RACE_2', 0, None, None, 0)
+###
+B_RACE_3= Beta('B_RACE_3', 0, None, None, 0)
+###
+B_income_cls_1_V0= Beta('B_income_cls_1_V0', 0, None, None, 1)
+B_income_cls_1_V1= Beta('B_income_cls_1_V1', 0, None, None, 0)
+B_income_cls_1_V2= Beta('B_income_cls_1_V2', 0, None, None, 0)
+B_income_cls_1_V3= Beta('B_income_cls_1_V3', 0, None, None, 0)
+###
+B_income_cls_2_V0= Beta('B_income_cls_2_V0', 0, None, None, 1)
+B_income_cls_2_V1= Beta('B_income_cls_2_V1', 0, None, None, 0)
+B_income_cls_2_V2= Beta('B_income_cls_2_V2', 0, None, None, 0)
+B_income_cls_2_V3= Beta('B_income_cls_2_V3', 0, None, None, 0)
+###
+B_income_cls_3_V0= Beta('B_income_cls_3_V0', 0, None, None, 1)
+B_income_cls_3_V1= Beta('B_income_cls_3_V1', 0, None, None, 0)
+B_income_cls_3_V2= Beta('B_income_cls_3_V2', 0, None, None, 0)
+B_income_cls_3_V3= Beta('B_income_cls_3_V3', 0, None, None, 0)
+###
+B_CENSUS_R_2_V0= Beta('B_CENSUS_R_2_V0', 0, None, None, 1)
+B_CENSUS_R_2_V1= Beta('B_CENSUS_R_2_V1', 0, None, None, 0)
+B_CENSUS_R_2_V2= Beta('B_CENSUS_R_2_V2', 0, None, None, 0)
+B_CENSUS_R_2_V3= Beta('B_CENSUS_R_2_V3', 0, None, None, 0)
+###
+B_CENSUS_R_3_V0= Beta('B_CENSUS_R_3_V0', 0, None, None, 1)
+B_CENSUS_R_3_V1= Beta('B_CENSUS_R_3_V1', 0, None, None, 0)
+B_CENSUS_R_3_V2= Beta('B_CENSUS_R_3_V2', 0, None, None, 0)
+B_CENSUS_R_3_V3= Beta('B_CENSUS_R_3_V3', 0, None, None, 0)
+###
+B_CENSUS_R_4_V0= Beta('B_CENSUS_R_4_V0', 0, None, None, 1)
+B_CENSUS_R_4_V1= Beta('B_CENSUS_R_4_V1', 0, None, None, 0)
+B_CENSUS_R_4_V2= Beta('B_CENSUS_R_4_V2', 0, None, None, 0)
+B_CENSUS_R_4_V3= Beta('B_CENSUS_R_4_V3', 0, None, None, 0)
+
+
+# Definition of the utility functions
+V0 = ASC_NOS + B_SEX_V0 * R_SEX_IMP + B_HHSIZE_V0 * HHSIZE + B_WORKER_V0 *WORKER + B_EDUC_1_V0 *EDUC_1 + B_EDUC_2_V0 *EDUC_2 + B_EDUC_3_V0 *EDUC_3 + B_AGE_IMP_1_V0 *R_AGE_IMP_1+ B_AGE_IMP_2_V0 *R_AGE_IMP_2+B_AGE_IMP_3_V0 *R_AGE_IMP_3+\
+    B_income_cls_1_V0 *income_cls_1+B_income_cls_2_V0 *income_cls_2+B_income_cls_3_V0 *income_cls_3 +B_CENSUS_R_2_V0 *CENSUS_R_2 +B_CENSUS_R_3_V0 *CENSUS_R_3+B_CENSUS_R_4_V0 *CENSUS_R_4 +B_MSACAT_V0 *MSACAT
+V1 = ASC_OFF + B_SEX_V1 * R_SEX_IMP + B_HHSIZE_V1 * HHSIZE + B_WORKER_V1 *WORKER + B_EDUC_1_V1 *EDUC_1 + B_EDUC_2_V1 *EDUC_2 + B_EDUC_3_V1 *EDUC_3 + B_AGE_IMP_1_V1 *R_AGE_IMP_1+ B_AGE_IMP_2_V1 *R_AGE_IMP_2+B_AGE_IMP_3_V1 *R_AGE_IMP_3+\
+    B_income_cls_1_V1 *income_cls_1+B_income_cls_2_V1 *income_cls_2+B_income_cls_3_V1 *income_cls_3 +B_CENSUS_R_2_V1 *CENSUS_R_2 +B_CENSUS_R_3_V1 *CENSUS_R_3+B_CENSUS_R_4_V1 *CENSUS_R_4 +B_MSACAT_V1 *MSACAT
+V2 = ASC_ONS + B_SEX_V2 * R_SEX_IMP + B_HHSIZE_V2 * HHSIZE + B_WORKER_V2 *WORKER + B_EDUC_1_V2 *EDUC_1 + B_EDUC_2_V2 *EDUC_2 + B_EDUC_3_V2 *EDUC_3 + B_AGE_IMP_1_V2 *R_AGE_IMP_1+ B_AGE_IMP_2_V2 *R_AGE_IMP_2+B_AGE_IMP_3_V2 *R_AGE_IMP_3+\
+    B_income_cls_1_V2 *income_cls_1+B_income_cls_2_V2 *income_cls_2+B_income_cls_3_V2 *income_cls_3 +B_CENSUS_R_2_V2 *CENSUS_R_2 +B_CENSUS_R_3_V2 *CENSUS_R_3+B_CENSUS_R_4_V2 *CENSUS_R_4 +B_MSACAT_V2 *MSACAT
+V3 = ASC_BOT + B_SEX_V3 * R_SEX_IMP + B_HHSIZE_V3 * HHSIZE + B_WORKER_V3 *WORKER + B_EDUC_1_V3 *EDUC_1 + B_EDUC_2_V3 *EDUC_2 + B_EDUC_3_V3 *EDUC_3 + B_AGE_IMP_1_V3 *R_AGE_IMP_1+ B_AGE_IMP_2_V3 *R_AGE_IMP_2+B_AGE_IMP_3_V3 *R_AGE_IMP_3+\
+    B_income_cls_1_V3 *income_cls_1+B_income_cls_2_V3 *income_cls_2+B_income_cls_3_V3 *income_cls_3 +B_CENSUS_R_2_V3 *CENSUS_R_2 +B_CENSUS_R_3_V3 *CENSUS_R_3+B_CENSUS_R_4_V3 *CENSUS_R_4 +B_MSACAT_V3 *MSACAT
+# Associate utility functions with the numbering of alternatives
+V = {0: V0,1: V1, 2: V2, 3: V3}
+
+# Associate the availability conditions with the alternatives
+av = {0: Avail, 1: Avail, 2: Avail, 3: Avail}
+
+# nest parameters
+NEST_OD=Beta('NEST_OD',1,1.0,10,0)
+
+NO_OD =1.0, [0]
+OD=NEST_OD, [1,2,3]
+
+nests = NO_OD, OD
+# Definition of the model. This is the contribution of each
+# observation to the log likelihood function.
+logprob = models.lognested(V, av, nests, shop_choice)
+
+# Define level of verbosity
+logger = msg.bioMessage()
+# logger.setSilent()
+# logger.setWarning()
+logger.setGeneral()
+# logger.setDetailed()
+
+# Create the Biogeme object
+biogeme = bio.BIOGEME(database, logprob)
+biogeme.modelName = "ondemand_nested"
+
+# Calculate the null log likelihood for reporting.
+biogeme.calculateNullLoglikelihood(av)
+
+# Estimate the parameters
+results = biogeme.estimate()
+pandasResults = results.getEstimatedParameters()
+print(pandasResults)
+
+# Get the results in a pandas table
+pandasResults = results.getEstimatedParameters()
+print(pandasResults)    
 # %%

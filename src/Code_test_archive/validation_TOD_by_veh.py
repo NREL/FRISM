@@ -126,7 +126,7 @@ for county in county_list_at:
     num_stop_at=pd.concat([num_stop_at,df_group], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(num_stop_sf['num_stop'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
+#plt.hist(num_stop_sf['num_stop'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
 plt.hist(num_stop_at['num_stop'], density=True, color ="red", alpha = 0.3, label="B2B_AT", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
 plt.title("B2B Number of Stops")
 plt.legend(loc="upper right")
@@ -147,7 +147,7 @@ for county in county_list_at:
     num_stop_at=pd.concat([num_stop_at,df_group], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(num_stop_sf['num_stop'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
+#plt.hist(num_stop_sf['num_stop'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
 plt.hist(num_stop_at['num_stop'], density=True, color ="red", alpha = 0.3, label="B2C_AT", bins=np.arange(min(num_stop_sf['num_stop']), max(num_stop_sf['num_stop']) + 1, 1))
 plt.title("B2C Number of Stops")
 plt.legend(loc="upper right")
@@ -172,7 +172,7 @@ for county in county_list_at:
     stop_time_at=pd.concat([stop_time_at,df], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(stop_time_sf['op_min'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
+#plt.hist(stop_time_sf['op_min'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
 plt.hist(stop_time_at['op_min'], density=True, color ="red", alpha = 0.3, label="B2B_AT", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
 plt.title("B2B stop duration")
 plt.legend(loc="upper right")
@@ -197,7 +197,7 @@ for county in county_list_at:
     stop_time_at=pd.concat([stop_time_at,df], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(stop_time_sf['op_min'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
+#plt.hist(stop_time_sf['op_min'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
 plt.hist(stop_time_at['op_min'], density=True, color ="red", alpha = 0.3, label="B2C_AT", bins=np.arange(min(stop_time_sf['op_min']), max(stop_time_sf['op_min']) + 10, 10))
 plt.title("B2C stop duration")
 plt.legend(loc="upper right")
@@ -235,7 +235,7 @@ for county in county_list_at:
     stop_time_at=pd.concat([stop_time_at,df], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(stop_time_sf['t_time'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
+#plt.hist(stop_time_sf['t_time'], density=True, color ="blue", alpha = 0.3, label="B2B_SF", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
 plt.hist(stop_time_at['t_time'], density=True, color ="red", alpha = 0.3, label="B2B_AT", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
 plt.title("B2B travel time")
 plt.legend(loc="upper right")
@@ -272,7 +272,7 @@ for county in county_list_at:
     stop_time_at=pd.concat([stop_time_at,df], ignore_index=True).reset_index(drop=True)
     
 plt.figure(figsize = (8,6))
-plt.hist(stop_time_sf['t_time'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
+#plt.hist(stop_time_sf['t_time'], density=True, color ="blue", alpha = 0.3, label="B2C_SF", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
 plt.hist(stop_time_at['t_time'], density=True, color ="red", alpha = 0.3, label="B2C_AT", bins=np.arange(min(stop_time_sf['t_time']), max(stop_time_sf['t_time']) + 10, 10))
 plt.title("B2C travel time ")
 plt.legend(loc="upper right")
