@@ -1,6 +1,6 @@
-state_CBSA = ["31080","40140","40900","41740","41860","41940"]
-study_CBSA= ["41860","41940"]
-study_region ="SF"
+state_CBSA = ["12420","19100","26420","41700"]
+study_CBSA= ["12420"] # "41700" =San Antonio-New Braunfels, TX
+study_region ="AT"
 x_var_candidate_hh= ['HOUSEID',
                      'HH_HISP', 
                      'HOMEOWN',
@@ -111,75 +111,73 @@ selected_x_var_delivery=[
 #"WEBUSE17_2"    
 ]
 
+# input for B2C day sim
+b2c_delivery_frequency=20
+hh_aggregation_size=8
+# input for B2B day sim
+b2b_day_factor =5
+fdir_in_out= "../../../FRISM_input_output_AT"
 
-firm_file= 'synthfirms_all_Sep.csv'
-warehouse_file= 'warehouses_all_Sep.csv'
-dist_file= 'od_distance.csv'
-CBG_file= 'sfbay_freight.geojson'
+# input for B2B/Geo_data
+firm_file= 'synthetic_firms_with_fleet.csv'
+warehouse_file= 'synthetic_for_hire_carriers.csv'
+dist_file= 'Austin_od_dist.csv'
+CBG_file= 'Austin_freight.geojson'
+##ship_direction = 'out' # ['out','in', 'all']
+commodity_list= ["1", "2", "3", "4", "5"]
+county_list=[453, 491, 209, 55, 21, 53] ## this should be updated 
+list_error_zone=[] # this should be updated
+weight_theshold=40000
+md_cap=8000
+hd_cap=35000
 
-
-b2c_delivery_frequency=30
-hh_aggregation_size=15
-
+# output data structure
 fnm_B2C_payload="B2C_payload"
 fnm_B2C_carrier="B2C_carrier"
 fnm_B2B_payload="B2B_payload"
 fnm_B2B_carrier="B2B_carrier"
 fnm_vtype="vehicle_types.csv"
-
-fdir_main_output= "../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/"
+fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
 
 #ship_direction = 'out' # ['out','in', 'all']
-commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-weight_theshold=40000
 
 
-# County: [1, 13, 41, 55, 75, 81, 85, 95, 97], all = 9999
+"""
+# HH sf_2010 variables vs 2018 data
 
-# HH variables that can be used, based on synth pop
-# "HHSIZE"
-# "HHVEHCNT"
-# "income_est"
-# "WRKCOUNT"
-# "HH_RACE_0"
-# "HH_RACE_1"
-# "HH_RACE_2"
-# "HH_RACE_3"
-# "income_cls_0"
-# "income_cls_1"
-# "income_cls_2"
-# "income_cls_3"
+household_id      int64     household_id                 int64
+serialno        float64     serialno                     int64
+persons           int64     persons                      int64
+cars              int64     cars                         int64
+income            int64     hh_income                   object income                     float64
+race_of_head      int64     hh_race_of_head             object race_of_head                 int64 
+age_of_head       int64     hh_age_of_head              object  age_of_head                  int64
+workers           int64     hh_workers                  object  workers                    float64
+*children          int64     hh_children                 object
+tenure            int64     tenure                       int64
+recent_mover      int64     recent_mover                 int64
+block_id          int64     block_id                     int64
 
-# "HHSIZE"
-# "HHVEHCNT"
-# "income_est"
-# "WRKCOUNT"
-# "HH_RACE_0"
-# "HH_RACE_1"
-# "HH_RACE_2"
-# "HH_RACE_3"
-# "income_cls_0"
-# "income_cls_1"
-# "income_cls_2"
-# "income_cls_3"
-# "R_AGE_IMP_0"
-# "R_AGE_IMP_1"
-# "R_AGE_IMP_2"
-# "R_AGE_IMP_3"
-# "EDUC_0"
-# "EDUC_1"
-# "EDUC_2"
-# "EDUC_3"
-# "R_RACE_0"
-# "R_RACE_1"
-# "R_RACE_2"
-# "R_RACE_3"
-# "R_SEX_IMP"
-# "SCHTYP"
-# "WRK_HOME"
-# "WORKER"
-# "WEBUSE17_0"
-# "WEBUSE17_1"
-# "WEBUSE17_2"
-# "onlineshop"
+# PER sf_2010 variables vs 2018 data
+
+person_id       int64
+age             int64       age                 int64   person_age         object
+earning         int64       earning           float64
+edu             int64       edu               float64
+hours           int64       hours             float64
+household_id    int64       household_id        int64
+member_id       int64       member_id           int64
+race_id         int64       race_id             int64   race               object
+relate          int64       relate              int64
+sex             int64       sex                 int64   person_sex         object
+student         int64       student             int64
+work_at_home    int64       work_at_home        int64
+worker          int64       worker          int64       
+
+"""
+"""
+zone_lu=pd.read_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_inputs/Geo_data/"+"zonal_id_lookup_final.csv")
+zone_lu["GEOID"]=zone_lu["GEOID"].astype(str)
+zone_lu["County"]=zone_lu["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
+county_list =zone_lu[zone_lu["FAFNAME"]=="Austin"]["County"].unique()
+"""

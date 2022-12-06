@@ -101,3 +101,41 @@ for county in county_list:
         if pd.isnull(df_payload.loc[i,"locationZone_x"]):
             print("null exist in county {}".format(county))
 # %%
+# AT check 
+
+f_dir="../../../FRISM_input_output_AT/Sim_outputs/"
+#f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_outputs/"
+
+county_list=[453, 491, 209, 55, 21, 53]
+b2b_shipment=0
+b2b_carrier=0
+b2b_veh =0
+
+b2c_shipment=0
+b2c_carrier=0
+b2c_veh =0
+
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"Shipment2Fleet/B2B_payload_county{}_shipall_A.csv".format(county))
+    b2b_shipment += df['payload_id'].nunique()
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"Shipment2Fleet/B2C_payload_county{}_shipall.csv".format(county))
+    b2c_shipment += df['payload_id'].nunique()
+
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"Tour_plan/B2B_county{}_carrier.csv".format(county))
+    b2b_carrier += df['carrierId'].nunique()
+    b2b_veh +=df['tourId'].nunique()
+
+for county in county_list:
+    df = pd.read_csv(f_dir+"Tour_plan/B2C_county{}_carrier.csv".format(county))
+    b2c_carrier += df['carrierId'].nunique()
+    b2c_veh +=df['tourId'].nunique()
+
+print ("num_shipment sum: {0}, b2b: {1}, b2c: {2}".format(b2b_shipment+b2c_shipment,b2b_shipment,b2c_shipment))
+print ("num_carrier sum: {0}, b2b: {1}, b2c: {2}".format(b2b_carrier+b2c_carrier,b2b_carrier,b2c_carrier))
+print ("num_veh sum: {0}, b2b: {1}, b2c: {2}".format(b2b_veh+b2c_veh,b2b_veh,b2c_veh))
+# %%

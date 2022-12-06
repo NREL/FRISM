@@ -112,10 +112,10 @@ selected_x_var_delivery=[
 ]
 
 # input for B2C day sim
-b2c_delivery_frequency=20
-hh_aggregation_size=10
+b2c_delivery_frequency=18
+hh_aggregation_size=8
 # input for B2B day sim
-b2b_day_factor =7
+b2b_day_factor =5
 fdir_in_out= "../../../FRISM_input_output_AT"
 
 # input for B2B/Geo_data
@@ -125,7 +125,7 @@ dist_file= 'Austin_od_dist.csv'
 CBG_file= 'Austin_freight.geojson'
 ##ship_direction = 'out' # ['out','in', 'all']
 commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[453, 491, 209, 55, 21] ## this should be updated 
+county_list=[453, 491, 209, 55, 21, 53] ## this should be updated 
 list_error_zone=[] # this should be updated
 weight_theshold=40000
 md_cap=8000

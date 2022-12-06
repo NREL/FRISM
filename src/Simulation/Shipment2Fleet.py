@@ -31,6 +31,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
 
     dist_df=pd.read_csv(fdir_geo+dist_file, header=0, sep=',')
     dist_df.columns=['Origin','Destination','dist']
+    #dist_df.to_csv(fdir_geo+dist_file, index = False, header=True)
     CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
     #CBGzone_df=CBGzone_df[['GEOID','CBPZONE','MESOZONE','area']]
     CBGzone_df= CBGzone_df.to_crs({'proj': 'cea'})
@@ -52,6 +53,8 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
                 firms=firms.rename({'BusID':'SellerID'}, axis='columns')
             if "lat" in firms.columns:
                 firms=firms.rename({'lat':'y', 'lon': 'x'}, axis='columns')
+            if "mdt" in firms.columns:
+                firms=firms.rename({'mdt':'md_veh', 'hdt':'hd_veh'}, axis='columns')
         else:
             print ("**** Generating x_y to firms file")        
             firms= pd.read_csv(fdir_firms+firm_file, header=0, sep=',')
@@ -128,8 +131,22 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
     if file_exists(ex_zone_file_xy):
         ex_zone=pd.read_csv(ex_zone_file_xy, header=0, sep=',')
     else:
-        print ("**** Generating x_y to ex_zone files")          
-        ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
+        print ("**** Generating x_y to ex_zone files")
+        ex_zone=CBGzone_df[~CBGzone_df["County"].isin(county_list)][['MESOZONE','geometry']].reset_index(drop=True)
+        ex_zone["BoundaryZONE"]=0
+        in_zones= CBGzone_df[CBGzone_df["County"].isin(county_list)].reset_index(drop=True)
+        for index, row in ex_zone.iterrows():
+            D = 999999
+            Id = None 
+            p = row['geometry'].centroid
+            for i,z in enumerate(in_zones['geometry']):
+                distance = p.distance(z)
+                ID = in_zones.iloc[i]['MESOZONE']
+                if distance <= D:
+                    D = distance
+                    Id = ID
+            ex_zone.at[index, "BoundaryZONE"] =Id
+        #ex_zone= pd.read_csv(fdir_geo+"External_Zones_Mapping.csv")
         ex_zone=ex_zone[~ex_zone['BoundaryZONE'].isin(list_error_zone)]
         temp_ex_zone=ex_zone.drop_duplicates(subset=['BoundaryZONE'])
         temp_ex_zone=temp_ex_zone.reset_index()
@@ -142,6 +159,7 @@ def genral_input_files_processing(firm_file, warehouse_file, dist_file,CBG_file,
                 temp_ex_zone.loc[i,'y']=y
                 bar()  
         ex_zone=ex_zone.merge(temp_ex_zone[["BoundaryZONE", "x", "y"]], on="BoundaryZONE", how='left')
+        ex_zone=ex_zone.drop('geometry', axis=1)
         ex_zone.to_csv(ex_zone_file_xy, index = False, header=True)
     ex_zone_list=list(ex_zone["MESOZONE"].unique())
 
@@ -1159,7 +1177,7 @@ def main(args=None):
                     bar()
                     #print (i)
             print ("**** Completed carrier assignement and Generating results ****")    
-            df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] >=0].reset_index(drop=True)
+            df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] !="no"].reset_index(drop=True)
             df_hh_D_GrID=df_hh_D_GrID[~df_hh_D_GrID['MESOZONE'].isin(config.list_error_zone)]
             df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), index = False, header=True)
 

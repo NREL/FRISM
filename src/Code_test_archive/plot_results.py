@@ -12,6 +12,9 @@ import geopandas as gpd
 #import osmnx as ox
 #import plotly.graph_objects as go
 
+'''
+Plot stop locations on the map 
+'''
 # %%
 parser = ArgumentParser()
 parser.add_argument("-st", "--shipment type", dest="ship_type",
@@ -22,7 +25,7 @@ args = parser.parse_args()
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 sf_map = plt.imread('../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SF_map.png')
 BBox= (-123.655,-121.524,36.869,38.852)
-
+#BBox= (-122.9,-121.6,37.0,38.5)
 # %%
 #
 # ship_type=args.ship_type
@@ -74,6 +77,9 @@ https://api.mapbox.com/styles/v1/ksjeong/cl1y7ojor001314o5mg62wtd7/wmts?access_t
 
 # %%
 
+'''
+Plot web-based results by income-group
+'''
 study_region= "SF" #"AT" 
 web_obs=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income_observed.csv'.format(study_region,study_region))
 online_bi_obs=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income_observed.csv'.format(study_region,study_region))
@@ -113,22 +119,40 @@ for ic_nm in list_income:
 
 # %%
 ############################################# Validation TOD distribution against INRIX #####################
+'''
+Plot INRIX vs Simulated stop activities 
+'''
+s_region="AT"
+CBG_file= 'Austin_freight.geojson' #'freight_centroids.geojson'
+# SF
+#county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+# AT
+county_list=[453, 491, 209, 55, 21, 53]
 ## INRIX data
-fdir_truck='../../../FRISM_input_output_SF/Model_carrier_op/INRIX_processing/'
+fdir_truck='../../../FRISM_input_output_{}/Model_carrier_op/INRIX_processing/'.format(s_region)
 df_dpt_dist_MD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_MD.csv', header=0, sep=',')
 df_dpt_dist_HD=pd.read_csv(fdir_truck+'depature_dist_by_cbg_HD.csv', header=0, sep=',')
 
-fdir_geo='../../../FRISM_input_output_SF/Sim_inputs/Geo_data/'
-CBGzone_df = gpd.read_file(fdir_geo+'freight_centroids.geojson')
-CBGzone_df.GEOID=CBGzone_df.GEOID.astype(str).astype(int)
-df_dpt_dist_MD=df_dpt_dist_MD.merge(CBGzone_df[["GEOID",'MESOZONE']], left_on="cbg_id", right_on="GEOID", how='left')
-df_dpt_dist_HD=df_dpt_dist_HD.merge(CBGzone_df[["GEOID",'MESOZONE']], left_on="cbg_id", right_on="GEOID", how='left')
-sel_zone= pd.read_csv(fdir_geo+'selected zone.csv')
-sel_zone=sel_zone.rename({'blkgrpid':'GEOID'}, axis=1)
-sel_zone = sel_zone.merge(CBGzone_df[['GEOID','MESOZONE']], on='GEOID', how='left')
+fdir_geo='../../../FRISM_input_output_{}/Sim_inputs/Geo_data/'.format(s_region)
 
-df_dpt_dist_MD=df_dpt_dist_MD[df_dpt_dist_MD['MESOZONE'].isin(sel_zone['MESOZONE'])].reset_index()
-df_dpt_dist_HD=df_dpt_dist_HD[df_dpt_dist_HD['MESOZONE'].isin(sel_zone['MESOZONE'])].reset_index()
+CBGzone_df = gpd.read_file(fdir_geo+CBG_file)
+
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
+## Add county id from GEOID
+CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
+CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
+CBGzone_df=CBGzone_df[CBGzone_df["County"]!=0].reset_index()
+
+
+df_dpt_dist_MD=df_dpt_dist_MD.merge(CBGzone_df[["GEOID",'MESOZONE',"County"]], left_on="cbg_id", right_on="GEOID", how='left')
+df_dpt_dist_HD=df_dpt_dist_HD.merge(CBGzone_df[["GEOID",'MESOZONE',"County"]], left_on="cbg_id", right_on="GEOID", how='left')
+# sel_zone= pd.read_csv(fdir_geo+'selected zone.csv')
+# sel_zone=sel_zone.rename({'blkgrpid':'GEOID'}, axis=1)
+# sel_zone = sel_zone.merge(CBGzone_df[['GEOID','MESOZONE']], on='GEOID', how='left')
+
+df_dpt_dist_MD=df_dpt_dist_MD[df_dpt_dist_MD['County'].isin(county_list)].reset_index()
+df_dpt_dist_HD=df_dpt_dist_HD[df_dpt_dist_HD['County'].isin(county_list)].reset_index()
 
 MD_dpt= df_dpt_dist_MD.groupby(['start_hour'])['Trip'].sum()
 MD_dpt=MD_dpt.to_frame()
@@ -140,14 +164,14 @@ HD_dpt=HD_dpt.to_frame()
 HD_dpt.reset_index(level=(0), inplace=True)
 HD_dpt['Trip_rate']=HD_dpt['Trip']/HD_dpt['Trip'].sum()
 
-f_dir_val= "../../../FRISM_input_output_SF/Validation/"
+f_dir_val= "../../../FRISM_input_output_{}/Validation/".format(s_region)
 MD_dpt.to_csv(f_dir_val+"md_tod_inrix_observed.csv", index = False, header=True )
 HD_dpt.to_csv(f_dir_val+"hd_tod_inrix_observed.csv", index = False, header=True )
 # %%
 ## Result data
-f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+f_dir="../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(s_region)
 #f_dir="../../../Results_from_HPC_v5/Tour_plan/"
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+
 MD_df_b2c=pd.DataFrame()
 v_type= "B2C"
 for county in county_list:
@@ -188,6 +212,15 @@ MD_dpt_B2BC.to_csv(f_dir_val+"md_tod_frism_simulated.csv", index = False, header
 HD_dpt_B2B.to_csv(f_dir_val+"hd_tod_frism_simulated.csv", index = False, header=True )
 
 from scipy.interpolate import make_interp_spline
+
+# %%
+# Read TOD from INRIX  
+MD_dpt=pd.read_csv(f_dir_val+"md_tod_inrix_observed.csv")
+HD_dpt=pd.read_csv(f_dir_val+"hd_tod_inrix_observed.csv" )
+# Read TOD from Simulation
+MD_dpt_B2BC=pd.read_csv(f_dir_val+"md_tod_frism_simulated.csv")
+HD_dpt_B2B=pd.read_csv(f_dir_val+"hd_tod_frism_simulated_mod.csv")
+
 
 md_sim_trip = MD_dpt_B2BC['Trip_rate'].to_numpy()
 md_sim_hour = MD_dpt_B2BC['start_hour'].to_numpy()
@@ -235,7 +268,7 @@ plt.fill_between(md_inrix_hour,md_inrix_trip,color ="blue", label="Observed (INR
 plt.fill_between(md_sim_hour,md_sim_trip , color ="red", label="Simulated (FRISM)", alpha = 0.2,)
 plt.title("Distrubtion of MD stop activities  by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_MD.png'.format(s_region))
 
 plt.figure(figsize = (8,6))
 plt.plot(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,)
@@ -244,7 +277,7 @@ plt.fill_between(hd_inrix_hour,hd_inrix_trip,color ="blue", alpha = 0.2,label="O
 plt.fill_between(hd_sim_hour,hd_sim_trip , color ="red", alpha = 0.2,label="Simulated (FRISM)")
 plt.title("Distrubtion of HD stop activities by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_HD.png')
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_HD.png'.format(s_region))
 
 plt.figure(figsize = (8,6))
 plt.plot(md2b_sim_hour,md2b_sim_trip , color ="blue", alpha = 0.3,)
@@ -253,7 +286,7 @@ plt.fill_between(md2b_sim_hour,md2b_sim_trip , color ="blue", label="B2B Simulat
 plt.fill_between(md2c_sim_hour,md2c_sim_trip , color ="red", label="B2C Simulated (FRISM)", alpha = 0.3,)
 plt.title("Distrubtion of MD stop activities  by time of day")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD_by_type.png')
+plt.savefig('../../../FRISM_input_output_{}/Validation/Val_truck_dist_MD_by_type.png'.format(s_region))
 
 
 # plt.figure(figsize = (8,6))
@@ -285,84 +318,9 @@ plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD_by_typ
 
 
 # %%
-############################################# Validation TOD distribution against INRIX #####################
-#[1, 13, 41, 55, 75, 81, 85, 95, 97]
-f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/Results_from_HPC_v3/Shipment2Fleet/"
-county=85
-df_carr=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
-df_pay=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
-
-carr_id_from_car_f=df_carr["carrier_id"].unique()
-
-test= df_pay[~df_pay["carrier_id"].isin(carr_id_from_car_f)]
-test.shape[0]
-# %%
-f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
-f_dir="../../../Results_from_HPC_v3/Shipment2Fleet/"
-county =85
-df_carr=pd.read_csv(f_dir+"B2B_carrier_county{}_shipall.csv".format(county))
-df_pay=pd.read_csv(f_dir+"B2B_payload_county{}_shipall.csv".format(county))
-print (df_pay.shape[0])
-
-# %%
-new_df_pay=pd.DataFrame()
-new_df_carr=pd.DataFrame()
-#for c_id in df_carr["carrier_id"].unique():
-for c_id in ["B2B_1006810_4976","B2B_1006812_4977"]:    
-    temp_pay_md= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="md")].reset_index(drop=True)
-    temp_pay_hd= df_pay[(df_pay["carrier_id"]==c_id) & (df_pay["veh_type"]=="hd")].reset_index(drop=True)
-    temp_carr_md = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
-    temp_carr_hd = df_carr[df_carr["carrier_id"]==c_id].reset_index(drop=True)
-    num_md = temp_pay_md.shape[0]
-    num_hd = temp_pay_hd.shape[0]
-
-    if num_md ==0:
-        temp_carr_md = pd.DataFrame()
-    elif num_md <= 30 and num_md >0:
-        new_c_id=c_id+"m"
-        temp_pay_md["carrier_id"] = new_c_id
-        temp_carr_md["carrier_id"] = new_c_id
-        temp_carr_md["num_veh_type_1"] =num_md
-        temp_carr_md["num_veh_type_2"] =0
-    else: 
-        for i in range(0,temp_pay_md.shape[0]):
-            new_c_id=c_id+"m{}".format(str(int(i/30)))
-            temp_pay_md.loc[i,"carrier_id"] = new_c_id
-        break_num=int(num_md/30)+1
-        temp_carr_md=pd.concat([temp_carr_md]*break_num, ignore_index=True).reset_index(drop=True)
-        for i in range(0,temp_carr_md.shape[0]):
-            new_c_id=c_id+"m{}".format(str(i))
-            temp_carr_md.loc[i,"carrier_id"] = new_c_id
-            temp_carr_md["num_veh_type_1"] =30
-            temp_carr_md["num_veh_type_2"] =0                    
-    if num_hd ==0:
-        temp_carr_hd = pd.DataFrame()
-    elif num_hd <= 30 and num_hd >0:
-        new_c_id=c_id+"h"
-        temp_pay_hd["carrier_id"] = new_c_id
-        temp_carr_hd["carrier_id"] = new_c_id
-        temp_carr_hd["num_veh_type_1"] =0
-        temp_carr_hd["num_veh_type_2"] =num_hd
-    else: 
-        for i in range(0,temp_pay_hd.shape[0]):
-            new_c_id=c_id+"h{}".format(str(int(i/30)))
-            temp_pay_hd.loc[i,"carrier_id"] = new_c_id
-        break_num=int(num_hd/30)+1
-        temp_carr_hd=pd.concat([temp_carr_hd]*break_num, ignore_index=True).reset_index(drop=True)
-        for i in range(0,temp_carr_hd.shape[0]):
-            new_c_id=c_id+"h{}".format(str(i))
-            temp_carr_hd.loc[i,"carrier_id"] = new_c_id
-            temp_carr_hd["num_veh_type_1"] =0
-            temp_carr_hd["num_veh_type_2"] =30
-    new_df_pay=pd.concat([new_df_pay,temp_pay_md, temp_pay_hd], ignore_index=True).reset_index(drop=True)
-    new_df_carr=pd.concat([new_df_carr,temp_carr_md, temp_carr_hd ], ignore_index=True).reset_index(drop=True) 
-
-# %%
-fdir_in_out= "../../../FRISM_input_output_SF/Sim_inputs/Synth_firm_pop/"
-f_nm="xysynthfirms_all_Sep.csv"
-
-firms = pd.read_csv(fdir_in_out+f_nm)
-# %%
+'''
+Coordinate check if it's properly assigned? 
+'''
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan_inputs/"
 for s in ["B2B", "B2C"]:
@@ -381,9 +339,12 @@ for s in ["B2B", "B2C"]:
             print ("{} tour county {}".format(s,str(county)))
 
 # %%
-## Draw stop ditribution by shipment type
+'''
+Draw stop ditribution by shipment type
+'''
+
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan_inputs/"
+f_dir="../../../FRISM_input_output_{}/Sim_outputs/Tour_plan_inputs/".format(s_region)
 for s in ["B2B", "B2C"]:
     df_pay_agg= pd.DataFrame()
     for county in county_list:
@@ -397,11 +358,11 @@ for s in ["B2B", "B2C"]:
     plt.hist(df_pay_agg['sequenceRank'], color ="blue", density=True, bins=df_pay_agg['sequenceRank'].max(), alpha = 0.5)
     #sns.distplot(df_pay_agg['sequenceRank'], color ="blue", kde=True, bins=df_pay_agg['sequenceRank'].max())
     plt.title("# Stops in a tour for {0} shipments".format(s))
-    plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Stop_hist_for_{}.png'.format(s))
+    plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Stop_hist_for_{}.png'.format(s_region,s))
 
 # %%
 ## Result data
-f_dir="../../../FRISM_input_output_SF/Sim_outputs/Tour_plan/"
+f_dir="../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(s_region)
 #f_dir="../../../Results_from_HPC_v5/Tour_plan/"
 # county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 county_list=[1]
@@ -481,10 +442,13 @@ plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2C,color ="blue", label="all ac
 plt.plot("start_hour", "Trip_rate", data=MD_dpt_B2C_sdepot, color ="red", label="starting depot", alpha = 0.3,)
 plt.title("B2C MD")
 plt.legend(loc="upper right")
-plt.savefig('../../../FRISM_input_output_SF/Sim_outputs/Val_truck_dist_MD.png')
+plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Val_truck_dist_MD.png'.format(s_region))
 
 # %%
-f_dir="../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/"
+'''
+Check start time distribution
+'''
+f_dir="../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(s_region)
 #f_dir="../../../Results_from_HPC_v5/Tour_plan/"
 # county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 county=1
@@ -496,4 +460,23 @@ for v_type in ["B2C", "B2B"]:
 
     plt.figure(figsize = (8,6))
     plt.plot("start_hour", "Trip", data=df_carr_dpt, color ="blue", label="all activity", alpha = 0.3,)
+
+
+
+
+
 # %%
+'''
+AT travel time skim processing  
+'''
+travel_file="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz"
+tt_df_sf = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
+#travel_file="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_inputs/Geo_data/austin-skims-res-full-new.csv.gz"
+travel_file="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz"
+tt_df_at = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
+
+tt_df_at=tt_df_at[tt_df_at["pathType"]=="SOV"]
+tt_df_at=tt_df_at[tt_df_at["timePeriod"].isin(['AM', 'MD', 'PM'])]
+new_tt_df= tt_df_at.groupby(["origin", "destination"])['TIME_minutes'].mean().reset_index(name='TIME_minutes')
+
+new_tt_df.to_csv('/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz', compression='gzip')
