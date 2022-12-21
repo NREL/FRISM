@@ -70,40 +70,50 @@ print (dc_module_text)
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
-# os.system("python Shipment2Fleet.py \
+# os.system("python Shipment2Fleet_veh_tech.py \
+#     -sf TDAHigh.csv \
+#         -sn High \
+#             -yt 2040 \
 #     -st B2C \
 #         -ct 21 \
 #             -sd all \
-#                 -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+#                 -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 # # B2B
 # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
 # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-os.system("python Shipment2Fleet.py \
-    -st B2B \
-        -ct 21 \
-            -sd all \
-                -rt Test") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+os.system("python Shipment2Fleet_veh_tech.py \
+    -sf TDAHigh.csv \
+        -sn High \
+            -yt 2040 \
+        -st B2B \
+            -ct 21 \
+                -sd all \
+                    -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # # B2C
-# os.system("python VRP_OR-tools.py \
-#     -cy 1 \
-#         -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
-#                 -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_carrier_county1_shipall.csv \
-#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2C_payload_county1_shipall.csv \
-#                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
-    # # B2B
-# os.system("python VRP_OR-tools.py \
-#     -cy 1 \
-#         -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
-#                 -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county1_shipout.csv \
-#                         -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county1_shipout.csv \
-#                             -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv")
+# os.system("python VRP_OR-tools_veh_tech.py \
+#     -cy 21 \
+#         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
+#                 -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2C_carrier_county21_shipall_sHigh_y2040.csv \
+#                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2C_payload_county21_shipall_sHigh_y2040.csv \
+#                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv \
+#                                          -sn High \
+#                                            -yt 2040")
+#     # # B2B
+# os.system("python VRP_OR-tools_veh_tech.py \
+#     -cy 21 \
+#         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
+#                 -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_carrier_county21_shipall_sHigh_y2040_A.csv \
+#                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_payload_county21_shipall_sHigh_y2040_A.csv \
+#                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv \
+#                                 -sn High \
+#                                     -yt 2040")
 
 print ("Completed running modules you selected")
