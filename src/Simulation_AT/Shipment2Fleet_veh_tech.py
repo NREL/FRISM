@@ -1570,11 +1570,12 @@ def main(args=None):
                                                                                      config.county_list)
 
     # temp// need to delete
+    # firm_file, warehouse_file, leasing_file, stock_file =config.sythfirm_fleet_file("high")
     # create_global_variable(config.md_cap,config.hd_cap,config.fdir_in_out ,config.state_id,config.max_tour_for_b2b)
-    # firms, truckings,leasings, dist_df, CBGzone_df, df_dpt_dist, ex_zone_list, ex_zone= genral_input_files_processing(config.firm_file,
-    #                                                                                  config.warehouse_file,
-    #                                                                                  config.leasing_file,
-    #                                                                                  "TDAHigh.csv",
+    # firms, truckings,leasings, dist_df, CBGzone_df, df_dpt_dist, ex_zone_list, ex_zone= genral_input_files_processing(firm_file,
+    # warehouse_file,
+    #                                                                                  leasing_file,
+    #                                                                                  stock_file,
     #                                                                                  2040, 
     #                                                                                  config.dist_file,
     #                                                                                  config.CBG_file, 
@@ -1589,6 +1590,7 @@ def main(args=None):
         # if file_exists(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type)):
         #     df_hh_D_GrID=pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(args.sel_county, args.run_type), header=0, sep=',')
         # else:
+        truckings_org= truckings.copy()
         sel_county= args.sel_county
         ship_type=args.ship_type 
         ship_direction=args.ship_direction
@@ -1723,7 +1725,7 @@ def main(args=None):
         df_hh_D_GrID_new.to_csv(fdir_in_out+'/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %sel_county, index = False, header=True)
         
 
-        payloads, carriers=b2c_create_output(df_hh_D_GrID_new,truckings,df_dpt_dist, ship_type)
+        payloads, carriers=b2c_create_output(df_hh_D_GrID_new,truckings_org,df_dpt_dist, ship_type)
         if not file_exists(config.fdir_main_output + str(args.target_year)+"/"):
             os.makedirs(config.fdir_main_output + str(args.target_year)+"/")
         dir_out= config.fdir_main_output + str(args.target_year)+"/"   
@@ -1744,6 +1746,7 @@ def main(args=None):
         #     firms = pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction), header=0, sep=',' )
         # else:     
         print ("**** Start processing daily B2B shipment")
+        truckings_org= truckings.copy()
         df_vius= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/vehicle_proportion_by_sctg_dist.csv", header=0, sep=',')
         FH_B2B, PV_B2B, firms = b2b_input_files_processing(firms,leasings,truckings,dist_df, CBGzone_df, args.sel_county, args.ship_direction, config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius, config.b2b_day_factor)
         FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
@@ -1777,7 +1780,7 @@ def main(args=None):
         #FH_B2B.rename({'x': 'c_x','y': 'c_y'},axis=1, inplace=True)
         PV_B2B['inbound_index']=PV_B2B['SellerCounty'].apply(lambda x: 0 if x in config.county_list else 1)
         FH_B2B['inbound_index']=FH_B2B['SellerCounty'].apply(lambda x: 0 if x in config.county_list else 1)
-        truckings['inbound_index']=truckings['County'].apply(lambda x: 0 if x in config.county_list else 1)
+        truckings_org['inbound_index']=truckings_org['County'].apply(lambda x: 0 if x in config.county_list else 1)
         PV_B2B['outbound_index']=PV_B2B['BuyerCounty'].apply(lambda x: 0 if x in config.county_list else 1)
         FH_B2B['outbound_index']=FH_B2B['BuyerCounty'].apply(lambda x: 0 if x in config.county_list else 1)
 
@@ -1785,10 +1788,10 @@ def main(args=None):
         FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         PV_B2B = PV_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
         FH_B2B= FH_B2B.sort_values(by=['SellerID', 'SCTG_Group']).reset_index(drop=True)
-        truckings["BusID"]=truckings["BusID"].astype('int')
+        truckings_org["BusID"]=truckings_org["BusID"].astype('int')
         FH_B2B["assigned_carrier"]=FH_B2B["assigned_carrier"].astype('int')
         # create payload and carriers
-        payloads, carriers=b2b_create_output(PV_B2B,FH_B2B,truckings,df_dpt_dist, args.ship_type, ex_zone_list, firms, ex_zone)
+        payloads, carriers=b2b_create_output(PV_B2B,FH_B2B,truckings_org,df_dpt_dist, args.ship_type, ex_zone_list, firms, ex_zone)
 
         payloads.to_csv (config.fdir_main_output+config.fnm_B2B_payload+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
         carriers.to_csv (config.fdir_main_output+config.fnm_B2B_carrier+"_county%s_ship%s.csv" %(args.sel_county, args.ship_direction), index = False, header=True)
