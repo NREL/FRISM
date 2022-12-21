@@ -894,22 +894,24 @@ def main(args=None):
     print('Time for the run: ', run_time)
     print('\n')
 
-
+    if not os.path.exists(config.fdir_main_output_tour + str(args.target_year)+"/"):
+        os.makedirs(config.fdir_main_output_tour + str(args.target_year)+"/")
+    dir_out=config.fdir_main_output_tour + str(args.target_year)+"/"     
     #  Saving the carrier ids with errors
     if len(error_list) > 0:
-        with open(config.fdir_in_out+"/Sim_outputs/%s_county%s_error_%s.csv"%(ship_type, str(count_num), str(file_index) ), "w", newline="") as f:
+        with open(dir_out+"%s_county%s_error_%s.csv"%(ship_type, str(count_num), str(file_index) ), "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(error_list)
 
     # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
     if file_index == 9999:
-        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
-        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
-        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+        tour_df.to_csv(dir_out+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+        carrier_df.to_csv(dir_out+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+        payload_df.to_csv(dir_out+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
     else:    
-        tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
-        carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier{2}_s{3}_y{4}.csv".format(ship_type, count_num,str(file_index),args.scenario,args.target_year), index=False)
-        payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
+        tour_df.to_csv(dir_out+"{0}_county{1}_freight_tours{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
+        carrier_df.to_csv(dir_out+"{0}_county{1}_carrier{2}_s{3}_y{4}.csv".format(ship_type, count_num,str(file_index),args.scenario,args.target_year), index=False)
+        payload_df.to_csv(dir_out+"{0}_county{1}_payload{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
 
     # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'

@@ -1,6 +1,9 @@
 import os
 import config
-
+import sys
+county = sys.argv[1]
+year = sys.argv[2]
+scenario = sys.argv[3]
 head_text = f"""
 {'-'*40}
 Run FRISM Module in FAMOUS, which is Freight module as part of BEAM-CORE
@@ -71,49 +74,47 @@ print (dc_module_text)
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
 # os.system("python Shipment2Fleet_veh_tech.py \
-#     -sf TDAHigh.csv \
-#         -sn High \
-#             -yt 2040 \
+#         -sn {0} \
+#             -yt {1} \
 #     -st B2C \
-#         -ct 21 \
+#         -ct {2} \
 #             -sd all \
-#                 -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
-# # B2B
-# # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
-# # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-os.system("python Shipment2Fleet_veh_tech.py \
-    -sf TDAHigh.csv \
-        -sn High \
-            -yt 2040 \
-        -st B2B \
-            -ct 21 \
-                -sd all \
-                    -rt RunSim") # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+#                 -rt RunSim".format(scenario, year, county)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+# # # B2B
+# # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
+# # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
+# os.system("python Shipment2Fleet_veh_tech.py \
+#         -sn {0} \
+#             -yt {1} \
+#         -st B2B \
+#             -ct {2} \
+#                 -sd all \
+#                     -rt RunSim".format(scenario, year, county)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # # B2C
-# os.system("python VRP_OR-tools_veh_tech.py \
-#     -cy 21 \
-#         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
-#                 -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2C_carrier_county21_shipall_sHigh_y2040.csv \
-#                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2C_payload_county21_shipall_sHigh_y2040.csv \
-#                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv \
-#                                          -sn High \
-#                                            -yt 2040")
+os.system("python VRP_OR-tools_veh_tech.py \
+    -cy {2} \
+        -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+            -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
+                -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+                    -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2C_carrier_county21_shipall_s{0}_y{1}.csv \
+                        -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county21_shipall_s{0}_y{1}.csv \
+                            -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+                                         -sn {0}\
+                                           -yt {1}".format(scenario, year, county))
 #     # # B2B
-# os.system("python VRP_OR-tools_veh_tech.py \
-#     -cy 21 \
-#         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
-#                 -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_carrier_county21_shipall_sHigh_y2040_A.csv \
-#                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_payload_county21_shipall_sHigh_y2040_A.csv \
-#                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv \
-#                                 -sn High \
-#                                     -yt 2040")
+os.system("python VRP_OR-tools_veh_tech.py \
+    -cy {2} \
+        -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+            -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
+                -ct ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+                    -cr ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2B_carrier_county21_shipall_A_s{0}_y{1}.csv \
+                        -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county21_shipall_A_s{0}_y{1}.csv \
+                            -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+                                -sn {0} \
+                                    -yt {1}".format(scenario, year, county))
 
 print ("Completed running modules you selected")

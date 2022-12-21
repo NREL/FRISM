@@ -123,9 +123,13 @@ max_tour_for_b2b = 4
 fdir_in_out= "../../../FRISM_input_output_AT"
 
 # input for B2B/Geo_data
-firm_file= 'synthetic_firms_with_fleet_TDA_high_mc_adjusted.csv'
-warehouse_file= 'synthetic_carriers_TDA_high.csv'
-leasing_file= 'synthetic_leasing_company_TDA_high.csv'
+def sythfirm_fleet_file(scenario):
+    firm_file= 'synthetic_firms_with_fleet_TDA_{}_mc_adjusted.csv'.format(scenario)
+    warehouse_file= 'synthetic_carriers_TDA_{}.csv'.format(scenario)
+    leasing_file= 'synthetic_leasing_company_TDA_{}.csv'.format(scenario)
+    stock_file = 'TDA_{}.csv'.format(scenario)
+    return firm_file, warehouse_file, leasing_file, stock_file 
+
 dist_file= 'Austin_od_dist.csv'
 CBG_file= 'Austin_freight.geojson'
 ##ship_direction = 'out' # ['out','in', 'all']
@@ -144,6 +148,7 @@ fnm_B2B_payload="B2B_payload"
 fnm_B2B_carrier="B2B_carrier"
 fnm_vtype="vehicle_types"
 fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
+fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(study_region)
 
 #ship_direction = 'out' # ['out','in', 'all']
 
