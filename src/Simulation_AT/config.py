@@ -137,8 +137,8 @@ commodity_list= ["1", "2", "3", "4", "5"]
 county_list=[453, 491, 209, 55, 21, 53] ## this should be updated 
 list_error_zone=[] # this should be updated
 weight_theshold=50000
-md_cap=10000
-hd_cap=45000
+md_cap=10000*0.8
+hd_cap=45000*0.8
 # https://www.technogroupusa.com/size-and-weight-limit-laws/ 
 
 # output data structure
