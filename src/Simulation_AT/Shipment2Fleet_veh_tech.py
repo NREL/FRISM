@@ -193,13 +193,15 @@ def genral_input_files_processing(firm_file, warehouse_file, leasing_file, stock
         # truckings['time_cap'] = truckings.apply(lambda x: (x['md_veh'] + x['hd_veh'])* 60*8, axis=1)
         
         #truckings=pd.concat([truckings,truckings_du], ignore_index=True).reset_index(drop=True)
+        for veh_type in input_veh_list[:-1]:
+            truckings[veh_type]=truckings[veh_type].apply(lambda x: x*3)
         truckings['md_capacity']=truckings.apply(lambda x: (x['Diesel Class 4-6 Vocational'] + x['Electric Class 4-6 Vocational'])*md_max_load, axis=1)
         truckings['hdt_capacity']=truckings.apply(lambda x: (x['Diesel Class 7&8 Tractor'] + x['Electric Class 7&8 Tractor']) *hd_max_load, axis=1)
         truckings['hdv_capacity']=truckings.apply(lambda x: (x['Diesel Class 7&8 Vocational'] + x['Electric Class 7&8 Vocational']) *hd_max_load, axis=1)
 
-        truckings['md_time_cap'] = truckings.apply(lambda x: (x['Diesel Class 4-6 Vocational'] +x['Electric Class 4-6 Vocational']) * 60*10, axis=1)
-        truckings['hdt_time_cap']=truckings.apply(lambda x: (x['Diesel Class 7&8 Tractor'] + x['Electric Class 7&8 Tractor']) * 60*10, axis=1)
-        truckings['hdv_time_cap']=truckings.apply(lambda x: (x['Diesel Class 7&8 Vocational'] + x['Electric Class 7&8 Vocational']) * 60*10, axis=1)
+        truckings['md_time_cap'] = truckings.apply(lambda x: (x['Diesel Class 4-6 Vocational'] +x['Electric Class 4-6 Vocational']) * 60*8, axis=1)
+        truckings['hdt_time_cap']=truckings.apply(lambda x: (x['Diesel Class 7&8 Tractor'] + x['Electric Class 7&8 Tractor']) * 60*8, axis=1)
+        truckings['hdv_time_cap']=truckings.apply(lambda x: (x['Diesel Class 7&8 Vocational'] + x['Electric Class 7&8 Vocational']) * 60*8, axis=1)
 
         truckings = truckings.merge(CBGzone_df[['MESOZONE','County']], on='MESOZONE', how='left')
         # leasing process
@@ -921,6 +923,7 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
 
     ###########################################################
     # For-hire processing
+    truckings_B=truckings.copy(deep=True) 
     md_D_num =truckings["Diesel Class 4-6 Vocational"].sum()
     md_E_num =truckings["Electric Class 4-6 Vocational"].sum()
     hdt_D_num=truckings["Diesel Class 7&8 Tractor"].sum()
@@ -992,13 +995,37 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
                 # find a carrier who can hand a shipment at row i   
                 sel_busID=carrier_sel(FH_sel['SellerZone'].iloc[i], FH_sel['D_truckload'].iloc[i], 60, cap_index, time_index, dist_df, truckings,"B2B", FH_sel['SCTG_Group'].iloc[i])
                 # put the carrier into df
-
-                FH_sel['assigned_carrier'].iloc[i]=sel_busID
-                FH_sel['veh_type_agg'].iloc[i]=v_type
-                # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
-                trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
-                truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - FH_sel.loc[i,'D_truckload']
-                truckings.loc[trucking_index,time_index] = truckings.loc[trucking_index,time_index] - 60
+                if sel_busID != "no":
+                    FH_sel['assigned_carrier'].iloc[i]=sel_busID
+                    FH_sel['veh_type_agg'].iloc[i]=v_type
+                    # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
+                    trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
+                    truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - FH_sel.loc[i,'D_truckload']
+                    truckings.loc[trucking_index,time_index] = truckings.loc[trucking_index,time_index] - 60
+                else:
+                    load=FH_sel["D_truckload"].iloc[i]
+                    num_shipment=int(load/max_load)+1
+                    temp=pd.concat([FH_sel.iloc[[i]]]*num_shipment, ignore_index=True)
+                    if num_shipment ==1:
+                        temp["D_truckload"]= load
+                    else:    
+                        temp["D_truckload"]=max_load
+                        temp["D_truckload"].iloc[-1]=load-max_load*(num_shipment-1)
+                    for j in range(0, temp.shape[0]):
+                        sel_busID=carrier_sel(temp['SellerZone'].iloc[j], temp['D_truckload'].iloc[j], 60, cap_index, time_index, dist_df, truckings,"B2B", temp['SCTG_Group'].iloc[j])
+                        if sel_busID != "no":
+                            temp['assigned_carrier'].iloc[j]=sel_busID
+                            temp['veh_type_agg'].iloc[j]=v_type
+                            # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
+                            trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
+                            truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - temp.loc[j,'D_truckload']
+                            truckings.loc[trucking_index,time_index] = truckings.loc[trucking_index,time_index] - 60
+                        else:
+                            temp['assigned_carrier'].iloc[j]=sel_busID
+                            temp['veh_type_agg'].iloc[j]=v_type
+                    FH_sel.iloc[i]=temp.iloc[0]
+                    if num_shipment >1:                                     
+                        FH_sel=pd.concat([FH_sel,temp.iloc[1:]], ignore_index=True).reset_index(drop=True)   
 
         FH_sel=FH_sel[FH_sel['assigned_carrier'] !="no"].reset_index(drop=True)
 
@@ -1006,7 +1033,7 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
         for i in range(0,FH_sel.shape[0]):
             v_type= FH_sel['veh_type_agg'].iloc[i]
             carr_id= FH_sel['assigned_carrier'].iloc[i]
-            [[md_D_num,md_E_num, hdt_D_num, hdt_E_num, hdv_D_num, hdv_E_num, ev_class]]=truckings[truckings["BusID"] == carr_id]\
+            [[md_D_num,md_E_num, hdt_D_num, hdt_E_num, hdv_D_num, hdv_E_num, ev_class]]=truckings_B[truckings_B["BusID"] == carr_id]\
                                                                                     [['Diesel Class 4-6 Vocational','Electric Class 4-6 Vocational',
                                                                                     'Diesel Class 7&8 Tractor','Electric Class 7&8 Tractor',
                                                                                     'Diesel Class 7&8 Vocational','Electric Class 7&8 Vocational',
@@ -1054,21 +1081,21 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
                 else:
                     p_lable=ev_class          
                 temp["veh_type"].iloc[j]=v_type+"_"+powerT+"_"+p_lable
-            firm_index= truckings[truckings["BusID"] == carr_id].index.item()
+            firm_index= truckings_B[truckings_B["BusID"] == carr_id].index.item()
             for key in dic_firm_stock.keys():   
                 if key ==  "md_D_num":
-                    truckings['Diesel Class 4-6 Vocational'].iloc[firm_index] =  max (dic_firm_stock[key],0) 
+                    truckings_B['Diesel Class 4-6 Vocational'].iloc[firm_index] =  max (dic_firm_stock[key],0) 
                 elif key == "md_E_num":
-                    truckings['Electric Class 4-6 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0) 
+                    truckings_B['Electric Class 4-6 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0) 
                 elif key == "hdt_D_num": 
-                    truckings['Diesel Class 7&8 Tractor'].iloc[firm_index] =max(dic_firm_stock[key],0)  
+                    truckings_B['Diesel Class 7&8 Tractor'].iloc[firm_index] =max(dic_firm_stock[key],0)  
                 elif key == "hdt_E_num":
-                    truckings['Electric Class 7&8 Tractor'].iloc[firm_index] =max(dic_firm_stock[key],0)  
+                    truckings_B['Electric Class 7&8 Tractor'].iloc[firm_index] =max(dic_firm_stock[key],0)  
                 elif key == "hdv_D_num":
-                    truckings['Diesel Class 7&8 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0) 
+                    truckings_B['Diesel Class 7&8 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0) 
                 elif key == "hdv_E_num": 
-                    truckings['Electric Class 7&8 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0)   
-            truckings['EV_powertrain (if any)'].iloc[firm_index] =ev_class
+                    truckings_B['Electric Class 7&8 Vocational'].iloc[firm_index] =max(dic_firm_stock[key],0)   
+            truckings_B['EV_powertrain (if any)'].iloc[firm_index] =ev_class
             FH_sel_ship= pd.concat([FH_sel_ship,temp], ignore_index=True).reset_index(drop=True)
             del temp              
             
