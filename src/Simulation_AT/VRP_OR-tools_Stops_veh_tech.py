@@ -911,7 +911,7 @@ def main(args=None):
                                 message = 'MODEL, PARAMETERS, OR FLAGS ARE INVALID'
 
                             print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' : ', message)
-                            error_list.append([carr_id, veh, message])
+                            error_list.append([carr_id, veh, comm, index, message])
                             print('\n')
 
 
