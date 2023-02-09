@@ -55,7 +55,7 @@ print (head_text)
 # # 1. Model estimation for End-Consumer Behavior Module (E-commerce generation)
 # print (hh_gen_est_text)
 # # Please replace hf, pf if their directory changes
-# os.system("python HH_ecom_models.py \
+# os.system("python E-Commerce_Generation/HH_ecom_models.py \
 #     -hf ../../../FRISM_input_output_{}/Model_inputs/NHTS/hhpub.csv \
 #         -pf ../../../FRISM_input_output_{}/Model_inputs/NHTS/perpub.csv \
 #             -mt WOD".format(config.study_region,config.study_region))
@@ -63,7 +63,7 @@ print (head_text)
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
 print (ec_module_text)
 # Please replace W, O, D, WOD with one of thme you want to run
-# os.system("python B2C_Generation.py \
+# os.system("python End-Consumer_Behavior/B2C_Generation.py \
 #     -hf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/households.csv.zip \
 #         -pf ../../../FRISM_input_output_AT/Sim_inputs/austin_2018/persons.csv.zip")
 
@@ -73,7 +73,7 @@ print (dc_module_text)
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
-# os.system("python Shipment2Fleet_veh_tech.py \
+# os.system("python B2B_B2C_Shipment/Shipment2Fleet_veh_tech.py \
 #         -sn {0} \
 #             -yt {1} \
 #     -st B2C \
@@ -83,7 +83,7 @@ print (dc_module_text)
 # # # B2B
 # # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
 # # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-# os.system("python Shipment2Fleet_veh_tech.py \
+# os.system("python  B2B_B2C_Shipment/Shipment2Fleet_veh_tech.py \
 #         -sn {0} \
 #             -yt {1} \
 #         -st B2B \
@@ -95,7 +95,7 @@ print (dc_module_text)
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # # B2C
-os.system("python VRP_OR-tools_Stops_veh_tech.py \
+os.system("python Carrier_Tour_Plan/VRP_OR-tools_Stops_veh_tech.py \
     -cy {2} \
         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
@@ -106,7 +106,7 @@ os.system("python VRP_OR-tools_Stops_veh_tech.py \
                                          -sn {0}\
                                            -yt {1}".format(scenario, year, county))
 #     # # B2B
-os.system("python VRP_OR-tools_Stops_veh_tech.py \
+os.system("python Carrier_Tour_Plan/VRP_OR-tools_Stops_veh_tech.py \
     -cy {2} \
         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
