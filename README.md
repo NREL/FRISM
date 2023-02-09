@@ -34,15 +34,11 @@ The final output is a set of daily tour plans for each carrier's vehicles to tra
 ```linux
 conda env create -f environment.yml
 ```
-2. In terminal, check to see if envirment was created
-```linux
-conda env list
-```
-3. Activate "frism" environment
+2. Activate "frism" environment
 ```linux
 conda activate frism
 ```
-5. To run the code, modify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
+3. To run the code, modify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
 ```linux
 python src/Simulation/Run_frism.py
 ```
