@@ -8,7 +8,13 @@ Juliette Ugirumurera: <jugirumu@nrel.gov>
 # THIS IS A SOFTWARE REPO
 
 ## Description
-FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. Its output are an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations.
+FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It runs in four main steps: Running Household E-commerce Generation Estimation model for End-Consumer Behavior Module, Running End-Consumer Behavior Module to simulate monthly delivery frequency, Running Distribution Channel to simulate B2B/B2C daily shipments and shipment-carrier matching, and Running Carrier Operation to simulate tour-plan for each carrier. It outputs daily tour plans for each carrier's vehicles to transport shipments from their origins to their destinations.
+
+### The following are contained in this repository
+File System for ATHENA SUMO
+- TODO Kyungsoo : to add list of other code files in the rep
+- Solving the vehicle routing problem: src/Simulation/VRP_OR-tools_Stops_veh_tech.py
+- Running the freight activity simulation: src/Simulation/Run_frism.py
 
 ## Access to input data
 Origin destination travel time and distance matrices, as well as freight centroid zones for the San Francisco Bay Area can be found on this [google drive link](https://drive.google.com/drive/folders/14LSjFYH3BtmqUaaAVoPk3wPhGc2f2nBz).

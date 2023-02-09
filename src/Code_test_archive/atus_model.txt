@@ -1,7 +1,0 @@
-************* Webuse Model: inital model ****************
-Accuracy for initial model: 0.96
-Error rate for initial model: 0.04
-initial confusion matirix) [[6459    0    0    0]
- [   1 2585    0    0]
- [   0  247    0    0]
- [   0  120    1   22]]
