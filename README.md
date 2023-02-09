@@ -14,7 +14,8 @@ FRISM simulates day-to-day freight activities including end-consumer shopping, d
 - Running Household E-commerce Generation Estimation model for End-Consumer Behavior Module
 - Running End-Consumer Behavior Module to simulate monthly delivery frequency
 - Running Distribution Channel to simulate B2B/B2C daily shipments and shipment-carrier matching
-- Running Carrier Operation to simulate tour-plan for each carrier. It outputs daily tour plans for each carrier's vehicles to transport shipments from their origins to their destinations.
+- Running Carrier Operation to simulate tour-plan for each carrier.
+The final output is a set of daily tour plans for each carrier's vehicles to transport shipments from their origins to their destinations.
 
 ## The following are contained in this repository
 File System for ATHENA SUMO
