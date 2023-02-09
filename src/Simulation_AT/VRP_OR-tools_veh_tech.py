@@ -451,22 +451,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
         vc_df[key+'_start_id']=np.nan
     vc_df = vc_df.fillna(int(0))
     vc_df = vc_df.reset_index()
-    #######################################
-    # # Create vehicle sequence vehicle ID
-    # vc_df = pd.DataFrame()
-    # vc_df['carrier_id']=c_df['carrier_id']
-    # vc_df['md_veh']=c_df['num_veh_type_1']
-    # vc_df['hd_veh'] = c_df['num_veh_type_2']
-    # vc_df['md_start_id']=np.nan
-    # vc_df['hd_start_id']=np.nan
-    # vc_df = vc_df.fillna(int(0))
-    # vc_df = vc_df.reset_index()
-    # n=0
-    # for i in range (0, vc_df.shape[0]):
-    #     vc_df.loc[i,'md_start_id'] =  n
-    #     vc_df.loc[i,'hd_start_id'] =  n + vc_df.loc[i,'md_veh']
-    #     n= vc_df.loc[i,'hd_start_id'] + vc_df.loc[i,'hd_veh']
-    #################### KJ added for veh_tech
+
     n=0
     for i in range (0, vc_df.shape[0]):
         for j in range(0,len(veh_list)):
@@ -479,7 +464,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
                 vc_df.loc[i,veh_type_id+"_start_id"]=n 
             if j== len(veh_list)-1:
                 n=  n + vc_df.loc[i,veh_type_id] 
-    #################################
+
     return tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df
 
 def random_points_in_polygon(polygon):

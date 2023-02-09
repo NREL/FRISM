@@ -95,7 +95,7 @@ print (dc_module_text)
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # # B2C
-os.system("python VRP_OR-tools_veh_tech.py \
+os.system("python VRP_OR-tools_Stops_veh_tech.py \
     -cy {2} \
         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \
@@ -106,7 +106,7 @@ os.system("python VRP_OR-tools_veh_tech.py \
                                          -sn {0}\
                                            -yt {1}".format(scenario, year, county))
 #     # # B2B
-os.system("python VRP_OR-tools_veh_tech.py \
+os.system("python VRP_OR-tools_Stops_veh_tech.py \
     -cy {2} \
         -t ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
             -d ../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv \

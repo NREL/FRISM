@@ -5,8 +5,10 @@ Kyungsoo Jeong: <Kyungsoo.Jeong@nrel.gov>
 Juliette Ugirumurera: <jugirumu@nrel.gov>
 <br>
 
+# THIS IS A SOFTWARE REPO
+
 ## Description
-FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel.
+FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. Its output are an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations.
 
 ## Access to input data
 Origin destination travel time and distance matrices, as well as freight centroid zones for the San Francisco Bay Area can be found on this [google drive link](https://drive.google.com/drive/folders/14LSjFYH3BtmqUaaAVoPk3wPhGc2f2nBz).
