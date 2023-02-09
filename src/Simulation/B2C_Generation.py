@@ -385,72 +385,21 @@ def edu_class_synth(EDUC):
     else:
         return 3
 
-# def delivery_process(online_choice, delivery, income_cl):
-#     if online_choice ==0:
-#         final_delivery=0
-#     elif online_choice ==1:
-#         if delivery <=1:
-#             final_delivery =1
-#         elif delivery >1 and delivery <80:
-#             final_delivery = round(delivery-0.5)
-#         elif delivery >=80:
-#             final_delivery = random.randrange (60,80,1)
-#     return final_delivery
-
-# def onlineshop_calibration(income_cl, online_choice):
-#     if income_cl ==0:
-#         if online_choice ==0:
-#             if random.uniform(0,1) <0.57:
-#                 return online_choice
-#             else:
-#                 return 1
-#         else:
-#             return online_choice        
-#     elif income_cl ==1:
-#         if online_choice ==0:
-#             if random.uniform(0,1) <0.68:
-#                 return online_choice
-#             else:
-#                 return 1
-#         else:
-#             return online_choice
-#     elif income_cl ==2:
-#         return online_choice
-#     elif income_cl==3:
-#         return online_choice                  
-
 def delivery_process(online_choice, delivery, income_cl):
     if online_choice ==0:
         final_delivery=0
     elif online_choice ==1:
-        if income_cl==2 :
+        if income_cl==3:
             if delivery <=2.5:
                 final_delivery =1
             elif delivery >2.5: #and delivery <20:
-                final_delivery = round(delivery-2)
+                final_delivery = round(delivery-0.5)
             #elif delivery >=20:
             #    final_delivery = random.randrange (15,60,1)
-        elif income_cl==3 :
+        else:     
             if delivery <=2.5:
                 final_delivery =1
-            elif delivery >2.5: #and delivery <20:
-                if random.uniform(0,1) <0.85:
-                    final_delivery = round(delivery-0.8)
-                else:
-                    final_delivery = random.randrange (5,40,5)         
-            #elif delivery >=20:
-            #    final_delivery = random.randrange (15,60,1)
-        elif income_cl==1 :
-            if delivery <=1.5:
-                final_delivery =1
-            elif delivery >1.5: #and delivery <20:
-                final_delivery = round(delivery-1.5)
-            #elif delivery >=20:
-            #    final_delivery = random.randrange (15,60,1)             
-        elif income_cl==0 :     
-            if delivery <=1.5:
-                final_delivery =1
-            elif delivery >1.5 and delivery <20:
+            elif delivery >2.5 and delivery <20:
                 final_delivery = round(delivery-2)
             elif delivery >=20:
                 final_delivery = random.randrange (15,60,1)
@@ -459,25 +408,25 @@ def delivery_process(online_choice, delivery, income_cl):
 def onlineshop_calibration(income_cl, online_choice):
     if income_cl ==0:
         if online_choice ==0:
-            if random.uniform(0,1) <0.56:
+            if random.uniform(0,1) <0.65:
                 return online_choice
             else:
                 return 1
         else:
             return online_choice
-    # elif income_cl ==1:
-    #     return online_choice                 
     elif income_cl ==1:
-        if online_choice ==0:
-            if random.uniform(0,1) <0.85:
-                return online_choice
-            else:
-                return 1
-        else:
-            return online_choice
+        return online_choice                 
+    # elif income_cl ==1:
+    #     if online_choice ==0:
+    #         if random.uniform(0,1) <0.68:
+    #             return online_choice
+    #         else:
+    #             return 1
+    #     else:
+    #         return online_choice
     elif income_cl ==2:
         if online_choice ==1:
-            if random.uniform(0,1) <0.85:
+            if random.uniform(0,1) <0.8:
                 return online_choice
             else:
                 return 0
@@ -485,14 +434,12 @@ def onlineshop_calibration(income_cl, online_choice):
             return online_choice 
     elif income_cl==3:
         if online_choice ==1:
-            if random.uniform(0,1) <0.68:
+            if random.uniform(0,1) <0.7:
                 return online_choice
             else:
                 return 0
         else:
             return online_choice                   
-
-
 
 def main(args=None):
     # read input files
@@ -500,7 +447,9 @@ def main(args=None):
     parser.add_argument("-hf", "--household_file", dest="hh_file",
                         help="household file in csv format", required=True, type=str)
     parser.add_argument("-pf", "--person_file", dest="per_file",
-                        help="person file in csv format", required=True, type=str)                         
+                        help="person file in csv format", required=True, type=str)  
+    parser.add_argument("-yr", "--year", dest="yr",
+                        help="four digit year YYYY", required=True, type=str)                                           
     args = parser.parse_args()
 
     # Read and process synth household
@@ -513,9 +462,9 @@ def main(args=None):
     df_hh['WEBUSE17']=loaded_model.predict(sim_X)
     ## Process for validation and save it
     val_hh=df_hh.groupby(['income_cls','WEBUSE17'])['income_cls'].agg(num_hh='count').reset_index()
-    val_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income.csv'.format(config.study_region,config.study_region), index = False, header=True)
+    val_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
     ## Save df_hh for further validation
-    df_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_hh_synth.csv'.format(config.study_region,config.study_region), index = False, header=True)
+    df_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_hh_synth_{}.csv'.format(config.study_region,config.study_region,args.yr), index = False, header=True)
     print ("** Completed simulated webuse on household **")
     
     # Read and process synth household
@@ -529,7 +478,7 @@ def main(args=None):
     df_per['onlineshop']=df_per.apply(lambda x: onlineshop_calibration(x['income_cls'], x['onlineshop']), axis=1) #*******************
     ## Process for validation and save it
     val_per=df_per.groupby(['income_cls','onlineshop'])['income_cls'].agg(num_hh='count').reset_index()
-    val_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income.csv'.format(config.study_region,config.study_region), index = False, header=True)
+    val_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
     print ("** Completed simulated online on individual **")
 
     #Run delivery frequency model
@@ -541,45 +490,47 @@ def main(args=None):
     df_per['delivery_f'] = df_per.apply(lambda x: delivery_process(x['onlineshop'], x['delivery_f'], x['income_cls']), axis=1) #**********************
     ## Process for validation and save it
     sns.displot(df_per['delivery_f'])
-    plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Generation/Delivery plot_simulated.png'.format(config.study_region))
+    plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Generation/Delivery plot_simulated_{}.png'.format(config.study_region, args.yr))
     ## Save df_per for further validation
-    df_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_per_synth.csv'.format(config.study_region,config.study_region), index = False, header=True)
+    df_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_per_synth_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
 
     # Aggregate delivery at household level
     df_per_hh=df_per.groupby(['household_id'])['delivery_f'].agg(delivery_f='sum').reset_index()
     df_hh_model=df_hh.merge(df_per_hh, on='household_id', how='left')
-    df_hh_model.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(config.study_region), index = False, header=True)
+    df_hh_model.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del_{}.csv'.format(config.study_region, args.yr), index = False, header=True)
     print ("** Completed simulated monthly delivery frequency on hosehold **")
+    
+    ############################# Only for base year ###### 
+    if int(args.yr) < 2020: 
+        print ("** Plot observed and simulatated by income group")
+        df_hh_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_hh.csv'.format(config.study_region,config.study_region))
+        df_per_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_per.csv'.format(config.study_region,config.study_region))
+        df_per_obs_hh=df_per_obs.groupby(['HOUSEID'])['DELIVER'].agg(delivery_f='sum').reset_index()
+        df_hh_obs=df_hh_obs.merge(df_per_obs_hh, on='HOUSEID', how='left')
 
-    print ("** Plot observed and simulatated by income group")
-    df_hh_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_hh.csv'.format(config.study_region,config.study_region))
-    df_per_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_per.csv'.format(config.study_region,config.study_region))
-    df_per_obs_hh=df_per_obs.groupby(['HOUSEID'])['DELIVER'].agg(delivery_f='sum').reset_index()
-    df_hh_obs=df_hh_obs.merge(df_per_obs_hh, on='HOUSEID', how='left')
-
-    #df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(config.study_region))
-
-
-    df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
-    df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+        #df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(config.study_region))
 
 
-    list_income=["income_cls_0","income_cls_1","income_cls_2","income_cls_3"]
-    dic_income={"income_cls_0": "income <$35k",
-                "income_cls_1": "income $35k-$75k",
-                "income_cls_2": "income $75k-125k",
-                "income_cls_3": "income >$125k"}
-        
-    for ic_nm in list_income:
-        plt.figure(figsize = (8,6))
-        #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
-        #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
-        #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
-        plt.hist(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="observed")
-        plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="modeled")
-        plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], config.study_region))
-        plt.legend(loc="upper right")
-        plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(config.study_region, ic_nm))
+        df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+        df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+
+
+        list_income=["income_cls_0","income_cls_1","income_cls_2","income_cls_3"]
+        dic_income={"income_cls_0": "income <$35k",
+                    "income_cls_1": "income $35k-$75k",
+                    "income_cls_2": "income $75k-125k",
+                    "income_cls_3": "income >$125k"}
+            
+        for ic_nm in list_income:
+            plt.figure(figsize = (8,6))
+            #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+            #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+            #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+            plt.hist(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="observed")
+            plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+            plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], config.study_region))
+            plt.legend(loc="upper right")
+            plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(config.study_region, ic_nm))
 
 if __name__ == "__main__":
     main()

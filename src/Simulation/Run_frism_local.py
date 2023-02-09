@@ -65,7 +65,7 @@ print (head_text)
 #         -pf ../../../FRISM_input_output/Sim_inputs/plans-base-2010/persons.csv")
 
 # 3. Distribution Channel Module Run
-for county in [13, 55, 75, 81, 85, 95, 97]:
+for county in [13, 41, 55, 75, 81, 85, 95, 97]:
     start_time=time.time()
     print ("Run county:", county)
     print (dc_module_text)
@@ -83,11 +83,11 @@ for county in [13, 55, 75, 81, 85, 95, 97]:
     # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
     # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
-    # os.system("python Shipment2Fleet.py \
-    # -st B2B \
-    #     -ct %s \
-    #         -sd all \
-    #             -rt RunSim"%str(county)) # if you want to run test with 100 shipment allocation to carriers, "-rt Test". Otherwise "-rt RunSim"
+    os.system("python Shipment2Fleet.py \
+    -st B2B \
+        -ct %s \
+            -sd all \
+                -rt RunSim"%str(county)) # if you want to run test with 100 shipment allocation to carriers, "-rt Test". Otherwise "-rt RunSim"
 
 
     # # 4. Carrier opration Module Run
@@ -104,12 +104,12 @@ for county in [13, 55, 75, 81, 85, 95, 97]:
         # # B2B    
     os.system("python VRP_OR-tools.py \
         -cy %s \
-            -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-                -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/od_distance.csv \
-                    -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/freight_centroids.geojson \
-                        -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/B2B_carrier_county%s_shipall.csv \
-                            -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/B2B_payload_county%s_shipall.csv \
-                                -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/vehicle_types.csv"%(str(county),str(county),str(county)))
+            -t ../../../FRISM_input_output/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+                -d ../../../FRISM_input_output/Sim_inputs/Geo_data/od_distance.csv \
+                    -ct ../../../FRISM_input_output/Sim_inputs/Geo_data/freight_centroids.geojson \
+                        -cr ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_carrier_county%s_shipall.csv \
+                            -pl ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/B2B_payload_county%s_shipall.csv \
+                                -vt ../../../FRISM_input_output/Sim_outputs/Shipment2Fleet/vehicle_types.csv"%(str(county),str(county),str(county)))
     print ("Completed run for county:",county)
     print ("Run time of %s: %s seconds" %(county, time.time()-start_time))  
 print ("Completed running modules you selected")

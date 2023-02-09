@@ -584,11 +584,11 @@ def b2b_input_files_processing(firms,CBGzone_df, sel_county, ship_direction, com
     ## Private Truck: PV_B2B
     FH_B2B= B2BF_T_D[B2BF_T_D['mode_choice']=="For-hire Truck"].reset_index(drop=True)
     PV_B2B= B2BF_T_D[B2BF_T_D['mode_choice']=="Private Truck"].reset_index(drop=True)
-
+    firms_rest=firms[~firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
     firms=firms[firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
     firms=firms.drop(columns=['md_veh', 'hd_veh'])
 
-    firms_rest=firms[~firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
+    
 
     FH_B2B[["md_truckload","hd_truckload","veh_type"]] =FH_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
     PV_B2B[["md_truckload","hd_truckload","veh_type"]] =PV_B2B.apply(lambda x: b2b_veh_type_truckload(x["SCTG_Group"],x["Distance"], x["D_truckload"], df_vius), axis=1).to_list()
@@ -997,7 +997,8 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     'del_x',
     'del_y',
     'pu_x',
-    'pu_y'])
+    'pu_y',
+    'ship_index'])
     payloads['payload_id']= B2BF_PV['payload_id']
     payloads['carrier_id']= B2BF_PV['Bus_ID'].apply(lambda x: 'B2B_'+str(x))
     #payloads['sequence_id']=
@@ -1026,7 +1027,8 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     payloads['veh_type']=B2BF_PV['veh_type']
     # payloads['del_x'] = B2BF_PV['del_x']
     # payloads['del_y'] = B2BF_PV['del_y']
-    payloads['del_x'],payloads['del_y']=zip(*B2BF_PV.apply(lambda x: ex_coordinate(x['del_x'],x['del_y'], x['BuyerZone'], x['outbound_index'], ex_zone), axis=1)) 
+    payloads['del_x'],payloads['del_y']=zip(*B2BF_PV.apply(lambda x: ex_coordinate(x['del_x'],x['del_y'], x['BuyerZone'], x['outbound_index'], ex_zone), axis=1))
+    payloads['ship_index']= B2BF_PV['outbound_index'].apply(lambda x:"external" if x ==1 else "internal")   
 
     payloads_FH = pd.DataFrame(columns = ['payload_id', 
     'carrier_id',
@@ -1080,6 +1082,7 @@ def b2b_create_output(B2BF_PV,B2BF_FH,truckings,df_dpt_dist, ship_type, ex_zone_
     payloads_FH['veh_type']=B2BF_FH['veh_type']
     payloads_FH['pu_x'],payloads_FH['pu_y'] =zip(*B2BF_FH.apply(lambda x: ex_coordinate(x['pu_x'],x['pu_y'], x['SellerZone'], x['inbound_index'], ex_zone), axis=1))
     payloads_FH['del_x'],payloads_FH['del_y']=zip(*B2BF_FH.apply(lambda x: ex_coordinate(x['del_x'],x['del_y'], x['BuyerZone'], x['outbound_index'], ex_zone), axis=1))
+    payloads['ship_index']= B2BF_FH['outbound_index'].apply(lambda x:"external" if x ==1 else "internal")  
     #payloads_FH['del_x'] = B2BF_FH['del_x']
     #payloads_FH['del_y'] = B2BF_FH['del_y']      
 
