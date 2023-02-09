@@ -11,17 +11,22 @@ Alicia Birky: <Alicia.Birky@nrel.gov>
 
 ## Description
 FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It runs in four main steps:
-- Running Household E-commerce Generation Estimation model for End-Consumer Behavior Module
+- Running Household E-commerce Generation Estimation model for End-Consumer Behavior
 - Running End-Consumer Behavior Module to simulate monthly delivery frequency
-- Running Distribution Channel to simulate B2B/B2C daily shipments and shipment-carrier matching
+- Running Distribution Channel to simulate Business to Business (B2B) and Business to Consumer (B2C) daily shipments and shipment-carrier matching
 - Running Carrier Operation to simulate tour-plan for each carrier.
 The final output is a set of daily tour plans for each carrier's vehicles to transport shipments from their origins to their destinations.
 
 ## The following are contained in this repository
-File System for ATHENA SUMO
+File System for FRISM
 - TODO Kyungsoo : to add list of other code files in the rep
-- Solving the vehicle routing problem: src/Simulation/VRP_OR-tools_Stops_veh_tech.py
-- Running the freight activity simulation: src/Simulation/Run_frism.py
+- Running Household E-commerce Generation Estimation for End-Consumer Behavior:
+- Running End-Consumer Behavior Module to simulate monthly delivery frequency:
+- Running Distribution Channel to simulate B2B and B2C daily shipments and shipment-carrier matching
+- Running Carrier Operation to simulate tour-plan for each carrier: 
+    *   src/Simulation/VRP_OR-tools_Stops_veh_tech.py
+- Running the freight activity simulation:
+    *   src/Simulation/Run_frism.py
 - List of inputs to run simulation: [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme)
 
 ## Installation Instructions
