@@ -22,6 +22,7 @@ File System for ATHENA SUMO
 - TODO Kyungsoo : to add list of other code files in the rep
 - Solving the vehicle routing problem: src/Simulation/VRP_OR-tools_Stops_veh_tech.py
 - Running the freight activity simulation: src/Simulation/Run_frism.py
+- List of inputs to run simulation: [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme)
 
 ## Installation Instructions
 ### Setup conda environment
