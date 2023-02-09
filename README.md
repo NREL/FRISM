@@ -24,7 +24,7 @@ File System for ATHENA SUMO
 - Running the freight activity simulation: src/Simulation/Run_frism.py
 
 ## Installation Instructions
-### SETUP CONDA ENVIRONMENT
+### Setup conda environment
 1. In your terminal load  environment.yml file
 ```linux
 conda env create -f environment.yml
@@ -33,14 +33,13 @@ conda env create -f environment.yml
 ```linux
 conda env list
 ```
-3. If installed correctly you will see "frism" as one of your environments
-4. Activate "athena" environment
+3. Activate "frism" environment
 ```linux
 conda activate frism
 ```
-5. To deactivate environment:
+5. To run the code:
 ```linux
-conda deactivate
+python src/Simulation/Run_frism.py
 ```
 
 ## Access to input data
