@@ -23,7 +23,7 @@ File System for FRISM
 - Running Household E-commerce Generation Estimation for End-Consumer Behavior:
 - Running End-Consumer Behavior Module to simulate monthly delivery frequency:
 - Running Distribution Channel to simulate B2B and B2C daily shipments and shipment-carrier matching
-- Running Carrier Operation to simulate tour-plan for each carrier: 
+- Running Carrier Operation to simulate tour-plan for each carrier:
     *   src/Simulation/VRP_OR-tools_Stops_veh_tech.py
 - Running the freight activity simulation:
     *   src/Simulation/Run_frism.py
@@ -43,7 +43,7 @@ conda env list
 ```linux
 conda activate frism
 ```
-5. To run the code:
+5. To run the code, modify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
 ```linux
 python src/Simulation/Run_frism.py
 ```
