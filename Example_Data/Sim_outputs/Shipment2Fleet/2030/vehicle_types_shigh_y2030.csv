@@ -1,0 +1,13 @@
+veh_type_id,veh_category,veh_class,body_type,commodities,weight,length,payload_capacity_weight,payload_capacity_cbf,max_speed(mph),primary_fuel_type,secondary_fuel_type,primary_fuel_rate,secondary_fuel_rate,Automation level,monetary cost
+md_D_Diesel,Diesel Class 4-6 Vocational,Class 4-6 Vocational,NA,"[1, 2, 3, 4, 5]",10000,NA,8000,NA,80,Diesel,NA,10.22102358,NA,NA,NA
+md_E_Battery Electric,Battery Electric Class 4-6 Vocational,Class 4-6 Vocational,NA,"[1, 2, 3, 4, 5]",10000,NA,8000,NA,80,Electricity,NA,22.5026532,NA,NA,NA
+md_E_H2 Fuel Cell,H2 Fuel Cell Class 4-6 Vocational,Class 4-6 Vocational,NA,"[1, 2, 3, 4, 5]",10000,NA,8000,NA,80,Hydrogen,NA,14.6635362,NA,NA,NA
+md_E_PHEV,PHEV Class 4-6 Vocational,Class 4-6 Vocational,NA,"[1, 2, 3, 4, 5]",10000,NA,8000,NA,80,Diesel,NA,14.06291271,NA,NA,NA
+hdt_D_Diesel,Diesel Class 7&8 Tractor,Class 7&8 Tractor,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Diesel,NA,6.012988978,NA,NA,NA
+hdt_E_Battery Electric,Battery Electric Class 7&8 Tractor,Class 7&8 Tractor,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Electricity,NA,10.04690347,NA,NA,NA
+hdt_E_H2 Fuel Cell,H2 Fuel Cell Class 7&8 Tractor,Class 7&8 Tractor,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Hydrogen,NA,11.87785681,NA,NA,NA
+hdt_E_PHEV,PHEV Class 7&8 Tractor,Class 7&8 Tractor,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Diesel,NA,0.1,NA,NA,NA
+hdv_D_Diesel,Diesel Class 7&8 Vocational,Class 7&8 Vocational,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Diesel,NA,6.458720505,NA,NA,NA
+hdv_E_Battery Electric,Battery Electric Class 7&8 Vocational,Class 7&8 Vocational,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Electricity,NA,14.61509678,NA,NA,NA
+hdv_E_H2 Fuel Cell,H2 Fuel Cell Class 7&8 Vocational,Class 7&8 Vocational,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Hydrogen,NA,9.916151552,NA,NA,NA
+hdv_E_PHEV,PHEV Class 7&8 Vocational,Class 7&8 Vocational,NA,"[1, 2, 3, 4, 5]",15000,NA,36000,NA,65,Diesel,NA,8.290582379,NA,NA,NA
