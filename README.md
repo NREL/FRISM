@@ -19,11 +19,15 @@ The final output is a set of daily tour plans for each carrier's vehicles to tra
 
 ## The following are contained in this repository
 - Running Household E-commerce Generation Estimation for End-Consumer Behavior:
-    *   
+    *   src/Simulation/E-Commerce_Generation/HH_ecom_models.py
+    *   src/Simulation/E-Commerce_Generation/config.py
 - Running End-Consumer Behavior Module to simulate monthly delivery frequency:
-    *   
+    *   src/Simulation/End-Consumer_Behavior/B2C_Generation.py
+    *   src/Simulation/End-Consumer_Behavior/B2B_Generation.py
+    *   src/Simulation/End-Consumer_Behavior/config.py
 - Running Distribution Channel to simulate B2B and B2C daily shipments and shipment-carrier matching
-    *   
+    *   src/Simulation/B2B_B2C_Shipment/Shipment2Fleet_veh_tech.py
+    *   src/Simulation/B2B_B2C_Shipment/config.py
 - Running Carrier Operation to simulate tour-plan for each carrier:
     *   src/Simulation/Carrier_Tour_Plan/VRP_OR-tools_Stops_veh_tech.py
 - Running the freight activity simulation:
