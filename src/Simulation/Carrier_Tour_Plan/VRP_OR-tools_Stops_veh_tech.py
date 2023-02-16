@@ -1,3 +1,6 @@
+# Authors: Juliette Ugirumurera and Kyungsoo Jeong
+# Use: code used to create vehicle tour plans considering timing and load constraints
+
 import pandas as pd
 import geopandas as gp
 import csv
