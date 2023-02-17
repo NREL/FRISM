@@ -1,5 +1,8 @@
 # Authors: Juliette Ugirumurera and Kyungsoo Jeong
-# Use: code used to create vehicle tour plans considering timing and load constraints
+
+"""Run to generate vehicles' tour plans considering timing and load constraints.
+
+"""
 
 import pandas as pd
 import geopandas as gp
@@ -27,9 +30,24 @@ depot_i = 0
 
 
 
-# Function to get travel time using mesozone ID refering CBGID in tt_df
 def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID, sel_tt, sel_dist):
-    #Added sel_tt_df for selected tt_df data frame and sel_dist_df for selected dist_df
+    """Retreives the travel time between an origin and destination.
+
+    Retrieves travel time between origin and destination geo ids; 
+    if the previous does not work, the travel time is calculated from
+    the distance between the origin and destination mesozones,
+
+    Args:
+        org_meso: origin mesozone id
+        dest_meso: destination mesozone id
+        org_geoID: origin geo id
+        dest_geoId: dest geo id
+        sel_tt: subset of origin-destination travel time dataframe containing data for org_geoID and dest_geoID
+        set_dist: subset of origin-destination distance dataframe contaning data org_meso and dest_meso
+
+    Returns:
+        travel_time: travel time between the origin and destination
+    """
     travel_time = -1
     try:
         travel_time = sel_tt['TIME_minutes'].to_numpy()[(sel_tt['origin'].to_numpy() == org_geoID)
@@ -43,18 +61,21 @@ def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID, sel_tt, sel_dist):
             travel_time = 60*3
     return travel_time
 
-# Function to create coorinate info after having the results
-# def x_y_finder(meso):
-#     try:
-#         find_index=CBGzone_df.index[CBGzone_df['MESOZONE']==meso]
-#         x_cord= CBGzone_df.iloc[find_index].X_cord.values[0]
-#         y_cord= CBGzone_df.iloc[find_index].Y_cord.values[0]
-#         return x_cord, y_cord
-#     except:
-#         return "NA", "NA"
-
 
 def get_geoId(zone, CBGzone_df):
+    """Retreives the geo ID of a given mesozone.
+
+    Give mesozone id, retreives the corresponding geo id from dataframe that
+     maps mesozone to geo ids to mesozone ids.
+
+    Args:
+        zone: mesozone id
+        CBGzone_df: dataframe that maps mesozones to geo ids
+
+    Returns:
+        org_geoID: returns the corresponding geo id. If mesozone was not found, org_geoID is 
+        set to -1.
+    """
     try:
         org_geoID= int(CBGzone_df[CBGzone_df['MESOZONE']==zone].GEOID.values[0])
     except:
@@ -62,12 +83,30 @@ def get_geoId(zone, CBGzone_df):
     return int(org_geoID)
 
 
-# Receives a data frame for a problem for a particular carrier id
-# To account for service time, we add service time of destination to regular travel time
-# Added shipment index to indicate if tour is external or internal and commodity id
 def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carrier_id,
                      CBGzone_df, tt_df, dist_df, veh, commodity, ship_index):
-    """Stores the data for the problem."""
+    """Create the data model for the vehicle routing problem.
+
+    Args:
+        df_prob: payload information for the vehicle routing problem
+        depot_loc: mesozone id of depot location for the problem
+        prob_type: problem type(Pickup, Delivery, or Pickup and Delivery)
+        v_df: dataframe with vehicle types infomation (vehicle capacity, vehicle technology: diezel or gasoline,..)
+        f_prob: dataframe with individual vehicle information (vehicle id, vehicle capacity, ...)
+        c_prob: carrier information dataframe
+        carrier_id: carrier id
+        CBGzone_df: dataframe that maps geo ids to mesozones
+        tt_df: orgin-destination travel time dataframe
+        dist_df: origin-destination distance dataframe
+        veh: vehicle type
+        commodity: commodity id of shipment to be carried
+        ship_index: integer that indicates if the shipments inside the region or has a 
+                    destination external to the region
+
+    Returns:
+        data: returns a dictionary with with all data necessary to formulate and solve a vehile routing
+        problem using ortools library.
+    """
     data = {}
     data['time_matrix'] = []
     data['loc_zones'] = []    # zones corresponding to locations
@@ -179,11 +218,10 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             index += 2
 
     # After gathering demand by location, change demand of depot to full load at the depot
-    #JU: this need to be double checked for a problem where one vehile is not enough to deliver everything
+    #TODO: this need to be double checked for a problem where one vehile is not enough to deliver everything
     # Below did not work if more than 1 vehicle is needed to handle depot demand
     # if prob_type == 'delivery':
     #     data['demands'][0] = -1 * sum(data['demands'])
-
 
     # Adding travel time for rest of locations
     print("Beginning to get time matrix")
@@ -253,15 +291,33 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
     print("veh_capacity: ", veh_capacity, " num_veh: ", data['num_vehicles'])
     data['depot'] = 0
 
-    # print('vehicle max stops: ', data['vehicle_max_stops'])
-    # print('vehicle slack stops: ', data['vehicle_slack_stops'])
-
     return data
 
 
 def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df, prob_type,
                    count_num, ship_type, c_prob, df_prob):
-    """Prints solution on console."""
+    """Prints the vehicle routing problem solution on console.
+
+    Args:
+        data: dictionary of vehicle routing problem (VRP) data
+        manager: VRP's routing index manager
+        routing: VRP's routing model
+        solution: VRP's solution
+        tour_df: dataframe to save vehicles' tour information 
+        carr_id: carrier id for the particular problem solved
+        carrier_df: dataframe to save carrier information from VRP solution
+        payload_df: dataframe to save payload information from VRP solution
+        prob_type: problem type (pickup, delivery, or pickup and delivery)
+        count_num: county number
+        ship_type: shipment type, business to business (B2B) or business to consumer (B2C)
+        c_prob: dataframe with VRP's carrier 
+        df_prob:dataframe with VRP's payload
+
+    Returns:
+        used_veh: a list of ids of vehicle used
+    """
+
+
     global tour_id
     global payload_i
     global depot_i
@@ -423,6 +479,28 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
     return used_veh
 
 def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, payload_file, vehicleType_file):
+    """Processes input files.
+
+    Reads in input files and processes them to generate dataframe with necessary to generate tours for
+    vehicles.
+
+    Args:
+        travel_file: file with origin-destination travel time information.
+        dist_file: file with origin-destination distance information.
+        CBGzone_file: file that maps mesozones ids to geo ids.
+        carrier_file: file with carrier information.
+        payload_file: file with payload information.
+        vehicleType_file: file with vehicle type information
+
+    Returns:
+        tt_df: origin-destination travel time dataframe.
+        dist_df: origin-destination distance dataframe.
+        CBGzone_df: dataframe that maps mesozones to geo ids.
+        c_df: carrier information dataframe.
+        p_df: paylaod information dataframe.
+        v_df: dataframe with vehicle type information (capacity, weight, diezel or electric, ...)
+        vc_df: dataframe with individual vehicle information (id, capacity, ...)
+    """
 
     # KJ: read travel time, distance, zonal file as inputs  # Slow step
     tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
@@ -438,9 +516,6 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     p_df = pd.read_csv(payload_file)
     p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
 
-    # just relax upper time window because of outside of region destination
-    #c_df['depot_upper']=50000
-    #p_df['del_tw_upper']=50000
     # Removing nans
     c_df = c_df.fillna(0); # Fill all nan with zeros
 
@@ -460,7 +535,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     # Reading in vehicle information
     v_df = pd.read_csv(vehicleType_file)
     v_df = v_df.dropna(axis=1, how='all')   # Removing all nan
-#################### KJ added for veh_tech
+    ################ KJ added for veh_tech
     veh_list=p_df["veh_type"].unique()
     veh_list = [ x.split("_")[0]+"_"+x.split("_")[1] for x in veh_list]
     veh_list = list(dict.fromkeys(veh_list))
@@ -486,6 +561,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
                 n=  n + vc_df.loc[i,veh_type_id] 
     return tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df
 
+# TODO: ask Kyungsoo to add comments here
 def random_points_in_polygon(polygon):
     temp = polygon.bounds
     finished= False
@@ -494,6 +570,7 @@ def random_points_in_polygon(polygon):
         finished = polygon.contains(point).values[0]
     return point
 
+# TODO: ask Kyungsoo to add comments here
 def random_loc (t_df,c_df,p_df,SFBay_CBG):
     c_df['depot_zone_x']=0.0
     c_df['depot_zone_y']=0.0
@@ -525,6 +602,7 @@ def random_loc (t_df,c_df,p_df,SFBay_CBG):
 
     return c_df, t_df, p_df
 
+# TODO: ask Kyungsoo to add comments here
 def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
 
     p_df=p_df.merge(ex_zone, how ='left', left_on='locationZone', right_on='MESOZONE')
@@ -667,8 +745,7 @@ def main(args=None):
     # The commodity will decide the limit on number of stops per vehicle:
     # randomly select stops limits and fix slack stop limits to maximum stops possible per commodity
 
-    # for carr_id in p_df['carrier_id'].unique():
-    for carr_id in ['B2C_2879885.0']:
+    for carr_id in p_df['carrier_id'].unique():
         # Initialize parameters used for probelm setting
         
         # Depot location
@@ -907,7 +984,6 @@ def main(args=None):
                                 message = 'PROBLEM NOT YET SOLVED'
                             elif st == 2:
                                 message = 'NO SOLUTION FOUND FOR PROBLEM'
-                                # print(data)
                             elif st == 3:
                                 message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
                             elif st ==4:
@@ -918,10 +994,10 @@ def main(args=None):
                             print('\n')
 
 
-                    # except Exception as e:
-                    #     print('Could not solve problem for carrier: ', carr_id, 'and vehicle ', veh , ' : ', e)
-                    #     error_list.append([carr_id, veh, e])
-                    #     print('\n')
+                    except Exception as e:
+                        print('Could not solve problem for carrier: ', carr_id, 'and vehicle ', veh , ' : ', e)
+                        error_list.append([carr_id, veh, e])
+                        print('\n')
 
     run_time = time() - b_time
     print('Time for the run: ', run_time)
@@ -946,20 +1022,6 @@ def main(args=None):
         carrier_df.to_csv(dir_out+"{0}_county{1}_carrier{2}_s{3}_y{4}.csv".format(ship_type, count_num,str(file_index),args.scenario,args.target_year), index=False)
         payload_df.to_csv(dir_out+"{0}_county{1}_payload{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
     print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
-
-    # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
-    # #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
-    # ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
-    # if (ship_type =='B2B') :
-    #     print ("Starting external zone processing for B2B")
-    #     tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
-
-    # #print ("Assigning x_y coordinate into depots and delivery locations")
-    # #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
-    # tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
-    # carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
-    # payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
-    # print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
 
 
 
