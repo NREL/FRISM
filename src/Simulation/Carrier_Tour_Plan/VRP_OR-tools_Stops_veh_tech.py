@@ -685,6 +685,10 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
 
 
 def main(args=None):
+    """Main function.
+
+    Takes input files specifing 
+    """
     parser = ArgumentParser()
     parser.add_argument("-cy", "--county-number", dest="county_num",
                         help="an integer indicating the county number", required=True, type=int)
