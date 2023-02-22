@@ -687,7 +687,19 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
 def main(args=None):
     """Main function.
 
-    Takes input files specifing 
+    Takes input files names from console specifing the parameters of the vehicle routing problem.
+
+    Args:
+        -cy or --county_number: the county number in the scenario of interest
+        -t or --travel_time_time: file with travel times between origin and destination census block group id
+        -d or --distance_file: file with distance between origin and destination mesozones
+        -ct or --freight_centroid_file: file that maps census block group ids to mesozones
+        -cr or --carrier_file: file with carriers' information
+        -pl or --payload_file: file with payloads' information
+        -vt or --vehicle_type_file: file with vehicle type information
+        -st or --scenario: specifies the name of the scenario 
+        -yt or --analysis_year: year to be simulated in 20XX format
+        -fn or --separate_file_index: a separate number to use to save output files
     """
     parser = ArgumentParser()
     parser.add_argument("-cy", "--county-number", dest="county_num",
@@ -696,8 +708,8 @@ def main(args=None):
                         help="travel time file in gz format", required=True, type=str)
     parser.add_argument("-d", "--distance_file", dest="dist_file",
                         help="distance file in csv format", required=True, type=str)
-    parser.add_argument("-ct", "--freigh_centroid_file", dest="CBGzone_file",
-                        help="travel time file in geojson format", required=True, type=str)
+    parser.add_argument("-ct", "--freight_centroid_file", dest="CBGzone_file",
+                        help="file that maps census block group ids to mesozones in geojson format", required=True, type=str)
     parser.add_argument("-cr", "--carrier_file", dest="carrier_file",
                         help="carrier file in csv format", required=True, type=str)
     parser.add_argument("-pl", "--payload_file", dest="payload_file",
@@ -706,10 +718,10 @@ def main(args=None):
                         help="vehicle type file in csv format", required=True, type=str)
     parser.add_argument("-sn", "--scenario", dest="scenario",
                     help="scenario", required=True, type=str)                
-    parser.add_argument("-yt", "--analysis year", dest="target_year",
+    parser.add_argument("-yt", "--analysis_year", dest="target_year",
                 help="20XX", required=True, type=int)    
-    parser.add_argument("-fn", "--separate_file index", dest="file_idx",
-                        help="an inteager", default=9999, type=str)                        
+    parser.add_argument("-fn", "--separate_file_index", dest="file_idx",
+                        help="an integer", default=9999, type=str)                        
 
     args = parser.parse_args()
     file_index=args.file_idx
