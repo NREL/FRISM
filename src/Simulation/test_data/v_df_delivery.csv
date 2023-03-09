@@ -1,0 +1,13 @@
+veh_type_id,veh_category,veh_class,commodities,weight,payload_capacity_weight,max_speed(mph),primary_fuel_type,primary_fuel_rate
+md_D_Diesel,Diesel Class 4-6 Vocational,Class 4-6 Vocational,"[1, 2, 3, 4, 5]",10000,8000,80,Diesel,10.22102358
+md_E_Battery Electric,Battery Electric Class 4-6 Vocational,Class 4-6 Vocational,"[1, 2, 3, 4, 5]",10000,8000,80,Electricity,22.5026532
+md_E_H2 Fuel Cell,H2 Fuel Cell Class 4-6 Vocational,Class 4-6 Vocational,"[1, 2, 3, 4, 5]",10000,8000,80,Hydrogen,14.6635362
+md_E_PHEV,PHEV Class 4-6 Vocational,Class 4-6 Vocational,"[1, 2, 3, 4, 5]",10000,8000,80,Diesel,14.06291271
+hdt_D_Diesel,Diesel Class 7&8 Tractor,Class 7&8 Tractor,"[1, 2, 3, 4, 5]",15000,36000,65,Diesel,6.012988977999999
+hdt_E_Battery Electric,Battery Electric Class 7&8 Tractor,Class 7&8 Tractor,"[1, 2, 3, 4, 5]",15000,36000,65,Electricity,10.04690347
+hdt_E_H2 Fuel Cell,H2 Fuel Cell Class 7&8 Tractor,Class 7&8 Tractor,"[1, 2, 3, 4, 5]",15000,36000,65,Hydrogen,11.87785681
+hdt_E_PHEV,PHEV Class 7&8 Tractor,Class 7&8 Tractor,"[1, 2, 3, 4, 5]",15000,36000,65,Diesel,0.1
+hdv_D_Diesel,Diesel Class 7&8 Vocational,Class 7&8 Vocational,"[1, 2, 3, 4, 5]",15000,36000,65,Diesel,6.458720505
+hdv_E_Battery Electric,Battery Electric Class 7&8 Vocational,Class 7&8 Vocational,"[1, 2, 3, 4, 5]",15000,36000,65,Electricity,14.61509678
+hdv_E_H2 Fuel Cell,H2 Fuel Cell Class 7&8 Vocational,Class 7&8 Vocational,"[1, 2, 3, 4, 5]",15000,36000,65,Hydrogen,9.916151552
+hdv_E_PHEV,PHEV Class 7&8 Vocational,Class 7&8 Vocational,"[1, 2, 3, 4, 5]",15000,36000,65,Diesel,8.290582379

@@ -1,0 +1,5 @@
+payload_id,carrier_id,commodity,weight,job,pu_zone,del_zone,pu_stop_duration,del_stop_duration,pu_tw_lower,pu_tw_upper,del_tw_lower,del_tw_upper,veh_type,del_x,del_y,pu_x,pu_y,ship_index,sequence_id,tour_id,pu_arrival_time,del_arrival_time
+21_B2B718,B2B_2627740_0hdt_D,2,36000.0,pickup_delivery,6730.0,175,90.0,140,20.0,1440.0,624,1440,hdt_D_Diesel,-97.33068479,30.11719221,-97.42082228,30.75682337,external,0,0,0.0,0.0
+21_B2B719,B2B_2627740_0hdt_D,2,15753.90154,pickup_delivery,6730.0,175,53.0,178,130.0,1440.0,697,1440,hdt_D_Diesel,-97.33068479,30.11719221,-97.42082228,30.75682337,external,0,0,0.0,0.0
+21_B2B720,B2B_2627740_0hdt_D,2,36000.0,pickup_delivery,6730.0,175,90.0,255,130.0,1440.0,328,1440,hdt_D_Diesel,-97.33068479,30.11719221,-97.42082228,30.75682337,external,0,0,0.0,0.0
+21_B2B721,B2B_2627740_0hdt_D,2,15753.90154,pickup_delivery,6730.0,175,31.0,195,20.0,1440.0,366,1440,hdt_D_Diesel,-97.33068479,30.11719221,-97.42082228,30.75682337,external,0,0,0.0,0.0

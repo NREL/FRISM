@@ -1,0 +1,2 @@
+carrier_id,firm_id,depot_zone,contract_firms,depot_lower,depot_upper,depot_time_before,depot_time_after,c_x,c_y,md_D,md_E,hdt_D,hdt_E,hdv_D,hdv_E,ev_type
+B2B_2627740_0hdt_D,B2B_2627740_0,6730,"[950650, 950650, 950650, 950650]",208,1365,30,35,-97.42082228392508,30.75682337175888,5,5,8,5,5,5,Battery Electric

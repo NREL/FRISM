@@ -1,0 +1,2 @@
+carrier_id,firm_id,depot_zone,contract_firms,depot_lower,depot_upper,depot_time_before,depot_time_after,c_x,c_y,md_D,md_E,hdt_D,hdt_E,hdv_D,hdv_E,ev_type
+B2C_2879885.0,B2C_2879885.0,5978,Nan,477,1077,10,10,-97.57486908174592,30.4702771187923,12,10,10,10,10,10,Battery Electric
