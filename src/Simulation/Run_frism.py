@@ -4,6 +4,7 @@ import sys
 county = sys.argv[1]
 year = sys.argv[2]
 scenario = sys.argv[3]
+path_stops = sys.argv[4]
 head_text = f"""
 {'-'*40}
 Run FRISM Module in FAMOUS, which is Freight module as part of BEAM-CORE
@@ -104,7 +105,8 @@ os.system("python VRP_OR-tools_Stops_veh_tech.py \
                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county21_shipall_s{0}_y{1}.csv \
                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
                                          -sn {0}\
-                                           -yt {1}".format(scenario, year, county))
+                                           -yt {1}\
+                                           -ps {3}".format(scenario, year, county, path_stops))
 #     # # B2B
 os.system("python VRP_OR-tools_Stops_veh_tech.py \
     -cy {2} \
@@ -115,6 +117,7 @@ os.system("python VRP_OR-tools_Stops_veh_tech.py \
                         -pl ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county21_shipall_A_s{0}_y{1}.csv \
                             -vt ../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
                                 -sn {0} \
-                                    -yt {1}".format(scenario, year, county))
+                                    -yt {1}\
+                                     -ps {3}".format(scenario, year, county, path_stops))
 
 print ("Completed running modules you selected")
