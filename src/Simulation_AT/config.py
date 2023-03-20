@@ -1,3 +1,4 @@
+
 state_CBSA = ["12420","19100","26420","41700"]
 study_CBSA= ["12420"] # "41700" =San Antonio-New Braunfels, TX
 study_region ="AT"
@@ -121,14 +122,7 @@ hh_aggregation_size=8
 b2b_day_factor =5
 max_tour_for_b2b = 4
 fdir_in_out= "../../../FRISM_input_output_AT"
-
 # input for B2B/Geo_data
-def sythfirm_fleet_file(scenario):
-    firm_file= 'synthetic_firms_with_fleet_TDA_{}_mc_adjusted.csv'.format(scenario)
-    warehouse_file= 'synthetic_carriers_TDA_{}.csv'.format(scenario)
-    leasing_file= 'synthetic_leasing_company_TDA_{}.csv'.format(scenario)
-    stock_file = 'TDA_{}.csv'.format(scenario)
-    return firm_file, warehouse_file, leasing_file, stock_file 
 
 dist_file= 'Austin_od_dist.csv'
 CBG_file= 'Austin_freight.geojson'

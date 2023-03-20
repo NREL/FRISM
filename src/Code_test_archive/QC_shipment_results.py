@@ -1,5 +1,6 @@
 
 # %%
+from re import A
 from matplotlib.image import AxesImage
 import pandas as pd
 import numpy as np
@@ -220,4 +221,125 @@ for com in commodity_list:
     df_for_qc.loc[com-1,"max_load_v1"]=B2BF.TruckLoad.max()
     df_for_qc.loc[com-1,"sum_load_v1"]=B2BF.TruckLoad.sum()
 df_for_qc.to_csv("/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Validation/Synth_firm_input_QC_0929.csv")        
+# %%
+# %%
+# AT check 
+
+f_dir="../../../Results_veh_tech_v1/"
+#f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_outputs/"
+
+
+year_list=[2030,2040,2050]
+s_list=["low", "central", "high"]
+county_list=[453, 491, 209, 55, 21, 53]
+stype_list=["B2B","B2C"]
+df_ship=pd.DataFrame(county_list, columns =["county"])
+df_tour=pd.DataFrame(county_list, columns =["county"])
+
+dic_veh={'md': "Class 4-6 Vocational",
+'hdt':"Class 7&8 Tractor",
+'hdv':"Class 7&8 Vocational"
+}
+dic_fuel={"Diesel": "Diesel", "Battery Electric": "Electricity", "H2 Fuel Cell": "Hydrogen" , "PHEV": "Diesel"}
+input_veh_list= ['Diesel Class 4-6 Vocational','Electric Class 4-6 Vocational',
+                    'Diesel Class 7&8 Tractor','Electric Class 7&8 Tractor',
+                    'Diesel Class 7&8 Vocational','Electric Class 7&8 Vocational',
+                    'EV_powertrain (if any)' ]
+output_veh_list=["md_D","md_E", "hdt_D", "hdt_E", "hdv_D", "hdv_E"]
+y_s_list=[]
+for y in year_list:
+    for s in s_list:
+        y_s_list.append(str(y)+s)
+df_veh_agg=pd.DataFrame(y_s_list, columns =["scenario"])
+df_veh_disagg=pd.DataFrame(y_s_list, columns =["scenario"])        
+veh_disagg_list=[]
+
+for veh_class in output_veh_list:
+    for veh_fuel in dic_fuel.keys():
+        df_veh_disagg[veh_class+"_"+veh_fuel]=0
+        veh_disagg_list.append(veh_class+"_"+veh_fuel)
+
+for veh_class in output_veh_list:
+    df_veh_agg[veh_class]=0
+
+
+for t in  stype_list:
+    for y in year_list:
+        for s in s_list:
+            df_ship[t+str(y)+s]=0
+            df_tour[t+str(y)+s]=0
+
+for t in  stype_list:
+    for y in year_list:
+        for s in s_list:
+            for c in county_list:
+                try: 
+                    i= df_ship.index[df_ship["county"]==c].values[0]
+                    if t == "B2C":
+                        ship=  pd.read_csv(f_dir+"Shipment2Fleet/{0}/{1}_payload_county{2}_shipall_s{3}_y{4}.csv". format(y,t,c,s,y))
+                    else:
+                        ship=  pd.read_csv(f_dir+"Shipment2Fleet/{0}/{1}_payload_county{2}_shipall_A_s{3}_y{4}.csv". format(y,t,c,s,y))
+
+                    tour=  pd.read_csv(f_dir+"Tour_plan/{0}/{1}_county{2}_freight_tours_s{3}_y{4}.csv".format(y,t,c,s,y))
+                    df_ship[t+str(y)+s].iloc[i]=ship.shape[0]
+                    df_tour[t+str(y)+s].iloc[i]=tour.shape[0]
+                except:
+                    print ("No data for type: {0}; County: {1}; Scenario: {2}; Year: {3}".format(t,c,s,y))
+
+for y in year_list:
+    for s in s_list:
+        i= df_veh_disagg.index[df_veh_disagg["scenario"]==str(y)+s].values[0]
+        for c in county_list:
+            for t in  stype_list:
+                tour=  pd.read_csv(f_dir+"Tour_plan/{0}/{1}_county{2}_carrier_s{3}_y{4}.csv".format(y,t,c,s,y))
+                for veh in veh_disagg_list:
+                    try:
+                        df_veh_disagg[veh].iloc[i] += len(tour[tour["vehicleTypeId"]==veh])
+                    except:
+                        pass    
+
+                for veh_class in output_veh_list:
+                    try:
+                        df_veh_agg[veh_class].iloc[i] += len(tour[tour["vehicleTypeId"].str.contains(veh_class)])  
+                    except:
+                        pass
+
+df_ship.loc['Total']= df_ship.sum(numeric_only=True, axis=0)
+df_tour.loc['Total']= df_tour.sum(numeric_only=True, axis=0)
+
+df_ship.to_csv(f_dir+"ship_summary.csv")
+df_tour.to_csv(f_dir+"tour_summary.csv")
+df_veh_disagg.to_csv(f_dir+"veh_type_disagg.csv")
+df_veh_agg.to_csv(f_dir+"veh_type_agg.csv")
+
+for t in  stype_list:
+    for y in year_list:
+        for s in s_list:
+            for c in county_list:
+                try:
+                    tour=  pd.read_csv(f_dir+"Tour_plan/{0}/{1}_county{2}_freight_tours_s{3}_y{4}.csv".format(y,t,c,s,y))
+                except:
+                    print ("No data for type: {0}; County: {1}; Scenario: {2}; Year: {3}".format(t,c,s,y))                    
+# %%
+import shutil
+import os
+
+file_list=["carrier", "freight_tours", "payload"]
+
+for y in year_list:
+    for s in s_list:
+        if not os.path.exists(f_dir+"Tour_plan/"+"{0}_{1}/".format(str(y),s)):
+            os.makedirs(f_dir+"Tour_plan/"+"{0}_{1}/".format(str(y),s))
+        origin=f_dir+"Shipment2Fleet/"+"{0}/vehicle_types_s{1}_y{0}.csv".format(y,s)
+        target=f_dir+"Tour_plan/"+"{0}_{1}/vehicle_types_s{1}_y{0}.csv".format(y,s)    
+        shutil.copy(origin, target)    
+        for t in  stype_list:
+            for c in county_list:
+                for f in file_list:    
+                    origin=f_dir+"Tour_plan/"+"{0}/{1}_county{2}_{3}_s{4}_y{5}.csv".format(y,t,c,f,s,y)
+                    target=f_dir+"Tour_plan/"+"{0}_{4}/{1}_county{2}_{3}_s{4}_y{5}.csv".format(y,t,c,f,s,y)    
+                    shutil.copy(origin, target)
+ 
+
+
 # %%
