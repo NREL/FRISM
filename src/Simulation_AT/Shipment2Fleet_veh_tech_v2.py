@@ -650,10 +650,11 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
     # read household delivery file from
     fdir_synth_firm=fdir_in_out+'/Sim_inputs/Synth_firm_results/'
     county_wo_sel= [i for i in county_list if i != sel_county]
-    B2BF_T_D=pd.DataFrame()
-    for com in commodity_list:
-        B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
-        B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
+    # B2BF_T_D=pd.DataFrame()
+    # for com in commodity_list:
+    #     B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
+    #     B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
+    B2BF_T_D=b2b_d_shipment_by_commodity(fdir_synth_firm, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
     B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
     B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
@@ -1147,7 +1148,7 @@ def b2b_d_select_with_ship_size(TruckLoad,w_th, b2b_day_factor):
             return 1
          else: return 0 
 
-def b2b_d_shipment_by_commodity(fdir,commoidty, weight_theshold, CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario):
+def b2b_d_shipment_by_commodity(fdir, weight_theshold, CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario):
     #daily_b2b_fname=fdir+'Daily_sctg%s_OD_%s_%s.csv' % (commoidty, sel_county,ship_direction)
     # if file_exists(daily_b2b_fname):
     #     B2BF=pd.read_csv(daily_b2b_fname, header=0, sep=',')
@@ -1874,24 +1875,24 @@ def main(args=None):
                 new_carriers=pd.concat([new_carriers,temp_carr], ignore_index=True).reset_index(drop=True) 
 
         # print ("missing x,y locations")
-        # # %%
-        # with alive_bar(new_payloads.shape[0], force_tty=True) as bar:
-        #     for i in range(0,new_payloads.shape[0]):
-        #         if new_payloads.loc[i,"job"] =="delivery":
-        #             if pd.isnull(new_payloads.loc[i,"del_x"]):
-        #                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
-        #                 new_payloads.loc[i,'del_x']=x
-        #                 new_payloads.loc[i,'del_y']=y 
-        #         elif new_payloads.loc[i,"job"] =="pickup_delivery":
-        #             if pd.isnull(new_payloads.loc[i,"del_x"]):
-        #                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
-        #                 new_payloads.loc[i,'del_x']=x
-        #                 new_payloads.loc[i,'del_y']=y
-        #             if pd.isnull(new_payloads.loc[i,"pu_x"]):
-        #                 [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"pu_zone"]])
-        #                 new_payloads.loc[i,'pu_x']=x
-        #                 new_payloads.loc[i,'pu_y']=y      
-        #         bar()
+        # %%
+        with alive_bar(new_payloads.shape[0], force_tty=True) as bar:
+            for i in range(0,new_payloads.shape[0]):
+                if new_payloads.loc[i,"job"] =="delivery":
+                    if pd.isnull(new_payloads.loc[i,"del_x"]):
+                        [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
+                        new_payloads.loc[i,'del_x']=x
+                        new_payloads.loc[i,'del_y']=y 
+                elif new_payloads.loc[i,"job"] =="pickup_delivery":
+                    if pd.isnull(new_payloads.loc[i,"del_x"]):
+                        [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"del_zone"]])
+                        new_payloads.loc[i,'del_x']=x
+                        new_payloads.loc[i,'del_y']=y
+                    if pd.isnull(new_payloads.loc[i,"pu_x"]):
+                        [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==new_payloads.loc[i,"pu_zone"]])
+                        new_payloads.loc[i,'pu_x']=x
+                        new_payloads.loc[i,'pu_y']=y      
+                bar()
 
         file_num=10
         if not file_exists(config.fdir_main_output + str(args.target_year)+"/"):
