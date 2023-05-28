@@ -269,7 +269,7 @@ for y in year_list:
 # %% ####################################################
 # AT check 
 
-f_dir="../../../Results_veh_tech_v1/"
+f_dir="../../../Results_veh_tech_v2/"
 #f_dir="/Users/kjeong/NREL/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_AT/Sim_outputs/"
 
 
@@ -365,3 +365,4 @@ for t in  stype_list:
                     tour=  pd.read_csv(f_dir+"Tour_plan/{0}/{1}_county{2}_freight_tours_s{3}_y{4}.csv".format(y,t,c,s,y))
                 except:
                     print ("No data for type: {0}; County: {1}; Scenario: {2}; Year: {3}".format(t,c,s,y))
+# %%

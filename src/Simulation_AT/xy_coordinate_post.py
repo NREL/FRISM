@@ -280,9 +280,9 @@ def genral_input_files_processing(firm_file, warehouse_file, leasing_file, stock
 
 f_dir="../../../Results_veh_tech_v2/"
 year_list=[2050]
-# s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",
-# "Ref_highp2", "Ref_highp4", "Ref_highp6","Ref_highp8","Ref_highp10"]
-s_list=["Ref_highp2"]
+s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",
+ "Ref_highp2", "Ref_highp4", "Ref_highp6","Ref_highp8","Ref_highp10"]
+#s_list=["Ref_highp2"]
 #s_list=["Ref_highp4", "Ref_highp6","Ref_highp8","Ref_highp10"]
 county_list=[453, 491, 209, 55, 21, 53]
 for y in year_list:

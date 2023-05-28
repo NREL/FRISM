@@ -246,18 +246,22 @@ def genral_input_files_processing(firm_file, warehouse_file, leasing_file, stock
         for veh_fuel in dic_fuel.keys():
             if veh_fuel == "PHEV":
                 temp_veh_fuel= veh_fuel+" Diesel"
-            else:
+            elif veh_fuel == "Diesel" :
+                temp_veh_fuel= veh_fuel+" CI"
+            else:    
                 temp_veh_fuel= veh_fuel
 
             temp= stocks[(stocks["Year"] == target_year) &
                 (stocks["Powertrain"].str.contains(temp_veh_fuel)) &
                 (stocks["Class"].str.contains(dic_veh[veh_class])) & 
-                (stocks["mpgge"] >1)]
-            mpg= temp["mpgge"].mean()
+                (stocks["mpgge"] >1) & 
+                (stocks["Stock"] >0)]
+            temp['w_mpgge']= temp.apply(lambda x: x["mpgge"]*x["Stock"], axis=1)
+            mpg= temp["w_mpgge"].sum()/temp["Stock"].sum()
             if pd.isna(mpg):
                 dic_energy[dic_veh[veh_class]][veh_fuel]= 0.1
             else: 
-                dic_energy[dic_veh[veh_class]][veh_fuel]= mpg
+                dic_energy[dic_veh[veh_class]][veh_fuel]= mpg   
     return firms, truckings, leasings, dist_df, CBGzone_df, df_dpt_dist, ex_zone_list, ex_zone       
 
 ###  Calculate distance between two meso zone: currenlty Euclidian dist
@@ -662,7 +666,6 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
     #B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
     #B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
     B2BF_T_D.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
-    
     ## Deal with the daily shipment seperately
     ## For-hire Truck: FH_B2B
     ## Private Truck: PV_B2B
@@ -674,7 +677,6 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
     firms=firms[firms["SellerID"].isin(PV_B2B["SellerID"])].reset_index(drop=True)
     #firms=firms.drop(columns=['md_veh', 'hd_veh'])
     leasings_orig=leasings.copy(deep=True)     
-
 
     ####
     # Private shipment processing    
@@ -1159,8 +1161,10 @@ def b2b_d_shipment_by_commodity(fdir, weight_theshold, CBGzone_df,sel_county,shi
         #print (filename)
         #filename="../../../FRISM_input_output_AT/Sim_inputs/Synth_firm_results/2050_HOP_highp2/private_truck_shipment_sctg5.csv"
         temp= pd.read_csv(filename, header=0, sep=',')
-        if temp.shape[0] >0: 
+        if temp.shape[0] >0:
+            temp["SellerID"]=temp["SellerID"].astype("int") 
             if "fleet_id" in temp.columns:
+                temp["fleet_id"]=temp["fleet_id"].astype("int") 
                 temp["SellerID"] = temp.apply(lambda x: str(x["SellerID"]) + "_" + str(x["fleet_id"]), axis=1)
                 temp = temp.drop("fleet_id", axis=1)
             else:
@@ -1588,14 +1592,14 @@ def main(args=None):
                                                                                      config.county_list)
 
     # # temp// need to delete
-    # firm_file, warehouse_file, leasing_file, stock_file =sythfirm_fleet_file(config.fdir_in_out,2050, "high")
+    # firm_file, warehouse_file, leasing_file, stock_file =sythfirm_fleet_file(config.fdir_in_out,2030, "Dmd_G")
     # create_global_variable(config.md_cap,config.hd_cap,config.fdir_in_out ,config.state_id,config.max_tour_for_b2b)
     # firms, truckings,leasings, dist_df, CBGzone_df, df_dpt_dist, ex_zone_list, ex_zone= genral_input_files_processing(firm_file,
-    # warehouse_file,
+    #                                                                                  warehouse_file,
     #                                                                                  leasing_file,
     #                                                                                  stock_file,
-    #                                                                                  2050,
-    #                                                                                  "high", 
+    #                                                                                  2030,
+    #                                                                                  "Dmd_G", 
     #                                                                                  config.dist_file,
     #                                                                                  config.CBG_file, 
     #                                                                                  "B2B",
@@ -1796,6 +1800,17 @@ def main(args=None):
         FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         firms.to_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+
+        # test
+        # truckings_org= truckings.copy()
+        # df_vius= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/vehicle_proportion_by_sctg_dist.csv", header=0, sep=',')
+        # FH_B2B, PV_B2B, firms = b2b_input_files_processing(firms,leasings,truckings,dist_df, CBGzone_df, 21, "all", 
+        # config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius, config.b2b_day_factor, 
+        # 2050, "Dmd_G")
+        # FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(21, "all"), index = False, header=True)
+        # PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(21, "all"), index = False, header=True)
+        # firms.to_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(21, "all"), index = False, header=True)        
+
          ########################## end if-caluse if needed ################### 
 
         # FH_B2B= pd.read_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(21, "all"), header=0, sep=',')
@@ -1811,6 +1826,15 @@ def main(args=None):
         PV_B2B['payload_id']=PV_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(int(x)))
         FH_B2B['payload_id']=FH_B2B['payload_id'].apply(lambda x: str(args.sel_county) + '_' + args.ship_type + str(int(x)))
         id_lookup=pd.concat([PV_B2B[['payload_id','shipment_id']],FH_B2B[['payload_id','shipment_id']]], ignore_index=True)
+        # Test 
+        # PV_B2B=PV_B2B[PV_B2B["D_truckload"]>0].reset_index(drop=True)
+        # FH_B2B=FH_B2B[FH_B2B["D_truckload"]>0].reset_index(drop=True)
+        # FH_B2B=FH_B2B.dropna(subset=["assigned_carrier"]).reset_index(drop=True)
+        # PV_B2B['payload_id']=PV_B2B.index
+        # FH_B2B['payload_id']=FH_B2B.index + PV_B2B.shape[0]
+        # PV_B2B['payload_id']=PV_B2B['payload_id'].apply(lambda x: str(21) + '_' + "B2B" + str(int(x)))
+        # FH_B2B['payload_id']=FH_B2B['payload_id'].apply(lambda x: str(21) + '_' + "B2B" + str(int(x)))
+        # id_lookup=pd.concat([PV_B2B[['payload_id','shipment_id']],FH_B2B[['payload_id','shipment_id']]], ignore_index=True)        
         # Assing x_y
         PV_B2B=PV_B2B.merge(firms[['SellerID','x','y']], on="SellerID", how="left")
         PV_B2B.rename({'x': 'pu_x','y': 'pu_y'},axis=1, inplace=True)
