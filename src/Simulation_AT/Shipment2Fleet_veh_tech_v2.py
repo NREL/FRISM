@@ -256,8 +256,11 @@ def genral_input_files_processing(firm_file, warehouse_file, leasing_file, stock
                 (stocks["Class"].str.contains(dic_veh[veh_class])) & 
                 (stocks["mpgge"] >1) & 
                 (stocks["Stock"] >0)]
-            temp['w_mpgge']= temp.apply(lambda x: x["mpgge"]*x["Stock"], axis=1)
-            mpg= temp["w_mpgge"].sum()/temp["Stock"].sum()
+            try: 
+                temp['w_mpgge']= temp.apply(lambda x: x["mpgge"]*x["Stock"], axis=1)
+                mpg= temp["w_mpgge"].sum()/temp["Stock"].sum()
+            except:
+                mpg=0.1    
             if pd.isna(mpg):
                 dic_energy[dic_veh[veh_class]][veh_fuel]= 0.1
             else: 
