@@ -455,9 +455,9 @@ def util_powertrain(num_D, num_E, dic_E, distance,veh_class, ev_class, coef_num_
 ###################################################################
 
 ########################### B2C CODES #############################
-def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county, list_error_zone,growth_factor):
+def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county, list_error_zone,growth_factor, year):
     # read household delivery file from 
-    df_hh = pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/households_del.csv', header=0, sep=',')
+    df_hh = pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/households_del_{}.csv'.format(str(year)), header=0, sep=',')
     df_hh= df_hh[['household_id','delivery_f', 'block_id']]
     df_hh['GEOID'] =df_hh['block_id'].apply(lambda x: np.floor(x/1000))
     df_hh = df_hh.merge(CBGzone_df[['GEOID','MESOZONE','County']], on='GEOID', how='left')
@@ -1645,7 +1645,7 @@ def main(args=None):
         ship_direction=args.ship_direction
         print ("**** Start processing daily B2C shipment")
         df_hh_D= b2c_input_files_processing(CBGzone_df, 
-                                            config.b2c_delivery_frequency, sel_county, config.list_error_zone, growth_factor)
+                                            config.b2c_delivery_frequency, sel_county, config.list_error_zone, growth_factor, args.target_year)
 
         print ("**** Completed initial daily generation and Start processing aggregation")
         df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, sel_county, ship_type)
