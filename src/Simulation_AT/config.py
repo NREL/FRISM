@@ -117,7 +117,7 @@ selected_x_var_delivery=[
 
 # input for B2C day sim
 b2c_delivery_frequency=18
-hh_aggregation_size=5
+hh_aggregation_size=8
 # input for B2B day sim
 b2b_day_factor =5
 max_tour_for_b2b = 4
