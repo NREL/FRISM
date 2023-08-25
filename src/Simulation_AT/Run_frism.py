@@ -11,7 +11,7 @@ Deveopled by NREL
 Contributors: Dr. Kyungsoo Jeong, Dr. Juliette Ugirumurera, and Dr. Alicia Birky
 {'-'*40}
 """
-
+# test
 hh_gen_est_text =f"""
 {'*'*60}
 Running Household E-commerce Generation Estionation model for End-Consumer Behavior Module

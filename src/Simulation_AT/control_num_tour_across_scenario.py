@@ -18,6 +18,191 @@ from alive_progress import alive_bar
 import time
 from shapely.geometry import Point
 import math 
+import shutil
+
+f_dir="../../../Results_veh_tech_v2/Tour_plan/2040_loc_v2/"
+f_dir_2="../../../Results_veh_tech_v2/Tour_plan/2040_loc_sum/"
+county_list=["453", "491", "209", "55", "21", "53"]
+
+s_list=["Con_p20_e0", "Con_p40_e0", "Con_p60_e0","Con_p40_e30","Con_p40_e60", "Con_p40_e90"]
+for target_year in ["2040"]:
+    for ship_type in ["B2C"]:
+        for scenario in s_list:
+            f_dir="../../../Results_dmd_v1/Tour_plan/2040_loc_v2/"
+
+            if not file_exists("../../../Results_dmd_v1/Tour_plan/2040_{}/".format(scenario)):
+                os.makedirs("../../../Results_dmd_v1/Tour_plan/2040_{}/".format(scenario))
+            f_dir_2= "../../../Results_dmd_v1/Tour_plan/2040_{}/".format(scenario)
+            tour_num=0
+            N_df_payload=pd.DataFrame()
+            N_df_tour=pd.DataFrame()
+            N_df_carrier=pd.DataFrame()
+
+            s1= "../../../Results_dmd_v1/Shipment2Fleet/2040_loc_v2/"+"vehicle_types_s{}_y{}.csv".format(scenario,target_year)    
+            shutil.copy(s1,f_dir_2)
+
+            f_dir_3= "../../../Results_dmd_v1/Tour_plan/2040_b2b_growth/"
+            B2B_df_payload =pd.read_csv(f_dir_3+"B2B_all_payload_sDmd_G_y{0}.csv".format(target_year))
+            B2B_tour =pd.read_csv(f_dir_3+"B2B_all_freight_tours_sDmd_G_y{0}.csv".format(target_year))
+            B2B_carrier =pd.read_csv(f_dir_3+"B2B_all_carrier_sDmd_G_y{0}.csv".format(target_year)) 
+            B2B_df_payload.to_csv(f_dir_2+"B2B_all_payload_s{0}_y{1}.csv".format(scenario,target_year), index = False, header=True)
+            B2B_tour.to_csv(f_dir_2+"B2B_all_freight_tours_s{0}_y{1}.csv".format(scenario,target_year), index = False, header=True)
+            B2B_carrier.to_csv(f_dir_2+"B2B_all_carrier_s{0}_y{1}.csv".format(scenario,target_year), index = False, header=True)    
+
+            for count_num in county_list:
+                df_payload = pd.read_csv(f_dir+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_tour = pd.read_csv(f_dir+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_carrier = pd.read_csv(f_dir+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+
+                df_carrier["tourId"]=df_carrier["tourId"].apply(lambda x: x+tour_num)
+                df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+                df_tour["tour_id"]=df_tour["tour_id"].apply(lambda x: x+tour_num)
+                
+                tour_num=df_carrier["tourId"].iloc[-1]+1
+                N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+                N_df_tour=pd.concat([N_df_tour,df_tour], ignore_index=True).reset_index(drop=True)
+                N_df_carrier=pd.concat([N_df_carrier,df_carrier], ignore_index=True).reset_index(drop=True)
+
+            N_df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
+ 
+#%%
+f_dir="../../../Results_veh_tech_v2/Tour_plan/2050/"
+f_dir_2="../../../Results_veh_tech_v2/Tour_plan/2050_all/"
+county_list=["453", "491", "209", "55", "21", "53"]
+
+s_list=["Dmd_G"]
+for target_year in ["2050"]:
+    for ship_type in ["B2B"]:
+        for scenario in s_list:
+            f_dir="../../../Results_dmd_v1/Tour_plan/{}/".format(target_year)
+            f_dir_2="../../../Results_dmd_v1/Tour_plan/{}_all/".format(target_year)
+            tour_num=0
+            N_df_payload=pd.DataFrame()
+            N_df_tour=pd.DataFrame()
+            N_df_carrier=pd.DataFrame()    
+            for count_num in county_list:
+                df_payload = pd.read_csv(f_dir+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_tour = pd.read_csv(f_dir+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_carrier = pd.read_csv(f_dir+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+
+                df_carrier["tourId"]=df_carrier["tourId"].apply(lambda x: x+tour_num)
+                df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+                df_tour["tour_id"]=df_tour["tour_id"].apply(lambda x: x+tour_num)
+                
+                tour_num=df_carrier["tourId"].iloc[-1]+1
+                N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+                N_df_tour=pd.concat([N_df_tour,df_tour], ignore_index=True).reset_index(drop=True)
+                N_df_carrier=pd.concat([N_df_carrier,df_carrier], ignore_index=True).reset_index(drop=True)
+
+            N_df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
+county_list=["453", "491", "209", "55", "21", "53"]
+
+s_list=["Dmd_G", "Dmd_G120", "Dmd_G140", "Dmd_G160", "Dmd_G180"]
+for target_year in ["2040"]:
+    for ship_type in ["B2C"]:
+        for scenario in s_list:
+            f_dir="../../../Results_dmd_v1/Tour_plan/{}/".format(target_year)
+            f_dir_2="../../../Results_dmd_v1/Tour_plan/{}_all/".format(target_year)
+            tour_num=0
+            N_df_payload=pd.DataFrame()
+            N_df_tour=pd.DataFrame()
+            N_df_carrier=pd.DataFrame()    
+            for count_num in county_list:
+                df_payload = pd.read_csv(f_dir+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_tour = pd.read_csv(f_dir+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_carrier = pd.read_csv(f_dir+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+
+                df_carrier["tourId"]=df_carrier["tourId"].apply(lambda x: x+tour_num)
+                df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+                df_tour["tour_id"]=df_tour["tour_id"].apply(lambda x: x+tour_num)
+                
+                tour_num=df_carrier["tourId"].iloc[-1]+1
+                N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+                N_df_tour=pd.concat([N_df_tour,df_tour], ignore_index=True).reset_index(drop=True)
+                N_df_carrier=pd.concat([N_df_carrier,df_carrier], ignore_index=True).reset_index(drop=True)
+
+            N_df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+            print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
+s_list=["Dmd_G"]
+for target_year in ["2018"]:
+    for ship_type in ["B2C"]:
+        for scenario in s_list:
+            f_dir="../../../Results_dmd_v1/Tour_plan/{}/".format(target_year)
+            f_dir_2="../../../Results_dmd_v1/Tour_plan/{}_all/".format(target_year)
+            tour_num=0
+            N_df_payload=pd.DataFrame()
+            N_df_tour=pd.DataFrame()
+            N_df_carrier=pd.DataFrame()    
+            for count_num in county_list:
+                df_payload = pd.read_csv(f_dir+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_tour = pd.read_csv(f_dir+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+                df_carrier = pd.read_csv(f_dir+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+
+                df_carrier["tourId"]=df_carrier["tourId"].apply(lambda x: x+tour_num)
+                df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+                df_tour["tour_id"]=df_tour["tour_id"].apply(lambda x: x+tour_num)
+                
+                tour_num=df_carrier["tourId"].iloc[-1]+1
+                N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+                N_df_tour=pd.concat([N_df_tour,df_tour], ignore_index=True).reset_index(drop=True)
+                N_df_carrier=pd.concat([N_df_carrier,df_carrier], ignore_index=True).reset_index(drop=True)
+            for new_year in ["2018","2030","2040","2050"]:
+                N_df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+                N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+                N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+            print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
+
+
+for ship_type in ["B2B"]:
+
+    f_dir="../../../Results_from_HPC_at_v5/Tour_plan/"
+    f_dir_2="../../../Results_dmd_v1/Tour_plan/2018_all/"
+    tour_num=0
+    N_df_payload=pd.DataFrame()
+    N_df_tour=pd.DataFrame()
+    N_df_carrier=pd.DataFrame()    
+    for count_num in county_list:
+        df_payload = pd.read_csv(f_dir+"{0}_county{1}_payload.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+        df_tour = pd.read_csv(f_dir+"{0}_county{1}_freight_tours.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+        df_carrier = pd.read_csv(f_dir+"{0}_county{1}_carrier.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+
+        df_carrier["tourId"]=df_carrier["tourId"].apply(lambda x: x+tour_num)
+        df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+        df_tour["tour_id"]=df_tour["tour_id"].apply(lambda x: x+tour_num)
+        
+        tour_num=df_carrier["tourId"].iloc[-1]+1
+        N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+        N_df_tour=pd.concat([N_df_tour,df_tour], ignore_index=True).reset_index(drop=True)
+        N_df_carrier=pd.concat([N_df_carrier,df_carrier], ignore_index=True).reset_index(drop=True)
+    def type_change (val):
+        if val==1:
+            return "md_D_Diesel"
+        if val==2:
+            if random.random() <0.84:
+                return "hdt_D_Diesel"
+            else:
+                return "hdv_D_Diesel"
+    N_df_carrier["vehicleTypeId"]=N_df_carrier["vehicleTypeId"].apply(lambda x: type_change(x))    
+   
+    scenario="Dmd_G"
+    new_year="2018"
+    N_df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+    N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+    N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,new_year), index = False, header=True)
+    print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
 #%%
 f_dir="../../../Results_veh_tech_v2/Tour_plan/2050/"
 f_dir_2="../../../Results_veh_tech_v2/Tour_plan/2050_all/"

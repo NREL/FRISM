@@ -1,4 +1,3 @@
-#%%
 import pandas as pd
 import geopandas as gp
 import csv
@@ -17,13 +16,13 @@ import numpy as np
 from argparse import ArgumentParser
 from shapely.geometry import Point
 import random
-import config
+import config_SF as config
 # Global Variables
 tour_id = 0
 payload_i = 0
 depot_i = 0
 
-# %%
+
 
 # Function to get travel time using mesozone ID refering CBGID in tt_df
 def tt_cal(org_meso, dest_meso, org_geoID, dest_geoID, sel_tt, sel_dist):
@@ -171,14 +170,14 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
 
     # Adding travel time for rest of locations
-    #print("Beginning to get time matrix")
+    print("Beginning to get time matrix")
 
     b_timing = time()
     sel_tt= tt_df[(tt_df['origin'].isin(data['geo_ids'])) &
                      (tt_df['destination'].isin(data['geo_ids']))]
     sel_dist = dist_df[(dist_df['Origin'].isin(data['loc_zones'])) &
                        (dist_df['Destination'].isin(data['loc_zones']))]
-    #print('len of tt ', len(sel_tt), ' len of dist ', len(sel_dist))
+    print('len of tt ', len(sel_tt), ' len of dist ', len(sel_dist))
 
     for i in range(len(data['loc_zones'])):
         time_l = []
@@ -194,7 +193,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
         data['time_matrix'].append(copy(time_l))
 
-    #print("calculating matrix time, ", time()-b_timing)
+    print("calculating matrix time, ", time()-b_timing)
 
     # We assume first value in graph is medium duty and second is duty
     # Adding vehicle capacities
@@ -240,7 +239,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
     #     data['num_vehicles'] = int(f_prob['hd_veh'].values[0])
 
-    #print("veh_capacity: ", veh_capacity, " num_veh: ", data['num_vehicles'])
+    print("veh_capacity: ", veh_capacity, " num_veh: ", data['num_vehicles'])
     data['depot'] = 0
     return data
 
@@ -252,7 +251,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
     global payload_i
     global depot_i
 
-    #print(f'Objective: {solution.ObjectiveValue()}')
+    print(f'Objective: {solution.ObjectiveValue()}')
     time_dimension = routing.GetDimensionOrDie('Time')
     total_time = 0
     for vehicle_id in range(data['num_vehicles']):
@@ -394,27 +393,27 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
             if prob_type != 'delivery': plan_output += 'Time of the route: {}min'.format(
                 solution.Min(time_var) - start_time)
 
-            #print(plan_output)
-            #print(plan_output_l)
+            print(plan_output)
+            print(plan_output_l)
             total_time += solution.Min(time_var)- start_time
             tour_id += 1 # Incrementing for the tour id
             depot_i +=1
-    #print('Total time of all routes: {}min'.format(total_time))
+    print('Total time of all routes: {}min'.format(total_time))
 
 def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, payload_file, vehicleType_file):
 
     # KJ: read travel time, distance, zonal file as inputs  # Slow step
-    tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"')# , error_bad_lines=False)
+    tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
     dist_df = pd.read_csv(dist_file)  # Slow step
     CBGzone_df = gp.read_file(CBGzone_file)
 
     # We need to know the depot using the carrier file
-    c_df = carrier_file
+    c_df = pd.read_csv(carrier_file)
     c_df = c_df.dropna(axis=1, how='all')   # Removing all nan
     #c_df = c_df[c_df["num_veh_type_1"]>0]  # Removing carriers don't have vehicles (Temporary solution)- need to check Shipment code
 
     # reading payload definition
-    p_df = payload_file
+    p_df = pd.read_csv(payload_file)
     p_df = p_df.dropna(axis=1, how='all')   # Removing all nan
 
     # just relax upper time window because of outside of region destination
@@ -603,11 +602,54 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
     return t_df, c_df, p_df_update
 
 
-def main(count_num,travel_file,dist_file, CBGzone_file, carrier_file, payload_file, vehicleType_file, ship_type):
-                        
+def main(args=None):
+    parser = ArgumentParser()
+    parser.add_argument("-cy", "--county-number", dest="county_num",
+                        help="an integer indicating the county number", required=True, type=int)
+    parser.add_argument("-t", "--travel_time_file", dest="travel_file",
+                        help="travel time file in gz format", required=True, type=str)
+    parser.add_argument("-d", "--distance_file", dest="dist_file",
+                        help="distance file in csv format", required=True, type=str)
+    parser.add_argument("-ct", "--freigh_centroid_file", dest="CBGzone_file",
+                        help="travel time file in geojson format", required=True, type=str)
+    parser.add_argument("-cr", "--carrier_file", dest="carrier_file",
+                        help="carrier file in csv format", required=True, type=str)
+    parser.add_argument("-pl", "--payload_file", dest="payload_file",
+                        help="payload file in csv format", required=True, type=str)
+    parser.add_argument("-vt", "--vehicle_type_file", dest="vehicleType_file",
+                        help="vehicle type file in csv format", required=True, type=str)
+    parser.add_argument("-sn", "--scenario", dest="scenario",
+                    help="scenario", required=True, type=str)                
+    parser.add_argument("-yt", "--analysis year", dest="target_year",
+                help="20XX", required=True, type=int)                      
+    parser.add_argument("-fn", "--separate_file index", dest="file_idx",
+                        help="an inteager", default=9999, type=str)                        
+
+    args = parser.parse_args()
+    file_index=args.file_idx
+
+    count_num = args.county_num
+
+    args = parser.parse_args()
 
 
-    tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(travel_file, dist_file,CBGzone_file, carrier_file, payload_file, vehicleType_file)
+    count_num = args.county_num
+
+    # Saving the created data frames
+    if "B2B" in args.payload_file:
+        ship_type = "B2B"
+    elif "B2C" in args.payload_file:
+        ship_type = "B2C"
+
+    tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(args.travel_file, args.dist_file,args.CBGzone_file, args.carrier_file, args.payload_file, args.vehicleType_file)
+
+
+    # tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing("../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz", 
+    # "../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv",
+    # "../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson", 
+    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_carrier_county21_shipall_sHigh_y2040_A.csv", 
+    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_payload_county21_shipall_sHigh_y2040_A.csv", 
+    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv")
 
     b_time = time()
     # data frames for the tour, carrier and payload
@@ -624,10 +666,6 @@ def main(count_num,travel_file,dist_file, CBGzone_file, carrier_file, payload_fi
 
     error_list = []
     error_list.append(['carrier', 'veh', 'reason'])
-    
-    # Add another look for commodity: loop by carrier, vehicle type and commodity type
-    # The commodity will decide the limit on number of stops per vehicle:
-    # randomly select stops limits and fix slack stop limits to maximum stops possible per commodity
 
 
     for carr_id in p_df['carrier_id'].unique():
@@ -670,45 +708,45 @@ def main(count_num,travel_file,dist_file, CBGzone_file, carrier_file, payload_fi
                 #     veh_num = int(vc_prob['hd_veh'].values[0])
 
                 # temporary QC check
-                #print ("Carrier Id: {}".format(carr_id))    
-                #print ("veh_type: {0} veh_capacity: {1} veh_num: {2}".format(veh,veh_capacity,veh_num))    
+                print ("Carrier Id: {}".format(carr_id))    
+                print ("veh_type: {0} veh_capacity: {1} veh_num: {2}".format(veh,veh_capacity,veh_num))    
 
                 max_veh_cap = veh_num*veh_capacity  # variable for saving the vehicle capacity
 
                 if len(df_prob) == 0:
-                    # print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
-                    # print('\n')
+                    print('Could not solve problem for carrier ', carr_id, ': NO PAYLOAD INFO')
+                    print('\n')
                     error_list.append([carr_id, veh, 'NO PAYLOAD INFO'])
                     valid = False
 
                 elif len(f_prob) == 0 or len(vc_prob) == 0:
-                    # print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
-                    # print('\n')
+                    print('Could not solve problem for carrier ', carr_id, ': NO VEHICLE TYPE INFO')
+                    print('\n')
                     error_list.append([carr_id, veh, 'NO VEHICLE TYPE INFO'])
                     valid = False
 
                 elif len(c_prob) == 0:
-                    # print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
-                    # print('\n')
+                    print('Could not solve problem for carrier ', carr_id, ': NO CARRIER INFO')
+                    print('\n')
                     error_list.append([carr_id, veh, 'NO CARRIER INFO'])
                     valid = False
                 
                 elif total_load > max_veh_cap:
                     df_prob.sort_values(by=['weight'])
                     valid = False
-                    # print("Load is larger than vehicle capacity")
-                    # print('Load is: ', total_load, ' num of veh: ', veh_num, ' total veh capacity is: ', max_veh_cap)
+                    print("Load is larger than vehicle capacity")
+                    print('Load is: ', total_load, ' num of veh: ', veh_num, ' total veh capacity is: ', max_veh_cap)
                     while valid == False and (len(df_prob) > 0):
                         message = 'Dropped payload : ', df_prob.iloc[-1]['payload_id'], ' with weight: ', df_prob.iloc[-1]['weight']
                         error_list.append([carr_id, veh, message])
-                        #print(message)
+                        print(message)
                         df_prob = df_prob.iloc[:-1 , :]
                         if  sum(df_prob['weight']) <= max_veh_cap:
                             valid = True
                     
                     if not valid:
-                        # print('Could not solve problem for carrier ', carr_id, ': SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY')
-                        # print('\n')
+                        print('Could not solve problem for carrier ', carr_id, ': SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY')
+                        print('\n')
                         error_list.append([carr_id, veh, 'SINGLE PAYLOAD WEIGHT GREATER THAN VEHICLE CAPACICY'])
 
                 if valid:
@@ -720,7 +758,7 @@ def main(count_num,travel_file,dist_file, CBGzone_file, carrier_file, payload_fi
                 # for now pickup and delivery works
                 # TO DO: work on pickup_delivery  # Removed prob_type != 'pickup_delivery'and
                 # if len(df_prob)> 0 and len(f_prob)> 0 and len(c_prob)> 0 and len(vc_prob)>0:
-                    # print('Solvign problem for carrier ', carr_id, ' with type', prob_type, ' and veh type ', veh)
+                    print('Solvign problem for carrier ', carr_id, ' with type', prob_type, ' and veh type ', veh)
                     data = create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carr_id,
                                              CBGzone_df, tt_df, dist_df, veh)
 
@@ -821,43 +859,75 @@ def main(count_num,travel_file,dist_file, CBGzone_file, carrier_file, payload_fi
                     
 
                     solve_time = time() - s_time
-                    # print('\nTime to solve is: ', solve_time)
+                    print('\nTime to solve is: ', solve_time)
 
                     # Print solution on console.
-                    # if solution:
-                    #     print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                    #                     payload_df, prob_type, count_num, ship_type, c_prob, df_prob)
-                    #     print('\n')
+                    if solution:
+                        print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
+                                       payload_df, prob_type, count_num, ship_type, c_prob, df_prob)
+                        print('\n')
 
-                    # else:
-                    #     st = routing.status()
-                    #     message = ''
-                    #     if st == 0:
-                    #         message = 'PROBLEM NOT YET SOLVED'
-                    #     elif st == 2:
-                    #         message = 'NO SOLUTION FOUND FOR PROBLEM'
-                    #         # print(data)
-                    #     elif st == 3:
-                    #         message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
-                    #     elif st ==4:
-                    #         message = 'MODEL, PARAMETERS, OR FLAGS ARE INVALID'
+                    else:
+                        st = routing.status()
+                        message = ''
+                        if st == 0:
+                            message = 'PROBLEM NOT YET SOLVED'
+                        elif st == 2:
+                            message = 'NO SOLUTION FOUND FOR PROBLEM'
+                            # print(data)
+                        elif st == 3:
+                            message = 'TIME LIMIT REACHED BEFORE FINDING A SOLUTION'
+                        elif st ==4:
+                            message = 'MODEL, PARAMETERS, OR FLAGS ARE INVALID'
 
-                    #     print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' : ', message)
-                    #     error_list.append([carr_id, veh, message])
-                    #     print('\n')
+                        print('Could not find a solution for carrier: ', carr_id, 'and veh ', veh, ' : ', message)
+                        error_list.append([carr_id, veh, message])
+                        print('\n')
 
 
             except Exception as e:
-                #print('Could not solve problem for carrier: ', carr_id, 'and vehicle ', veh , ' : ', e)
+                print('Could not solve problem for carrier: ', carr_id, 'and vehicle ', veh , ' : ', e)
                 error_list.append([carr_id, veh, e])
-                #print('\n')
+                print('\n')
 
     run_time = time() - b_time
     print('Time for the run: ', run_time)
     print('\n')
 
+    if not os.path.exists(config.fdir_main_output_tour + str(args.target_year)+"/"):
+        os.makedirs(config.fdir_main_output_tour + str(args.target_year)+"/")
+    dir_out=config.fdir_main_output_tour + str(args.target_year)+"/"     
+    #  Saving the carrier ids with errors
+    if len(error_list) > 0:
+        with open(dir_out+"%s_county%s_error_%s.csv"%(ship_type, str(count_num), str(file_index) ), "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(error_list)
+
     # ' {0} Load({1}) -> '.format(node_list[l], temp_load)
-    return tour_df,carrier_df,payload_df
+    if file_index == 9999:
+        tour_df.to_csv(dir_out+"{0}_county{1}_freight_tours_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+        carrier_df.to_csv(dir_out+"{0}_county{1}_carrier_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+        payload_df.to_csv(dir_out+"{0}_county{1}_payload_s{2}_y{3}.csv".format(ship_type, count_num,args.scenario,args.target_year), index=False)
+    else:    
+        tour_df.to_csv(dir_out+"{0}_county{1}_freight_tours{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
+        carrier_df.to_csv(dir_out+"{0}_county{1}_carrier{2}_s{3}_y{4}.csv".format(ship_type, count_num,str(file_index),args.scenario,args.target_year), index=False)
+        payload_df.to_csv(dir_out+"{0}_county{1}_payload{2}_s{3}_y{4}.csv".format(ship_type, count_num, str(file_index),args.scenario,args.target_year), index=False)
+    print ('Completed saving tour-plan files for {0} and county {1}'.format(ship_type, count_num), '\n')
+
+    # dir_geo=config.fdir_in_out+'/Sim_inputs/Geo_data/'
+    # #polygon_CBG = gp.read_file(dir_geo+'sfbay_freight.geojson') # include polygon for all the mesozones in the US
+    # ex_zone_match= pd.read_csv(dir_geo+"xyExternal_Zones_Mapping.csv") # relationship between external zones and boundary zones
+    # if (ship_type =='B2B') :
+    #     print ("Starting external zone processing for B2B")
+    #     tour_df,carrier_df,payload_df= external_zone (tour_df,carrier_df,payload_df,ex_zone_match,tt_df, dist_df, CBGzone_df)
+
+    # #print ("Assigning x_y coordinate into depots and delivery locations")
+    # #tour_df_xy,carrier_df_xy,payload_df_xy=random_loc (tour_df,carrier_df,payload_df, polygon_CBG)
+    # tour_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_freight_tours_xy.csv" .format(ship_type, count_num), index=False)
+    # carrier_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_carrier_xy.csv" .format(ship_type, count_num), index=False)
+    # payload_df.to_csv(config.fdir_in_out+"/Sim_outputs/Tour_plan/{0}_county{1}_payload_xy.csv" .format(ship_type, count_num), index=False)
+    # print ("Complete saving tour-plan with xy coordinate for {0} and county {1}" .format(ship_type, count_num))
+
 
 
 if __name__ == "__main__":
