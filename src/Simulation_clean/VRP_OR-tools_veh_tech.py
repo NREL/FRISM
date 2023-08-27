@@ -1,3 +1,4 @@
+# %%
 import pandas as pd
 import geopandas as gp
 import csv
@@ -403,8 +404,10 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, payload_file, vehicleType_file):
 
     # KJ: read travel time, distance, zonal file as inputs  # Slow step
-    tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', error_bad_lines=False)
+    tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"') #, error_bad_lines=False)
     dist_df = pd.read_csv(dist_file)  # Slow step
+    if "OriginZone" in dist_df.columns:
+        dist_df=dist_df.rename({'OriginZone':'Origin', 'DestinationZone': 'Destination'}, axis='columns')
     CBGzone_df = gp.read_file(CBGzone_file)
 
     # We need to know the depot using the carrier file
@@ -601,7 +604,7 @@ def external_zone (t_df,c_df,p_df,ex_zone,tt_df, dist_df, CBGzone_df):
 
     return t_df, c_df, p_df_update
 
-
+# %%
 def main(args=None):
     parser = ArgumentParser()
     parser.add_argument("-cy", "--county-number", dest="county_num",
@@ -644,12 +647,12 @@ def main(args=None):
     tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing(args.travel_file, args.dist_file,args.CBGzone_file, args.carrier_file, args.payload_file, args.vehicleType_file)
 
 
-    # tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing("../../../FRISM_input_output_AT/Sim_inputs/Geo_data/tt_df_cbg.csv.gz", 
-    # "../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_od_dist.csv",
-    # "../../../FRISM_input_output_AT/Sim_inputs/Geo_data/Austin_freight_centroids.geojson", 
-    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_carrier_county21_shipall_sHigh_y2040_A.csv", 
-    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/B2B_payload_county21_shipall_sHigh_y2040_A.csv", 
-    # "../../../FRISM_input_output_AT/Sim_outputs/Shipment2Fleet/vehicle_types_sHigh_y2040.csv")
+    # tt_df, dist_df, CBGzone_df, c_df, p_df, v_df, vc_df = input_files_processing("../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz", 
+    # "../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv",
+    # "../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson", 
+    # "../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/2018/B2B_carrier_county1_shipall_A_sBase_y2018_sr10.csv", 
+    # "../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/2018/B2B_payload_county1_shipall_A_sBase_y2018_sr10.csv", 
+    # "../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/2018/vehicle_types_sBase_y2018.csv")
 
     b_time = time()
     # data frames for the tour, carrier and payload
@@ -669,7 +672,7 @@ def main(args=None):
 
 
     for carr_id in p_df['carrier_id'].unique():
-   # for carr_id in ['B2B_98420_0']:
+#    for carr_id in ["B2B_1001435_4_0hdv_D"]:
         # Initialize parameters used for probelm setting
         
         # Depot location
