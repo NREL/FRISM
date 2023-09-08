@@ -16,7 +16,7 @@ CBG_file= 'SFBay_freight.geojson'
 b2c_delivery_frequency=18
 hh_aggregation_size=8
 # input for B2B day sim
-b2b_day_factor =0.175
+b2b_day_factor =0.17
 max_tour_for_b2b = 4
 fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
 # input for B2B/Geo_data
