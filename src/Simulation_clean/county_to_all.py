@@ -16,11 +16,12 @@ from shapely.geometry import Point
 import math 
 import shutil
 #%%
-f_dir="../../..//Results_from_HPC_sfn_v0/Tour_plan/2018/"
-f_dir_2="../../../Results_from_HPC_sfn_v0/Tour_plan/2018_all/"
+f_dir="../../..//Results_from_HPC_sfn_v0/Tour_plan/2050/"
+f_dir_2="../../../Results_from_HPC_sfn_v0/Tour_plan/2050_all/"
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-target_year="2018"
-s_list=["Base"]
+target_year="2050"
+#s_list=["Base"]
+s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
 # s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",
 # "Ref_highp2", "Ref_highp4", "Ref_highp6","Ref_highp8","Ref_highp10"]
 for scenario in s_list:

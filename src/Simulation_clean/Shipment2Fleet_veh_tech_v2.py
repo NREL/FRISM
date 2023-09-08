@@ -513,6 +513,7 @@ def util_powertrain(num_D, num_E, dic_E, distance,veh_class, ev_class, coef_num_
 ########################### B2C CODES #############################
 def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county, list_error_zone,growth_factor, year):
     # read household delivery file from 
+
     df_hh = pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/households_del_{}.csv'.format(str(year)), header=0, sep=',')
     df_hh= df_hh[['household_id','delivery_f', 'block_id']]
     df_hh['GEOID'] =df_hh['block_id'].apply(lambda x: np.floor(x/1000))
@@ -537,7 +538,8 @@ def b2c_input_files_processing(CBGzone_df, possilbe_delivey_days, sel_county, li
     # Generate load in "lb"
     df_hh_D["D_truckload"]=df_hh_D["D_packages"].apply(b2c_d_truckload)
     # Save daily household having shipments and sum of load 
-    df_hh_D.to_csv (fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
+    #df_hh_D.to_csv (fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)
+
     return df_hh_D
 
 def b2c_household_aggregation (df_hh_D, zone_df,hh_aggregation_num, county, ship_type):
@@ -717,7 +719,7 @@ def b2c_create_output(df_del,truckings,df_dpt_dist, ship_type):
 # %%
 ########################### B2B CODES ############################
 # c1: bulk, c2:fuel_fert, c3:interm_food, c4:mfr_goods, c5:others 
-def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold, list_error_zone, county_list, df_vius, b2b_day_factor,year, scenario):
+def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, sel_county, ship_direction, commodity_list, weight_theshold, list_error_zone, county_list, df_vius, b2b_day_factor,year, scenario,daily_demand_creator):
     ## Need to delete    
     # sel_county =21
     # ship_direction ="all"
@@ -734,14 +736,15 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
     # for com in commodity_list:
     #     B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
     #     B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
-    B2BF_T_D=b2b_d_shipment_by_commodity(fdir_synth_firm, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
-    B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
-    B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
-    B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
-    #B2BF_T_D["SellerID"]=B2BF_T_D["SellerID"].astype(str).astype(float)
-    #B2BF_T_D["BuyerID"]=B2BF_T_D["BuyerID"].astype(str).astype(float)
-    #B2BF_T_D["SCTG_Group"]=B2BF_T_D["SCTG_Group"].astype(str).astype(int)              
-    B2BF_T_D.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
+    if daily_demand_creator == "Y":
+        B2BF_T_D=b2b_d_shipment_by_commodity(fdir_synth_firm, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
+        B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
+        B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
+        B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
+        B2BF_T_D.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
+    else: 
+        B2BF_T_D =pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), header=0, sep=',')   
+
     ## Deal with the daily shipment seperately
     ## For-hire Truck: FH_B2B
     ## Private Truck: PV_B2B
@@ -1243,11 +1246,11 @@ def b2b_d_select(TruckLoad,w_th):
     else: return 0
 def b2b_d_select_with_ship_size(TruckLoad,w_th, b2b_day_factor):
     if TruckLoad <= w_th*1:
-         if random.uniform(0,1) <=1/(b2b_day_factor*52):
+         if random.uniform(0,1) <=(b2b_day_factor/52.15):
             return 1
          else: return 0   
     else:
-         if random.uniform(0,1) <=1/(b2b_day_factor*52):
+         if random.uniform(0,1) <=(b2b_day_factor/52.15):
             return 1
          else: return 0 
 
@@ -1308,7 +1311,7 @@ def b2b_d_shipment_by_commodity(fdir, weight_theshold, CBGzone_df,sel_county,shi
                 temp=sampling_shipper(temp, sample_ratio, bin_size)
 
             B2BF=pd.concat([B2BF,temp],ignore_index=True)
-    #B2BF.to_csv(fdir+'Daily_sctg%s_OD_%s_%s.csv' % (commoidty, sel_county,ship_direction), index = False, header=True)
+    #B2BF.to_csv(fdir+'Daily_OD_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
     return B2BF
 
 def b2b_veh_type_truckload_prior(SCTG_Group,Distance, D_truckload, df_vius,dic_firm_stock):
@@ -1668,7 +1671,9 @@ def main(args=None):
     parser.add_argument("-gf", "--b2c growth", dest="growth_factor",
                         help="b2 growth 100,120,150", default=100, type=int)
     parser.add_argument("-sr", "--sample ratio", dest="sample_rate",
-                        help="sampeing rate for light run 0-100", default=100, type=int)                                                                                                        
+                        help="sampeing rate for light run 0-100", default=100, type=int)
+    parser.add_argument("-dc", "--condition for daily demand generation", dest="daily_demand_creator",
+                        help="Y:create new one, N: use existing one", required=True, type=str)                                                                                                        
     args = parser.parse_args()
     
     start_time=time.time()
@@ -1748,26 +1753,31 @@ def main(args=None):
         ship_type=args.ship_type 
         ship_direction=args.ship_direction
         print ("**** Start processing daily B2C shipment")
-        df_hh_D= b2c_input_files_processing(CBGzone_df, 
-                                            config.b2c_delivery_frequency, sel_county, config.list_error_zone, growth_factor, args.target_year)
+        if args.daily_demand_creator == "Y": 
+            df_hh_D= b2c_input_files_processing(CBGzone_df, 
+                                                config.b2c_delivery_frequency, sel_county, config.list_error_zone, growth_factor, args.target_year)
 
-        print ("**** Completed initial daily generation and Start processing aggregation")
-        # option 1
-        # if sample_ratio==100:
-        #     df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, sel_county, ship_type)
-        # else: 
-        #     df_hh_D_GrID= b2c_sampling_household (df_hh_D, sel_county,ship_type,sample_ratio)
+            print ("**** Completed initial daily generation and Start processing aggregation")
+            # option 1
+            # if sample_ratio==100:
+            #     df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, sel_county, ship_type)
+            # else: 
+            #     df_hh_D_GrID= b2c_sampling_household (df_hh_D, sel_county,ship_type,sample_ratio)
 
-        # option 2
-        df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, sel_county, ship_type)
-        if sample_ratio <100: 
-            df_hh_D_GrID= b2c_sampling_household_agg (df_hh_D_GrID,sample_ratio)
+            # option 2
+            df_hh_D_GrID, id_lookup =b2c_household_aggregation (df_hh_D, CBGzone_df, config.hh_aggregation_size, sel_county, ship_type)
+            if sample_ratio <100: 
+                df_hh_D_GrID= b2c_sampling_household_agg (df_hh_D_GrID,sample_ratio)
 
+            df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)    
+        else: 
+            df_hh_D_GrID= pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, header=0, sep=',')        
+ 
         df_hh_D_GrID.loc[:,'veh_type_agg'] ="md"
         df_hh_D_GrID.loc[:,'assigned_carrier']="no"
         df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
-        df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %sel_county, index = False, header=True)
-        id_lookup.to_csv (config.fdir_main_output+"B2Bid_lookup+"+"_county%s_ship%s.csv" %(sel_county, ship_direction), index = False, header=True)
+        #df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_before_county%s.csv' %sel_county, index = False, header=True)
+        #id_lookup.to_csv (config.fdir_main_output+"B2Bid_lookup+"+"_county%s_ship%s.csv" %(sel_county, ship_direction), index = False, header=True)
         # Assigned the carrirer to shipment!: 
         ## This part is time consuming which is associated to the function "carrier_sel()"
         print ("**** Complete aggregation and Starting carrier assignement ****")
@@ -1913,7 +1923,7 @@ def main(args=None):
         df_vius= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/vehicle_proportion_by_sctg_dist.csv", header=0, sep=',')
         FH_B2B, PV_B2B, firms = b2b_input_files_processing(firms,leasings,truckings,dist_df, CBGzone_df, args.sel_county, args.ship_direction, 
         config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius, config.b2b_day_factor, 
-        args.target_year, args.scenario)
+        args.target_year, args.scenario, args.daily_demand_creator)
         FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         firms.to_csv(fdir_in_out+'/Sim_outputs/temp_save/B2B_firms%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)

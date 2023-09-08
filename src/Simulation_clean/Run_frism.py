@@ -5,6 +5,7 @@ county = sys.argv[1]
 year = sys.argv[2]
 scenario = sys.argv[3]
 sample_rate = sys.argv[4]
+d_gen=sys.argv[5]
 
 head_text = f"""
 {'-'*40}
@@ -75,50 +76,52 @@ print (dc_module_text)
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
 
-# os.system("python Shipment2Fleet_veh_tech_v2.py \
-#         -sn {0} \
-#             -yt {1} \
-#     -st B2C \
-#         -ct {2} \
-#             -sd all \
-#                 -rt RunSim \
-#                   -sr {3}".format(scenario, year, county, sample_rate)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+os.system("python Shipment2Fleet_veh_tech_v2.py \
+        -sn {0} \
+            -yt {1} \
+    -st B2C \
+        -ct {2} \
+            -sd all \
+                -rt RunSim \
+                  -sr {3} \
+                    -dc {4}".format(scenario, year, county, sample_rate,d_gen)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 # #B2B
-# # # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
-# # # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
-# os.system("python Shipment2Fleet_veh_tech_v2.py \
-#         -sn {0} \
-#             -yt {1} \
-#         -st B2B \
-#             -ct {2} \
-#                 -sd all \
-#                     -rt RunSim \
-#                         -sr {3}".format(scenario, year, county, sample_rate)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
+# # Please select a county(-ct) you want to run & select shipment direction(-sd) = out, in, all
+# # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
+os.system("python Shipment2Fleet_veh_tech_v2.py \
+        -sn {0} \
+            -yt {1} \
+        -st B2B \
+            -ct {2} \
+                -sd all \
+                    -rt RunSim \
+                        -sr {3} \
+                         -dc {4}".format(scenario, year, county, sample_rate, d_gen)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # B2C
-os.system("python VRP_OR-tools_veh_tech.py \
-    -cy {2} \
-        -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-            -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
-                -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
-                    -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_carrier_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
-                        -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
-                            -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
-                                         -sn {0}\
-                                           -yt {1}".format(scenario, year, county, sample_rate))
-#     # # B2B
-os.system("python VRP_OR-tools_veh_tech.py \
-    -cy {2} \
-        -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-            -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
-                -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
-                    -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_carrier_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
-                        -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
-                            -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
-                                -sn {0} \
-                                    -yt {1}".format(scenario, year, county, sample_rate))
+# os.system("python VRP_OR-tools_veh_tech.py \
+#     -cy {2} \
+#         -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
+#                 -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_carrier_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
+#                         -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
+#                             -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+#                                          -sn {0}\
+#                                            -yt {1}".format(scenario, year, county, sample_rate))
+# #     # # B2B
+# os.system("python VRP_OR-tools_veh_tech.py \
+#     -cy {2} \
+#         -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+#             -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
+#                 -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
+#                     -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_carrier_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
+#                         -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
+#                             -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+#                                 -sn {0} \
+#                                     -yt {1}".format(scenario, year, county, sample_rate))
 
 print ("Completed running modules you selected")
