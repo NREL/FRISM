@@ -1,5 +1,7 @@
+# %%
 import pandas as pd
 import numpy as np
+#%%
 import joblib
 from argparse import ArgumentParser
 import config
@@ -17,7 +19,7 @@ from imblearn.over_sampling import SMOTE
 import statsmodels.formula.api as smf
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+# %%
 def input_files_processing(household_file, person_file,state_CBSA,x_var_candidate_hh, x_var_candidate_per):
     # Household data processing
     # Read NHTS household data

@@ -737,12 +737,14 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
     #     B2BF_C =  b2b_d_shipment_by_commodity(fdir_synth_firm,com, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
     #     B2BF_T_D=pd.concat([B2BF_T_D,B2BF_C],ignore_index=True)
     if daily_demand_creator == "Y":
+        print ("**** Generating new shipment sample")
         B2BF_T_D=b2b_d_shipment_by_commodity(fdir_synth_firm, weight_theshold,CBGzone_df,sel_county,ship_direction, county_wo_sel, b2b_day_factor,year, scenario)
         B2BF_T_D= B2BF_T_D[~B2BF_T_D['SellerZone'].isin(list_error_zone)]
         B2BF_T_D= B2BF_T_D[~B2BF_T_D['BuyerZone'].isin(list_error_zone)]
         B2BF_T_D=B2BF_T_D.dropna(axis=0, how="any").reset_index()
         B2BF_T_D.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), index = False, header=True)
     else: 
+        print ("**** Reading existing shipment sample")
         B2BF_T_D =pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/B2B_daily_%s_%s.csv' % (sel_county,ship_direction), header=0, sep=',')   
 
     ## Deal with the daily shipment seperately

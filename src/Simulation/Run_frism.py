@@ -51,10 +51,10 @@ print (head_text)
 # # 1. Model estimation for End-Consumer Behavior Module (E-commerce generation)
 # print (hh_gen_est_text)
 # # Please replace hf, pf if their directory changes
-# os.system("python HH_ecom_models.py \
-#     -hf ../../../FRISM_input_output_SF/Model_inputs/NHTS/hhpub.csv \
-#         -pf ../../../FRISM_input_output_SF/Model_inputs/NHTS/perpub.csv \
-#             -mt WOD")
+os.system("python HH_ecom_models.py \
+    -hf ../../../FRISM_input_output_SF/Model_inputs/NHTS/hhpub.csv \
+        -pf ../../../FRISM_input_output_SF/Model_inputs/NHTS/perpub.csv \
+            -mt WOD")
 
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
 # print (ec_module_text)

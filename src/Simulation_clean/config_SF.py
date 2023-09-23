@@ -13,7 +13,7 @@ CBG_file= 'SFBay_freight.geojson'
 
 
 # input for B2C day sim
-b2c_delivery_frequency=22
+b2c_delivery_frequency=18
 hh_aggregation_size=8
 # input for B2B day sim
 b2b_day_factor =0.17

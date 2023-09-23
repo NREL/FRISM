@@ -18,15 +18,18 @@ import shutil
 #%%
 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-target_year="2018"
-f_dir="../../..//Results_from_HPC_sfn_v1/Tour_plan/{}/".format(target_year)
-f_dir_2="../../../Results_from_HPC_sfn_v1/Tour_plan/{}_all/".format(target_year)
-s_list=["Base"]
+target_year="2040"
+f_dir="../../..//Results_from_HPC_sfn_v2/Tour_plan/{}/".format(target_year)
+f_dir_2="../../../Results_from_HPC_sfn_v2/Tour_plan/{}_all/".format(target_year)
+#s_list=["Base"]
 #s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
+#s_list=["Dmd_G"]
+s_list=["Dmd_G", "Dmd_G120", "Dmd_G140", "Dmd_G160","Dmd_G180"]
 # s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",
 # "Ref_highp2", "Ref_highp4", "Ref_highp6","Ref_highp8","Ref_highp10"]
 for scenario in s_list:
-    for ship_type in ["B2B", "B2C"]:
+    #for ship_type in ["B2B", "B2C"]:
+    for ship_type in ["B2C"]:    
         tour_num=0
         N_df_payload=pd.DataFrame()
         N_df_tour=pd.DataFrame()
@@ -49,4 +52,38 @@ for scenario in s_list:
         N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+# %%
+# %%
+f_dir="../../../Results_from_HPC_sfn_v1/Tour_plan/{}_all/".format(target_year)
+f_dir_2= "../../../Results_from_HPC_sfn_v1/Tour_plan/{}_all/".format(target_year)
+
+sample_target={"B2B":6950, 
+                "B2C":1040}
+y="2050"
+for ship_type in ["B2B", "B2C"]:
+    for s in s_list:
+        df_payload = pd.read_csv(f_dir+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,s,y)).reset_index()
+        df_tour = pd.read_csv(f_dir+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,s,y)).reset_index()
+        df_carrier = pd.read_csv(f_dir+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,s,y)).reset_index()
+        list_tour=random.sample(list(df_carrier["tourId"].unique()),sample_target[ship_type])
+        df_payload = df_payload[df_payload["tourId"].isin(list_tour)]
+        df_tour = df_tour[df_tour["tour_id"].isin(list_tour)]
+        df_carrier = df_carrier[df_carrier["tourId"].isin(list_tour)]
+        df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)
+        df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)
+        df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)  
+#%%
+for ship_type in ["B2B", "B2C"]:
+    for s in s_list:
+        df_payload = pd.read_csv(f_dir+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,s,y))
+        df_tour = pd.read_csv(f_dir+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,s,y))
+        df_carrier = pd.read_csv(f_dir+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,s,y))
+        
+        df_payload  = df_payload.drop(["level_0","index"], axis=1)
+        df_tour     = df_tour.drop(["level_0","index"], axis=1)   
+        df_carrier  = df_carrier.drop(["level_0","index"], axis=1) 
+        
+        df_payload.to_csv(f_dir_2+"{0}_all_payload_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)
+        df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)
+        df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,s,y), index = False, header=True)
 # %%

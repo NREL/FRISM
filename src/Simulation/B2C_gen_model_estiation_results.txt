@@ -104,3 +104,95 @@ WORKER           0.1540      0.027      5.645      0.000       0.101       0.207
 ================================================================================
 ************* Delivery Model ****************
 Model performance (Mean Squared Error): 32.27
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.71
+Error rate for initial model: 0.29
+initial confusion matirix) [[  21    3   29]
+ [ 111 1495  441]
+ [  29   18   38]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.77
+Error rate for calibrated model: 0.23
+calibrated confusion matrix [[  39    5    9]
+ [ 263 1636  148]
+ [  54   19   12]]
+coef/intercept for initial M [[-0.01596486 -0.88394732  0.02649692 -0.29171494 -0.39336169  2.61764511
+   1.80061062  1.43963424]
+ [ 0.04106899  0.85216102 -0.31620144 -0.53167538 -0.13940303 -2.51634332
+  -1.9776526  -1.38577592]
+ [-0.02510413  0.0317863   0.28970452  0.82339032  0.53276472 -0.10130178
+   0.17704198 -0.05385832]] [-1.68521717  1.69698025 -0.01176308]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[ 604  515]
+ [ 481 1934]]
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[  30    5   22]
+ [ 118 1511  417]
+ [  29   15   38]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.78
+Error rate for calibrated model: 0.22
+calibrated confusion matrix [[  42    7    8]
+ [ 217 1637  192]
+ [  44   19   19]]
+coef/intercept for initial M [[-0.00423405 -0.95196026  0.0891421  -0.18925299 -0.29928477  2.50906025
+   1.74051238  1.42398751]
+ [ 0.05696144  0.86043602 -0.35797117 -0.5542288  -0.17101895 -2.53213845
+  -1.98120107 -1.44391791]
+ [-0.05272739  0.09152424  0.26882907  0.74348178  0.47030372  0.0230782
+   0.24068868  0.0199304 ]] [-1.65203323  1.71009907 -0.05806584]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[ 582  508]
+ [ 473 1971]]
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[  28    3   26]
+ [ 106 1498  444]
+ [  21   17   42]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.78
+Error rate for calibrated model: 0.22
+calibrated confusion matrix [[  43    4   10]
+ [ 272 1642  134]
+ [  46   18   16]]
+coef/intercept for initial M [[-0.00770222 -0.89922923  0.00250975 -0.31068281 -0.4651336   2.42074057
+   1.67534054  1.29709263]
+ [ 0.05208875  0.85958335 -0.3420818  -0.50967203 -0.11927567 -2.46631648
+  -1.95317598 -1.35730974]
+ [-0.04438653  0.03964588  0.33957205  0.82035484  0.58440928  0.04557591
+   0.27783543  0.06021711]] [-1.50009156  1.65102722 -0.15093566]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[ 602  528]
+ [ 476 1928]]
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.71
+Error rate for initial model: 0.29
+initial confusion matirix) [[  25    5   26]
+ [ 119 1506  429]
+ [  24   20   31]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.78
+Error rate for calibrated model: 0.22
+calibrated confusion matrix [[  41    6    9]
+ [ 266 1641  147]
+ [  41   21   13]]
+coef/intercept for initial M [[-0.04187878 -0.87679844  0.05586668 -0.36921947 -0.38512496  2.68391877
+   1.89526239  1.46839131]
+ [ 0.06763711  0.84522624 -0.41962047 -0.52464587 -0.1814905  -2.66711097
+  -2.12074328 -1.52622993]
+ [-0.02575833  0.0315722   0.3637538   0.89386534  0.56661546 -0.0168078
+   0.2254809   0.05783862]] [-1.73385616  1.88057837 -0.14672221]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.72
+Error rate for initial model: 0.28
+initial confusion matirix) [[ 632  520]
+ [ 472 1910]]
