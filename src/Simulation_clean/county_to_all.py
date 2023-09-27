@@ -53,6 +53,16 @@ for scenario in s_list:
         N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
 # %%
+f_dir="../../..//Results_from_HPC_sfn_v2/Shipment2Fleet/{}/".format(target_year)
+for scenario in s_list:
+    #for ship_type in ["B2B", "B2C"]:
+    for ship_type in ["B2C"]:    
+        N_df_payload=pd.DataFrame()
+        for count_num in county_list:
+            df_payload = pd.read_csv(f_dir+"{0}_payload_county{1}_shipall_s{2}_y{3}_sr13.csv".format(ship_type, count_num,scenario,target_year)).reset_index()
+            N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+  
+        print ("{},{}:{}".format(ship_type,scenario,N_df_payload.shape[0]))  
 # %%
 f_dir="../../../Results_from_HPC_sfn_v1/Tour_plan/{}_all/".format(target_year)
 f_dir_2= "../../../Results_from_HPC_sfn_v1/Tour_plan/{}_all/".format(target_year)
