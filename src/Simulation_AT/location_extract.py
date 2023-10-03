@@ -9,7 +9,7 @@ def miles_to_meters(miles):
     except:
         return 0
         
-API_KEY = 'AIzaSyBwOVlq_RzcegiXvV8uo3tlYmeDdgAQIms'
+API_KEY = "your key" # need to put API key 
 map_client = googlemaps.Client(API_KEY)
 
 # address = '333 Market St, San Francisco, CA'
