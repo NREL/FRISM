@@ -1,22 +1,21 @@
 # List of inputs and outputs
 ## Running Household E-commerce Generation Estimation model for End-Consumer Behavior
-Note: TODO-Kyungsoo: what file formats are needed for each input?
 1. Need to select models (W,O,D,WOD)Please make sure if you select models you want to run. with selection of models (W,O,D,WOD)
-2. Please check "config.py" in the working directory. If you change selected variables used in the model, please copy and paste "config.py" to Simulation folder
-3. This only needs to estimate, calibrate, validate models to simulate the E-commerce.
-4. Once the models are fully estimated, you don't need to run this again for the simulation.
+2. Please check "config_SF.py" in the working directory. If you change selected variables used in the model, please copy and paste "config_SF.py" to Simulation folder
+3. Input file: household file in '.csv' and person file in '.csv'
+4. This only needs to estimate, calibrate, validate models to simulate the E-commerce.
+5. Once the models are fully estimated, you don't need to run this again for the simulation.
 
 ## Running End-Consumer Behavior model to simulate monthly delivery frequency
-Note: TODO-Kyungsoo: what file formats are needed for each input?
-1. Key inputs: Synthetic population of household and person which comes from BEAM-CORE passenger model
-2. Key inputs: models(*.sav) estimated from "HH_ecom_models.py"
-3. Please check "config.py" in the working directory.
+1. Key inputs: Synthetic population of household and person which comes from BEAM-CORE passenger model in '.csv'
+2. Estimated models: models(*.sav) estimated from "HH_ecom_models.py"
+3. Please check "config_SF.py" in the working directory.
 
 ## Running Distribution Channel to simulate B2B/B2C daily shipments and shipment-carrier matching
-Note: TODO-Kyungsoo: what file formats are needed for each input?
-1. Key inputs: Synthetic population of household and person which comes from BEAM-CORE passenger model
-2. Key inputs: models(*.sav) estimated from "HH_ecom_models.py"
-3. Please check "config.py" in the working directory.
+1. B2B flow inputs: annual tonnage flow between firms generated from SynthFirm
+2. Firm inputs: synthetic firms, carriers, leasing firms files from SynthFirm
+3. B2C inputs:  households delivery file generated from End-Consumer model
+
 
 ## Running Carrier Operation to simulate tour-plan for each carrier
 1. scenario year

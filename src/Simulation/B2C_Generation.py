@@ -1,16 +1,17 @@
+# %%
 from tkinter import X
 import pandas as pd
 import numpy as np
 import joblib
 from argparse import ArgumentParser
-import config
+import config_SF as config
 import random
 
 import statsmodels.api as sm
 from sklearn.linear_model import LogisticRegression
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+# %%
 def input_files_processing_hh(household_file):
     # Household data processing
     # Read Synthetic household file

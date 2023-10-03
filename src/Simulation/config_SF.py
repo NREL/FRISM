@@ -1,9 +1,49 @@
-state_CBSA = ["12420","19100","26420","41700"]
-study_CBSA= ["12420"] # "41700" =San Antonio-New Braunfels, TX
-study_region ="AT"
-state_id =48
+state_CBSA = ["31080","40140","40900","41740","41860","41940"]
+study_CBSA= ["41860","41940"]
+study_region ="SF"
+state_id =6
 msacat=1
-census_r=3 # 1: northeast, 2: midwest, 3:south, 4:west
+census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
+
+# Need to updated for SF 
+county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
+dist_file= 'SFBay_od_dist.csv'
+CBG_file= 'SFBay_freight.geojson'
+
+
+
+# input for B2C day sim
+b2c_delivery_frequency=18
+hh_aggregation_size=8
+# input for B2B day sim
+b2b_day_factor =0.17
+max_tour_for_b2b = 4
+fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
+# input for B2B/Geo_data
+
+
+##ship_direction = 'out' # ['out','in', 'all']
+commodity_list= ["1", "2", "3", "4", "5"]
+## this should be updated 
+list_error_zone=[] # this should be updated
+weight_theshold=50000
+md_cap=10000*0.8
+hd_cap=45000*0.8
+# https://www.technogroupusa.com/size-and-weight-limit-laws/ 
+
+# output data structure
+fnm_B2C_payload="B2C_payload"
+fnm_B2C_carrier="B2C_carrier"
+fnm_B2B_payload="B2B_payload"
+fnm_B2B_carrier="B2B_carrier"
+fnm_vtype="vehicle_types"
+fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
+fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(study_region)
+
+#ship_direction = 'out' # ['out','in', 'all']
+
+### fixed variable list for B2C model
+
 x_var_candidate_hh= ['HOUSEID',
                      'HH_HISP', 
                      'HOMEOWN',
@@ -113,45 +153,6 @@ selected_x_var_delivery=[
 #"WEBUSE17_1"#,
 #"WEBUSE17_2"    
 ]
-
-# input for B2C day sim
-b2c_delivery_frequency=18
-hh_aggregation_size=8
-# input for B2B day sim
-b2b_day_factor =5
-max_tour_for_b2b = 4
-fdir_in_out= "../../../FRISM_input_output_AT"
-
-# input for B2B/Geo_data
-def sythfirm_fleet_file(scenario):
-    firm_file= 'synthetic_firms_with_fleet_TDA_{}_mc_adjusted.csv'.format(scenario)
-    warehouse_file= 'synthetic_carriers_TDA_{}.csv'.format(scenario)
-    leasing_file= 'synthetic_leasing_company_TDA_{}.csv'.format(scenario)
-    stock_file = 'TDA_{}.csv'.format(scenario)
-    return firm_file, warehouse_file, leasing_file, stock_file 
-
-dist_file= 'Austin_od_dist.csv'
-CBG_file= 'Austin_freight.geojson'
-##ship_direction = 'out' # ['out','in', 'all']
-commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[453, 491, 209, 55, 21, 53] ## this should be updated 
-list_error_zone=[] # this should be updated
-weight_theshold=50000
-md_cap=10000*0.8
-hd_cap=45000*0.8
-# https://www.technogroupusa.com/size-and-weight-limit-laws/ 
-
-# output data structure
-fnm_B2C_payload="B2C_payload"
-fnm_B2C_carrier="B2C_carrier"
-fnm_B2B_payload="B2B_payload"
-fnm_B2B_carrier="B2B_carrier"
-fnm_vtype="vehicle_types"
-fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
-fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(study_region)
-
-#ship_direction = 'out' # ['out','in', 'all']
-
 
 """
 # HH sf_2010 variables vs 2018 data
