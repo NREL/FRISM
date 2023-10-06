@@ -10,12 +10,16 @@ Alicia Birky: <Alicia.Birky@nrel.gov>
 ## THIS IS A SOFTWARE REPO
 
 ## Description
+<<<<<<< Updated upstream
 FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It runs in four main steps:
 - Running Household E-commerce Generation Estimation model for End-Consumer Behavior
 - Running End-Consumer Behavior model to simulate monthly delivery frequency
 - Running Distribution Channel to simulate Business to Business (B2B) and Business to Consumer (B2C) daily shipments and shipment-carrier matching
 - Running Carrier Operation to simulate tour-plan for each carrier.
 The final output is a set of daily tour plans for each carrier's vehicles to transport shipments from their origins to their destinations.
+=======
+FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It outputs an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations.
+>>>>>>> Stashed changes
 
 ## The following are contained in this repository
 - Running Household E-commerce Generation Estimation for End-Consumer Behavior:
