@@ -304,8 +304,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
         #     pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     except Exception as e:
-        print('Could not build data dictionary for: ', carrier_id, 'and vehicle ', veh , ' : ', e)
-        return {}
+            # print('Could not build data dictionary for: ', carr_id, 'and vehicle ', veh , ' : ', e)
+            return {}
 
     return data
 
@@ -946,7 +946,8 @@ def main(args=None):
         # The commodity will decide the limit on number of stops per vehicle:
         # randomly select stops limits and fix slack stop limits to maximum stops possible per commodity
 
-        for carr_id in p_df['carrier_id'].unique(): 
+        # for carr_id in p_df['carrier_id'].unique():
+        for carr_id in ['B2B_2627740_0hdt_D']: 
             # Initialize parameters used for probelm setting
             try:
                 comm = -1
