@@ -22,7 +22,7 @@ import numpy as np
 from argparse import ArgumentParser
 from shapely.geometry import Point
 import random
-import config_SF as config
+import config
 import pickle
 
 # Global Variables
@@ -304,8 +304,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
         #     pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     except Exception as e:
-            # print('Could not build data dictionary for: ', carr_id, 'and vehicle ', veh , ' : ', e)
-            return {}
+        print('Could not build data dictionary for: ', carrier_id, 'and vehicle ', veh , ' : ', e)
+        return {}
 
     return data
 
@@ -519,7 +519,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
     """
     try:
         # KJ: read travel time, distance, zonal file as inputs  # Slow step
-        tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"') #, error_bad_lines=False)
+        tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', on_bad_lines='skip')
         dist_df = pd.read_csv(dist_file)  # Slow step
         CBGzone_df = gp.read_file(CBGzone_file)
 
@@ -947,7 +947,6 @@ def main(args=None):
         # randomly select stops limits and fix slack stop limits to maximum stops possible per commodity
 
         for carr_id in p_df['carrier_id'].unique():
-        # for carr_id in ['B2B_2627740_0hdt_D']: 
             # Initialize parameters used for probelm setting
             try:
                 comm = -1
@@ -1058,13 +1057,12 @@ def main(args=None):
                                 # v_df.to_csv('Carrier_Tour_Plan/test_data/v_df_pickup_delivery.csv', index=False)
                                 # vc_prob.to_csv('Carrier_Tour_Plan/test_data/vc_prob_pickup_delivery.csv', index=False)
                                 # c_prob.to_csv('Carrier_Tour_Plan/test_data/c_prob_pickup_delivery.csv', index=False)
-
+                                
                                 data = create_data_model(df_prob, depot_loc, prob_type, v_df, vc_prob, c_prob, carr_id,
                                                         CBGzone_df, tt_df, dist_df, veh, comm, index, path_stops)
 
                                 # Now solving the problem
-                                if not data: 
-                                    print('Could not create data dictionary for carrier: ', carr_id, 'veh: ', veh)
+                                if not data:
                                     error_list.append([carr_id, veh, comm, index, 'could not create data dictionary'])
                                 else:
                                     used_veh = form_solve(data, tour_df, carr_id, carrier_df, payload_df, 
