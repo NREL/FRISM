@@ -6,7 +6,7 @@ import numpy as np
 import geopandas as gpd
 from argparse import ArgumentParser
 import random
-import config_SF as config
+import config
 import glob
 from os.path import exists as file_exists
 import os
