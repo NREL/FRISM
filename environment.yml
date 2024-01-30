@@ -14,4 +14,3 @@ dependencies:
   - xlrd
   - libgdal
   - seaborn
-prefix: /Users/jugirumu/opt/anaconda3/envs/frism
