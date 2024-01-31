@@ -100,7 +100,7 @@ Running Carrier Operation to simulate tour-plan for each carrier
 #                          -dc {4}".format(scenario, year, county, sample_rate, d_gen)) # if you want to run test with 100 shipment allocation to carriers, "-rt test". Otherwise "-rt RunSim"
 
 
-# # 4. Carrier opration Module Run
+# 4. Carrier operation module run
 print (co_module_text)
 #B2C
 os.system("python VRP_OR-tools_Stops_veh_tech.py \
