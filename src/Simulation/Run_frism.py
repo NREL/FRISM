@@ -53,7 +53,7 @@ Running Carrier Operation to simulate tour-plan for each carrier
 """
 
 
-print (head_text)
+# print (head_text)
 
 # # 1. Model estimation for End-Consumer Behavior Module (E-commerce generation)
 # print (hh_gen_est_text)
@@ -64,15 +64,15 @@ print (head_text)
 #             -mt WOD".format(config.study_region,config.study_region))
 
 # # 2. End-Consumer Behavior Module Run (E-commerce generation)
-print (ec_module_text)
+# print (ec_module_text)
 # Please replace W, O, D, WOD with one of thme you want to run
-os.system("python B2C_Generation.py \
-    -hf ../../../FRISM_input_output_SF/Sim_inputs/hh_pop/sfbay_2040/households.csv \
-        -pf ../../../FRISM_input_output_SF/Sim_inputs/hh_pop/sfbay_2040/persons.csv \
-          -yr 2040")
+# os.system("python B2C_Generation.py \
+#     -hf ../../../FRISM_input_output_SF/Sim_inputs/hh_pop/sfbay_2040/households.csv \
+#         -pf ../../../FRISM_input_output_SF/Sim_inputs/hh_pop/sfbay_2040/persons.csv \
+#           -yr 2040")
 
 # 3. Distribution Channel Module Run
-print (dc_module_text)
+# print (dc_module_text)
 # B2C
 # Please select a county(-ct) you want to run, make sure -sd = all for B2C
 # Counties in SF bay area: [1, 13, 41, 55, 75, 81, 85, 95, 97]; if you want to run SF together, select 9999
@@ -101,28 +101,30 @@ print (dc_module_text)
 
 
 # # 4. Carrier opration Module Run
-# print (co_module_text)
-# B2C
-# os.system("python VRP_OR-tools_veh_tech.py \
-#     -cy {2} \
-#         -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
-#                 -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_carrier_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
-#                         -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
-#                             -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
-#                                          -sn {0}\
-#                                            -yt {1}".format(scenario, year, county, sample_rate))
-# #     # # B2B
-# os.system("python VRP_OR-tools_veh_tech.py \
-#     -cy {2} \
-#         -t ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
-#             -d ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_od_dist.csv \
-#                 -ct ../../../FRISM_input_output_SF/Sim_inputs/Geo_data/SFBay_freight_centroids.geojson \
-#                     -cr ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_carrier_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
-#                         -pl ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
-#                             -vt ../../../FRISM_input_output_SF/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
-#                                 -sn {0} \
-#                                     -yt {1}".format(scenario, year, county, sample_rate))
+print (co_module_text)
+#B2C
+os.system("python VRP_OR-tools_Stops_veh_tech.py \
+    -cy {2} \
+        -t ../../Example_Data/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+            -d ../../Example_Data/Sim_inputs/Geo_data/Austin_od_dist.csv \
+                -ct ../../Example_Data/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+                    -cr ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/B2C_carrier_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
+                        -pl ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/B2C_payload_county{2}_shipall_s{0}_y{1}_sr{3}.csv \
+                            -vt ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+                                         -sn {0}\
+                                           -yt {1} \
+                                            -ps ../../Example_Data/Sim_inputs/Stops_data/".format(scenario, year, county, sample_rate))
+#B2B
+os.system("python VRP_OR-tools_Stops_veh_tech.py \
+    -cy {2} \
+        -t ../../Example_Data/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
+            -d ../../Example_Data/Sim_inputs/Geo_data/Austin_od_dist.csv \
+                -ct ../../Example_Data/Sim_inputs/Geo_data/Austin_freight_centroids.geojson \
+                    -cr ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/B2B_carrier_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
+                        -pl ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/B2B_payload_county{2}_shipall_A_s{0}_y{1}_sr{3}.csv \
+                            -vt ../../Example_Data/Sim_outputs/Shipment2Fleet/{1}/vehicle_types_s{0}_y{1}.csv \
+                                -sn {0} \
+                                    -yt {1} \
+                                     -ps ../../Example_Data/Sim_inputs/Stops_data/".format(scenario, year, county, sample_rate))
 
 print ("Completed running modules you selected")

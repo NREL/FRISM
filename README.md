@@ -38,5 +38,11 @@ conda activate frism
 ```
 3. To run the code, specify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
 ```linux
-python src/Simulation/Run_frism.py [county number] [year] [scenario name]
+cd src/Simulation
+python Run_frism.py [county number] [year] [scenario name] [sampling rate] [d_gen]
+```
+An example of the above command that use the data in the 'Example_Data' folder is:
+```linux
+cd src/Simulation
+python Run_frism.py 21 2030 high 10 Y
 ```
