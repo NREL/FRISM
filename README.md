@@ -41,7 +41,7 @@ conda activate frism
 cd src/Simulation
 python Run_frism.py [county number] [year] [scenario name] [sampling rate] [Y or N]
 ```
-Y for the last input parameter means there will be generation of new shipments in the 'Shipment2Fleet_veh_tech.py' script, while N means no generation of new shipment in the 'Shipment2Fleet_veh_tech.py' script.
+**Y** for the last input parameter means there will be generation of new shipments in the 'Shipment2Fleet_veh_tech.py' script, while **N** means no generation of new shipment in the 'Shipment2Fleet_veh_tech.py' script.
 
 An example of the above command that use the data in the 'Example_Data' folder is:
 ```linux
@@ -49,4 +49,4 @@ cd src/Simulation
 python Run_frism.py 21 2030 high 10 Y
 ```
 
-The output of the above simulation will be saved in a 'FRISM_input_output_AT' outside of the repository folder.
+The output of the above simulation will be saved in a **FRISM_input_output_AT** outside of the repository folder. The tour plans results from the vehicle routing algorithm will be under **FRISM_input_output_AT/Sim_outputs/Tour_plan/[year]**.
