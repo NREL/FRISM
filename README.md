@@ -48,3 +48,5 @@ An example of the above command that use the data in the 'Example_Data' folder i
 cd src/Simulation
 python Run_frism.py 21 2030 high 10 Y
 ```
+
+The output of the above simulation will be saved in a 'FRISM_input_output_AT' outside of the repository folder.
