@@ -36,12 +36,12 @@ conda env create -f environment.yml
 ```linux
 conda activate frism
 ```
-3. To run the code, specify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
+3. To run the code, first specify the input parameters for all the modules in the [Run_frism.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Run_frism.py) script as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme). Then run the following:
 ```linux
 cd src/Simulation
 python Run_frism.py [county number] [year] [scenario name] [sampling rate] [Y or N]
 ```
-**Y** for the last input parameter means there will be generation of new shipments in the 'Shipment2Fleet_veh_tech.py' script, while **N** means no generation of new shipment in the 'Shipment2Fleet_veh_tech.py' script.
+**Y** for the last input parameter means there will be generation of new shipments in the [Shipment2Fleet_veh_tech.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Shipment2Fleet_veh_tech.py) script, while **N** means no generation of new shipment in the *Shipment2Fleet_veh_tech.py* script.
 
 An example of the above command that use the data in the 'Example_Data' folder is:
 ```linux
