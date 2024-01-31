@@ -32,7 +32,7 @@ FRISM simulates day-to-day freight activities including end-consumer shopping, d
 ```linux
 conda env create -f environment.yml
 ```
-2. Activate "frism" environment
+2. Activate *frism* environment
 ```linux
 conda activate frism
 ```
@@ -49,4 +49,4 @@ cd src/Simulation
 python Run_frism.py 21 2030 high 10 Y
 ```
 
-The output of the above simulation will be saved in a **FRISM_input_output_AT/** at the same directory level as the repository folder. The tour plans results from the vehicle routing algorithm will be under **FRISM_input_output_AT/Sim_outputs/Tour_plan/[year]**.
+The output of the above simulation will be saved in a *FRISM_input_output_AT/* at the same directory level as the repository folder. The tour plans results from the vehicle routing algorithm will be under *FRISM_input_output_AT/Sim_outputs/Tour_plan/[year]*.
