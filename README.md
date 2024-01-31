@@ -39,8 +39,10 @@ conda activate frism
 3. To run the code, specify the input files as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme) and run the following:
 ```linux
 cd src/Simulation
-python Run_frism.py [county number] [year] [scenario name] [sampling rate] [d_gen]
+python Run_frism.py [county number] [year] [scenario name] [sampling rate] [Y or N]
 ```
+Y for the last input parameter means there will be generation of new shipments in the 'Shipment2Fleet_veh_tech.py' script, while N means no generation of new shipment in the 'Shipment2Fleet_veh_tech.py' script.
+
 An example of the above command that use the data in the 'Example_Data' folder is:
 ```linux
 cd src/Simulation
