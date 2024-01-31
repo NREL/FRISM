@@ -18,7 +18,7 @@
 
 
 ## Running Carrier Operation to simulate tour-plan for each carrier
-For an example of how to run the vehicle routing problem to generate vehicle tour plans, please refer to this [Run_frism.py][https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Run_frism.py] step 4 'Carrier operation module run'.
+For an example of how to run the vehicle routing problem to generate vehicle tour plans, please refer to this [Run_frism.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Run_frism.py) step 4 'Carrier operation module run'.
 1. scenario year
 2. Travel time matrix in '.csv.gz' format. Example file [here](https://github.com/NREL/FRISM/blob/open-source/Example_Data/Sim_inputs/Geo_data/tt_df_cbg.csv.gz).
 3. Origin-Destination distance matrix in '.csv' format. Example file [here](https://github.com/NREL/FRISM/blob/open-source/Example_Data/Sim_inputs/Geo_data/Austin_od_dist.csv.zip).
