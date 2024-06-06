@@ -311,7 +311,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
 
 def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df, payload_df, prob_type,
-                   count_num, ship_type, c_prob, df_prob, tour_id, payload_i, depot_i):
+                   count_num, ship_type, c_prob, df_prob, tour_id, payload_i, depot_i, comm):
     """Prints the vehicle routing problem solution on console.
 
     Args:
@@ -339,6 +339,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
     # print(f'Objective: {solution.ObjectiveValue()}')
     time_dimension = routing.GetDimensionOrDie('Time')
     total_time = 0
+    req_type = 0
     for vehicle_id in range(data['num_vehicles']):
         route_load = 0
         index = routing.Start(vehicle_id)
@@ -369,6 +370,9 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
             if prob_type == 'delivery':
                 beg_index = payload_i   # to be used to adjust load info for delivery problems
                 node_list = []
+                req_type = 1
+            elif prob_type == 'pickup': req_type = 2
+            else: req_type = 3
 
             while not routing.IsEnd(index):
 
@@ -384,8 +388,8 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                 # Add processing for depot
                 if node_index == 0:
                     payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i), int(seqId), int(tour_id),
-                                                 int(1),
-                                                 int(data['demands'][node_index]), int(route_load), 1,
+                                                 int(comm),
+                                                 int(data['demands'][node_index]), int(route_load), req_type,
                                                  int(data['loc_zones'][node_index]),
                                                  int(solution.Min(time_var) * 60),
                                                  int(0 * 60),
@@ -412,8 +416,8 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                             loc_x = df_prob[df_prob['payload_id'] == id_payload]['del_x'].values[0]
                             loc_y = df_prob[df_prob['payload_id'] == id_payload]['del_y'].values[0]
 
-                    payload_df.loc[payload_i] = [str(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(1),
-                                                 int(data['demands'][node_index]), int(route_load), 1, int(data['loc_zones'][node_index]),
+                    payload_df.loc[payload_i] = [str(data['payload_ids'][node_index-1]), int(seqId), int(tour_id), int(comm),
+                                                 int(data['demands'][node_index]), int(route_load), req_type, int(data['loc_zones'][node_index]),
                                                 int(solution.Min(time_var)*60),
                                                  int(data['time_windows'][node_index][0]*60),
                                                 int(data['time_windows'][node_index][1]*60),
@@ -437,8 +441,8 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
                                          'requestType','locationZone','estimatedTimeOfArrivalInSec','arrivalTimeWindowInSec_lower',
                                          'arrivalTimeWindowInSec_upper','operationDurationInSec', 'locationZone_x', 'locationZone_y']
             payload_df.loc[payload_i] = [str(count_num) + '_d' + ship_type + str(depot_i) + '_', int(seqId), int(tour_id),
-                                         int(1),
-                                         int(data['demands'][node_index]), int(route_load), 1,
+                                         int(comm),
+                                         int(data['demands'][node_index]), int(route_load), req_type,
                                          int(data['loc_zones'][node_index]),
                                          int(solution.Min(time_var) * 60),
                                          int(0 * 60),
@@ -829,7 +833,7 @@ def form_solve(data, tour_df, carr_id, carrier_df, payload_df, prob_type, count_
     # Print solution on console.
     if solution:
         used_veh = print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_df,
-                    payload_df, prob_type, count_num, ship_type, c_prob, df_prob, tour_id, payload_i, depot_i)
+                    payload_df, prob_type, count_num, ship_type, c_prob, df_prob, tour_id, payload_i, depot_i, comm)
         # print('\n')
         return used_veh
 
