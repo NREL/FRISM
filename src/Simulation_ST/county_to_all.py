@@ -15,12 +15,12 @@ from shapely.geometry import Point
 import math 
 import shutil
 #%%
-county_list=[453, 491, 209, 55, 21, 53]
-target_year="2050"
-f_dir="../../../FRISM_input_output_AT/R_HPC_0122_24/Tour_plan/{}/".format(target_year)
-f_dir_2="../../../FRISM_input_output_AT/R_HPC_0122_24/Tour_plan/{}_all/".format(target_year)
-#s_list=["Base"]
-s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
+county_list=[61,33,53,35]
+target_year="2018"
+f_dir="../../../FRISM_input_output_ST/result_0423/Tour_plan/{}/".format(target_year)
+f_dir_2="../../../FRISM_input_output_ST/result_0423/Tour_plan/{}_all/".format(target_year)
+s_list=["Base"]
+#s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
 #s_list=["Dmd_G"]
 # s_list=["Dmd_G", "Dmd_G120", "Dmd_G140", "Dmd_G160","Dmd_G180"]
 # s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",

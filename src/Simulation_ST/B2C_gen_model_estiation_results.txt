@@ -1,0 +1,106 @@
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.65
+Error rate for initial model: 0.35
+initial confusion matirix) [[  0   0  10]
+ [  5 140  62]
+ [  0   3   8]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.79
+Error rate for calibrated model: 0.21
+calibrated confusion matrix [[  6   3   1]
+ [ 15 169  23]
+ [  4   3   4]]
+coef/intercept for initial M [[-1.17439396 -1.96259293 -1.74968383  0.05935756 -0.41972788 -0.15878418
+  -1.10023808 -0.75760543]
+ [ 0.89300553  1.32407968  0.81050276  0.52785624  1.22479956  0.42653055
+   0.95392425  2.24660278]
+ [ 0.28138843  0.63851325  0.93918107 -0.58721381 -0.80507169 -0.26774637
+   0.14631383 -1.48899735]] [ 3.31591362 -2.88759621 -0.42831741]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.65
+Error rate for initial model: 0.35
+initial confusion matirix) [[ 80  42]
+ [ 85 161]]
+************* Delivery Model ****************
+Summary report:
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:                DELIVER   No. Observations:                  338
+Model:                            GLM   Df Residuals:                      327
+Model Family:        NegativeBinomial   Df Model:                           10
+Link Function:                    Log   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -926.24
+Date:                Thu, 28 Mar 2024   Deviance:                       143.97
+Time:                        09:36:23   Pearson chi2:                     272.
+No. Iterations:                    13   Pseudo R-squ. (CS):           0.001810
+Covariance Type:            nonrobust                                         
+================================================================================
+                   coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------
+HHSIZE           0.2186      0.067      3.280      0.001       0.088       0.349
+HHVEHCNT         0.1291      0.069      1.873      0.061      -0.006       0.264
+income_cls_0     0.2876      0.254      1.134      0.257      -0.209       0.784
+income_cls_1     0.1589      0.191      0.830      0.406      -0.216       0.534
+income_cls_2     0.1811      0.175      1.038      0.299      -0.161       0.523
+R_AGE_IMP_0     -0.6647      0.563     -1.180      0.238      -1.769       0.440
+R_AGE_IMP_1      0.4863      0.228      2.134      0.033       0.040       0.933
+R_AGE_IMP_2      0.3642      0.224      1.625      0.104      -0.075       0.803
+EDUC_3           0.4419      0.163      2.704      0.007       0.122       0.762
+R_SEX_IMP       -0.2625      0.156     -1.686      0.092      -0.568       0.043
+WORKER           0.1948      0.198      0.981      0.326      -0.194       0.584
+================================================================================
+************* Delivery Model ****************
+Model performance (Mean Squared Error): 62.50
+************* Webuse Model: inital model ****************
+Accuracy for initial model: 0.69
+Error rate for initial model: 0.31
+initial confusion matirix) [[  4   3   2]
+ [ 12 149  47]
+ [  0   6   5]]
+************* Webuse Model: calibrated model ****************
+Accuracy for calibrated model: 0.75
+Error rate for calibrated model: 0.25
+calibrated confusion matrix [[  4   2   3]
+ [ 14 164  30]
+ [  1   7   3]]
+coef/intercept for initial M [[-1.02922077 -1.90179386 -0.79982991  0.1314773  -0.21949289  0.29371058
+  -0.88208305 -1.06904914]
+ [ 1.21824384  1.1433855   0.49137993  0.59990792  1.12227246 -0.25219738
+   0.80430458  2.07770251]
+ [-0.18902307  0.75840836  0.30844998 -0.73138521 -0.90277957 -0.0415132
+   0.07777848 -1.00865337]] [ 2.25874156 -2.7575378   0.49879624]
+************* Online Model: inital model ****************
+Accuracy for initial model: 0.68
+Error rate for initial model: 0.32
+initial confusion matirix) [[ 76  46]
+ [ 72 174]]
+************* Delivery Model ****************
+Summary report:
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:                DELIVER   No. Observations:                  338
+Model:                            GLM   Df Residuals:                      327
+Model Family:        NegativeBinomial   Df Model:                           10
+Link Function:                    Log   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -951.61
+Date:                Thu, 28 Mar 2024   Deviance:                       149.79
+Time:                        09:44:36   Pearson chi2:                     306.
+No. Iterations:                    12   Pseudo R-squ. (CS):          -0.001396
+Covariance Type:            nonrobust                                         
+================================================================================
+                   coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------
+HHSIZE           0.1902      0.068      2.807      0.005       0.057       0.323
+HHVEHCNT         0.0810      0.069      1.169      0.242      -0.055       0.217
+income_cls_0     0.5053      0.256      1.972      0.049       0.003       1.007
+income_cls_1     0.3293      0.192      1.714      0.087      -0.047       0.706
+income_cls_2     0.0922      0.179      0.515      0.606      -0.258       0.443
+R_AGE_IMP_0     -0.5903      0.609     -0.969      0.333      -1.784       0.604
+R_AGE_IMP_1      0.5300      0.222      2.386      0.017       0.095       0.965
+R_AGE_IMP_2      0.6268      0.225      2.787      0.005       0.186       1.068
+EDUC_3           0.3599      0.165      2.177      0.029       0.036       0.684
+R_SEX_IMP       -0.0501      0.155     -0.322      0.747      -0.354       0.254
+WORKER           0.3027      0.195      1.556      0.120      -0.079       0.684
+================================================================================
+************* Delivery Model ****************
+Model performance (Mean Squared Error): 53.71
