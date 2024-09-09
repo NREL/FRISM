@@ -10,7 +10,7 @@ Alicia Birky: <Alicia.Birky@nrel.gov>
 ## THIS IS A SOFTWARE REPO
 
 ## Description
-FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It outputs an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations.
+FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It outputs an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations. This software is associated with NREL software record SWR-24-40.
 
 ## The following are contained in this repository
 - Running Household E-commerce Generation Estimation for End-Consumer Behavior:
