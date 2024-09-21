@@ -51,13 +51,19 @@ for scenario in s_list:
         N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
 #%%
-
+########### SF ##############
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-target_year="2050"
-f_dir="../../../FRISM_input_output_SF/R_HPC_0102_24/Tour_plan/{}/".format(target_year)
-f_dir_2="../../../FRISM_input_output_SF/R_HPC_0102_24/Tour_plan/{}_all/".format(target_year)
-#s_list=["Base"]
-s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
+target_year="2018"
+f_dir="../../../FRISM_input_output_SF/result_0710/Tour_plan/{}/".format(target_year)
+f_dir_2="../../../FRISM_input_output_SF/result_0710/Tour_plan/{}_all/".format(target_year)
+s_list=["Base"]
+
+
+# target_year="2050"
+# f_dir="../../../FRISM_input_output_SF/R_HPC_0102_24/Tour_plan/{}/".format(target_year)
+# f_dir_2="../../../FRISM_input_output_SF/R_HPC_0102_24/Tour_plan/{}_all/".format(target_year)
+# #s_list=["Base"]
+# s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
 #s_list=["Dmd_G"]
 # s_list=["Dmd_G", "Dmd_G120", "Dmd_G140", "Dmd_G160","Dmd_G180"]
 # s_list=["HOP_highp2", "HOP_highp4", "HOP_highp6","HOP_highp8","HOP_highp10",
@@ -93,7 +99,7 @@ for scenario in s_list:
 # %%        
 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-target_year="2040"
+target_year="2018"
 f_dir="../../..//Results_from_HPC_sfn_v2/Tour_plan/{}/".format(target_year)
 f_dir_2="../../../Results_from_HPC_sfn_v2/Tour_plan/{}_all/".format(target_year)
 #s_list=["Base"]

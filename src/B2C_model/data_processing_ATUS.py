@@ -1,5 +1,6 @@
 # %%
 import pandas as pd
+import numpy as np
 #%%
 import joblib
 from argparse import ArgumentParser
@@ -82,6 +83,7 @@ atus_resp = atus_resp[var_resp]
 atus_cps  = atus_cps[var_cps]
 
 atus_resp =atus_resp.merge(atus_cps, on=["TUCASEID","TULINENO"], how="left")
+#%%
 atus_resp =atus_resp[atus_resp["TULINENO"]==1]
 
 # %%
@@ -200,6 +202,40 @@ def income_group_agg(HHFAMINC):
     elif HHFAMINC in [16]: # 150~k 
         return 5   
 
+def income_est(HHFAMINC):
+    if HHFAMINC ==1:
+        return (0+5000)/200000
+    elif HHFAMINC ==2: # 10000~15000
+        return (5000+7500)/200000
+    elif HHFAMINC ==3: # 10000~15000
+        return (7500+10000)/200000
+    elif HHFAMINC ==4: # 10000~15000
+        return (10000+12500)/200000
+    elif HHFAMINC ==5: # 10000~15000
+        return (12500+15000)/200000
+    elif HHFAMINC ==6: # 10000~15000
+        return (15000+20000)/200000
+    elif HHFAMINC ==7: # 10000~15000
+        return (20000+25000)/200000
+    elif HHFAMINC ==8: # 10000~15000
+        return (25000+30000)/200000
+    elif HHFAMINC ==9: # 10000~15000
+        return (30000+35000)/200000
+    elif HHFAMINC ==10: # 10000~15000
+        return (35000+40000)/200000
+    elif HHFAMINC ==11: # 10000~15000
+        return (40000+50000)/200000
+    elif HHFAMINC ==12: # 10000~15000
+        return (50000+ 60000)/200000
+    elif HHFAMINC ==13: # 10000~15000
+        return (60000+ 75000)/200000
+    elif HHFAMINC ==14: # 10000~15000
+        return (75000+ 100000)/200000
+    elif HHFAMINC ==15: # 10000~15000
+        return (100000+ 150000)/200000    
+    elif HHFAMINC ==16: # 10000~15000
+        return (150000+ 250000)/200000  
+
 
 def home_class(HOMEOWN):
     if HOMEOWN == 1: 
@@ -211,16 +247,16 @@ def edu_class(EDUC):
         return 0
     elif EDUC in [40,41,42]: # college and tech 
         return 1
-    elif EDUC in [43]: # undergraduate 
+    elif EDUC in [43,44,45,46]: # undergraduate 
         return 2    
-    elif EDUC in [44,45,46]: # graduate 
-        return 3 
+    # elif EDUC in [44,45,46]: # graduate 
+    #     return 3 
 def age_est(R_AGE_IMP):
-    if R_AGE_IMP  <20 :
+    if R_AGE_IMP  <18 :
         return 0
-    elif R_AGE_IMP  >=20 and R_AGE_IMP  <35:
+    elif R_AGE_IMP  >=18 and R_AGE_IMP  <25:
         return 1
-    elif R_AGE_IMP  >=35 and R_AGE_IMP  <50:
+    elif R_AGE_IMP  >=25 and R_AGE_IMP  <50:
         return 2
     elif R_AGE_IMP  >=50 and R_AGE_IMP  <65:
         return 3
@@ -272,20 +308,26 @@ atus_df=atus_act.groupby(['TUCASEID']).agg(instore_goods_act=('instore_goods','s
                                            instore_grocery_act=('instore_grocery','sum'), online_grocery_act=('online_grocery','sum'),
                                            instore_food_act=('instore_food','sum'), online_food_act=('online_food','sum'))
 
+atus_df['instore_gen_act']=atus_df['instore_goods_act']+ atus_df['instore_grocery_act'] 
+atus_df['online_gen_act']=atus_df['online_goods_act']+ atus_df['online_grocery_act'] 
+
 atus_df['choice_instore_goods']  =atus_df["instore_goods_act"].apply(lambda x: 0 if x==0 else 1 )
 atus_df['choice_online_goods']   =atus_df["online_goods_act"].apply(lambda x: 0 if x==0 else 1)
 atus_df['choice_instore_grocery']=atus_df["instore_grocery_act"].apply(lambda x: 0 if x==0 else 1)
 atus_df['choice_online_grocery'] =atus_df["online_grocery_act"].apply(lambda x: 0 if x==0 else 1)
 atus_df['choice_instore_food']   =atus_df["instore_food_act"].apply(lambda x: 0 if x==0 else 1)
 atus_df['choice_online_food']    =atus_df["online_food_act"].apply(lambda x: 0 if x==0 else 1)
-atus_df.to_csv(fdir_input+"atus_df_processed_2022.csv")
-atus_df =atus_df.merge(atus_resp, on=["TUCASEID"], how="left")
+atus_df['choice_instore_gen']   =atus_df["instore_gen_act"].apply(lambda x: 0 if x==0 else 1)
+atus_df['choice_online_gen']    =atus_df["online_gen_act"].apply(lambda x: 0 if x==0 else 1)
 
+atus_df =atus_df.merge(atus_resp, on=["TUCASEID"], how="left")
+atus_df.to_csv(fdir_input+"atus_df_processed_2022.csv")
 
 # %%
+atus_df['income_est']     =atus_df['HEFAMINC'].apply(income_est)
 atus_df['HEFAMINC']     =atus_df['HEFAMINC'].apply(income_group_agg)
 atus_df['PEEDUCA']      =atus_df['PEEDUCA'].apply(edu_class)
-atus_df['AGE']          =atus_df['PRTAGE']
+atus_df['R_AGE']          =atus_df['PRTAGE']
 atus_df['PRTAGE']       =atus_df['PRTAGE'].apply(age_est)
 atus_df['PESEX']        =atus_df['PESEX'].apply(sex_class)
 atus_df['PTDTRACE']     =atus_df['PTDTRACE'].apply(race_class)
@@ -293,9 +335,10 @@ atus_df['TESCHENR']     =atus_df['TESCHENR'].apply(student_class)
 atus_df['GTMETSTA']     =atus_df['GTMETSTA'].apply(msa_id)
 atus_df['PREXPLF']      =atus_df['PREXPLF'].apply(employment)
 atus_df['CHILD']      =atus_df['PRNMCHLD'].apply(lambda x: 0 if x==0 else 1)
+
 atus_df.rename(columns = {'HEFAMINC':'income_cls',
 'PEEDUCA':'EDUC',
-'PRTAGE':'R_AGE_IMP',
+'PRTAGE':'R_AGE_C',
 'PESEX':'R_SEX_IMP',
 'PTDTRACE':'R_RACE',
 'TESCHENR':'SCHTYP',
@@ -306,7 +349,7 @@ atus_df.rename(columns = {'HEFAMINC':'income_cls',
 
 atus_df.to_csv(fdir_input+"atus_df_pre_model_2022.csv")
 # %%
-Class_vars= ['income_cls','EDUC', 'R_AGE_IMP','R_SEX_IMP','R_RACE','SCHTYP','MSACAT','WORKER','CENSUS_R']
+Class_vars= ['income_cls','EDUC', 'R_AGE_C','R_SEX_IMP','R_RACE','SCHTYP','MSACAT','WORKER','CENSUS_R']
 # Create class variables that has more than two classes
 cat_vars=[]
 for var_c in Class_vars:
@@ -317,5 +360,22 @@ for var in cat_vars:
     cat_list = pd.get_dummies(atus_df[var], prefix=var)
     atus_df=atus_df.join(cat_list)
 
+def shop_choice(offline_shop_sum, online_shop_sum):
+    if offline_shop_sum ==0 and online_shop_sum ==0 :
+        return 3    # no shop
+    elif offline_shop_sum ==1 and online_shop_sum ==0 :
+        return 1 # off
+    elif offline_shop_sum ==0 and online_shop_sum ==1 :
+        return 2 # on
+    elif offline_shop_sum ==1 and online_shop_sum ==1 :
+        return 0 # both
+
+atus_df['choice_goods']=atus_df.apply(lambda x: shop_choice(x['choice_instore_goods'], x['choice_online_goods']), axis=1)
+atus_df['choice_grocery']=atus_df.apply(lambda x: shop_choice(x['choice_instore_grocery'], x['choice_online_grocery']), axis=1)
+atus_df['choice_food']=atus_df.apply(lambda x: shop_choice(x['choice_instore_food'], x['choice_online_food']), axis=1)
+atus_df['choice_gen']=atus_df.apply(lambda x: shop_choice(x['choice_instore_gen'], x['choice_online_gen']), axis=1)
+
 atus_df.to_csv(fdir_input+"atus_df_model_2022.csv")    
 #
+
+# %%

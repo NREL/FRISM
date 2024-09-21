@@ -7,14 +7,15 @@ census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
 
 # Need to updated for SF 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-dist_file= 'SFBay_od_dist.csv'
-CBG_file= 'SFBay_freight.geojson'
-
+dist_file= 'BayArea_od_dist.csv'
+CBG_file= 'BayArea_freight.geojson'
+property_file = 'Property Type in SF Bay Area.geojson'
+tt_file="tt_df_cbg_v2.csv.gz"
 
 
 # input for B2C day sim
-b2c_delivery_frequency=18
-hh_aggregation_size=8
+b2c_delivery_frequency=20
+hh_aggregation_size=10
 # input for B2B day sim
 b2b_day_factor =0.17
 max_tour_for_b2b = 4

@@ -367,15 +367,6 @@ def mode_est(WRKTRANS):
     else :
         return 0
 
-# Convert delivery to two classes (person)
-## NHTS code
-## Model Variable
-def onlineshop_class(DELIVER):
-    if DELIVER  > 0: 
-        return 1
-    else:
-        return 0
-
 def edu_class_synth(EDUC):
     if EDUC <16 :
         return 0

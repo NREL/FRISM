@@ -219,14 +219,14 @@ def child_class(LIF_CYC):
 ### 05=Graduate degree or professional degree
 ## Model Variable: 0: not applicable +low hc, 1:hc, 2:BA+college, 3: MS+
 def edu_class(EDUC):
-    if EDUC in [-1, 1]:
+    if EDUC in [-1, 1,2,3]:
         return 0
-    elif EDUC in [2]:
+    elif EDUC in [4,5]:
         return 1
-    elif EDUC in [3,4]:
+    elif EDUC in [6,7,8]:
         return 2    
-    elif EDUC in [5]:
-        return 3  
+    # elif EDUC in [5]:
+    #     return 3  
 
 # Convert student status to two classes (person)
 ## NHTS code
@@ -266,16 +266,16 @@ def work_class(WORKER):
 ## NHTS code
 ## Model Variable
 def age_est(R_AGE_IMP):
-    if R_AGE_IMP  <20 :
+    if R_AGE_IMP  <18 :
         return 0
-    elif R_AGE_IMP  >=20 and R_AGE_IMP  <35:
+    elif R_AGE_IMP  >=18 and R_AGE_IMP  <25:
         return 1
-    elif R_AGE_IMP  >=35 and R_AGE_IMP  <50:
+    elif R_AGE_IMP  >=25 and R_AGE_IMP  <50:
         return 2
     elif R_AGE_IMP  >=50 and R_AGE_IMP  <65:
         return 3
     elif R_AGE_IMP  >=65:
-        return 4   
+        return 4    
 # Convert sex to two classes (person)
 ## NHTS code
 ### 01=Male
@@ -288,27 +288,27 @@ def sex_class(R_SEX_IMP):
         return 0        
 def income_est(HHFAMINC):
     if HHFAMINC == 1:
-        est_income= np.random.randint(0,10000)
+        est_income= (0+10000)
     elif HHFAMINC == 2:
-        est_income= np.random.randint(10000,14999)
+        est_income= (10000+15000)/2
     elif HHFAMINC == 3:
-        est_income= np.random.randint(15000,24999)
+        est_income= (15000+25000)/2
     elif HHFAMINC == 4:
-        est_income= np.random.randint(25000,34999)
+        est_income= (25000+35000)/2
     elif HHFAMINC == 5:
-        est_income= np.random.randint(35000,49999)
+        est_income= (35000+50000)/2
     elif HHFAMINC == 6:
-        est_income= np.random.randint(50000,74999)
+        est_income= (50000+75000)/2
     elif HHFAMINC == 7:
-        est_income= np.random.randint(75000,99999)
+        est_income= (75000+100000)/2
     elif HHFAMINC == 8:
-        est_income= np.random.randint(100000,124999)
+        est_income= (100000+125000)/2
     elif HHFAMINC == 9:
-        est_income= np.random.randint(125000,149999)
+        est_income= (125000+150000)/2
     elif HHFAMINC == 10:
-        est_income= np.random.randint(150000,199999)
+        est_income= (150000+200000)/2
     elif HHFAMINC == 11:
-        est_income= np.random.randint(200000,500000)
+        est_income= (200000+500000)/2
     return est_income/100000
 
 def urban (urban):
@@ -321,55 +321,6 @@ def urban (urban):
 # Household data processing
 # Read NHTS household data
 fdir_input= "../../../B2C_Data/NHTS_22/"
-household_file= fdir_input+"hhpub.csv"
-nhts_hh = pd.read_csv(household_file, header=0, sep=',')
-x_var_candidate_hh= ['HOUSEID',
-                     'HHFAMINC_IMP',
-                     'HHSIZE',
-                     'HHVEHCNT',
-                     'MSACAT',
-                     'HH_HISP', 
-                     'HOMEOWN',
-                     'HH_RACE',
-                    "YOUNGCHILD",
-                     'WRKCOUNT']
-# Subset of data with potential X variables for model estimation 
-nhts_hh= nhts_hh[x_var_candidate_hh]
-
-# Filter out records that have not valid response
-## Exlude HOUSEID (key ID) and HH_CBSA (v_type=object, not used in modeling)
-## var_x should be "int"; Need to check if there is object type variable in a new variable set
-for var_x in x_var_candidate_hh:
-    if var_x not in ['HOUSEID']: 
-        nhts_hh = nhts_hh[nhts_hh[var_x]>=0]
-
-# Process variables using function         
-nhts_hh['income_cls']=nhts_hh['HHFAMINC_IMP'].apply(income_group)
-nhts_hh['HH_RACE']=nhts_hh['HH_RACE'].apply(race_class)
-nhts_hh['HOMEOWN']=nhts_hh['HOMEOWN'].apply(home_class)
-nhts_hh['HH_HISP']=nhts_hh['HH_HISP'].apply(hisp_class)
-
-
-# list of variables that have class
-## Need to update!!, if functions change used in "Process variables using function"  
-Class_vars= ['HH_RACE','HOMEOWN','HH_HISP','income_cls'] 
-
-# Create class variables that has more than two classes
-cat_vars=[]
-for var_c in Class_vars:
-    if nhts_hh[var_c].unique().size >2:
-        cat_vars.append(var_c)
-for var in cat_vars:
-    cat_list='var'+'_'+var
-    cat_list = pd.get_dummies(nhts_hh[var], prefix=var)
-    nhts_hh=nhts_hh.join(cat_list)
-#data_vars=nhts_hh.columns.values.tolist()
-#to_keep=[i for i in data_vars if i not in cat_vars]
-#nhts_hh=nhts_hh[to_keep]
-
-# personal data processing
-# Read NHTS person data
-
 person_file=fdir_input+"perpub.csv"
 nhts_per = pd.read_csv(person_file, header=0, sep=',')
 
@@ -408,7 +359,7 @@ for var_x in x_var_candidate_per:
 #nhts_per = nhts_per.merge(nhts_hh[['HOUSEID','WEBUSE17','income_est','income_cls']], on='HOUSEID', how='inner')
 # Select records with age>16 with assumption that person>16 years old can do online shopping
 nhts_per = nhts_per[nhts_per['R_AGE']>=16]           
-
+# %%
 # Process variables using function
 nhts_per['income_est']=nhts_per['HHFAMINC'].apply(income_est)
 nhts_per['income_cls']=nhts_per['HHFAMINC'].apply(income_group)
@@ -417,13 +368,13 @@ nhts_per['HOMEOWN']=nhts_per['HOMEOWN'].apply(home_class)
 nhts_per['HH_HISP']=nhts_per['HH_HISP'].apply(hisp_class)         
 nhts_per['EDUC']=nhts_per['EDUC'].apply(edu_class)
 nhts_per['WORKER']=nhts_per['WORKER'].apply(work_class)
-nhts_per['R_AGE']=nhts_per['R_AGE'].apply(age_est)
-nhts_per['R_RACE_IMP']=nhts_per['R_RACE_IMP'].apply(race_class)
+nhts_per['R_AGE_C']=nhts_per['R_AGE'].apply(age_est)
+nhts_per['R_RACE']=nhts_per['R_RACE_IMP'].apply(race_class)
 nhts_per['R_SEX_IMP']=nhts_per['R_SEX_IMP'].apply(sex_class)      
 nhts_per['URBRUR']=nhts_per['URBRUR'].apply(urban)
 # list of variables that have class
 ## Need to update!!, if functions change used in "Process variables using function"  
-Class_vars= ['EDUC', 'WORKER','R_AGE','R_RACE_IMP','R_SEX_IMP','income_cls'] 
+Class_vars= ['EDUC', 'WORKER','R_RACE','R_SEX_IMP','income_cls',"R_AGE_C"] 
 
 # Create class variables that has more than two classess
 cat_vars=[]
