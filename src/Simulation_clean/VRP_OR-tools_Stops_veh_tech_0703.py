@@ -364,7 +364,7 @@ def print_solution(data, manager, routing, solution, tour_df, carr_id, carrier_d
 
             tour_df.loc[tour_id] = [tour_id, start_time*60, data['loc_zones'][manager.IndexToNode(index)], 3600*12,
                                     depot_x, depot_y,true_depot]
-            carrier_df.loc[tour_id] = [carr_id, tour_id, data['vehicle_ids'][vehicle_id],
+            carrier_df.loc[tour_id] = [carr_id, tour_id, "c"+str(count_num)+"_"+str(data['vehicle_ids'][vehicle_id]),
                                        data['vehicle_types'][vehicle_id], data['loc_zones'][manager.IndexToNode(index)],
                                        depot_x,depot_y,true_depot]
 
