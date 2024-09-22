@@ -532,6 +532,7 @@ def input_files_processing(travel_file, dist_file, CBGzone_file, carrier_file, p
         # KJ: read travel time, distance, zonal file as inputs  # Slow step
         tt_df = pd.read_csv(travel_file, compression='gzip', header=0, sep=',', quotechar='"', on_bad_lines='skip')
         dist_df = pd.read_csv(dist_file)  # Slow step
+        dist_df.columns=['Origin','Destination','dist']
         CBGzone_df = gp.read_file(CBGzone_file)
 
         # We need to know the depot using the carrier file

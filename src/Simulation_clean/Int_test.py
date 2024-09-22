@@ -243,3 +243,9 @@ temp[temp["BusID"]==8392394]
 filename = "/Users/kjeong/KJ_NREL_Work/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/New_base_input/port_location_in_region.geojson"
 temp_2=gpd.read_file(filename)
 # %%
+
+dist_file= "/Users/kjeong/KJ_NREL_Work/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Sim_inputs/Geo_data/BayArea_od_dist.csv"
+dist=pd.read_csv(dist_file)
+tt_file= "/Users/kjeong/KJ_NREL_Work/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Sim_inputs/Geo_data/tt_df_cbg_v2.csv.gz"
+tt= pd.read_csv(tt_file, compression='gzip', header=0, sep=',', quotechar='"')
+# %%

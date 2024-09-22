@@ -642,7 +642,7 @@ def b2c_good_select(delivery_f,fq_factor,growth_factor,commodity_type):
     growth_factor=growth_factor+(growth_factor/100)**6
     if commodity_type == "goods":   
         day_factor = random.randrange(fq_factor,31)
-    else: day_factor =30      
+    else: day_factor =50      
     pro=delivery_f/day_factor
     r= random.uniform(0,1)*(100/growth_factor)
     if r <= pro:
@@ -732,11 +732,13 @@ def assign_store(dest,df_group,loc_df, tt_df):
     # tt_inverse=1/df_group["travel_time_bin"].unique()
     # tt_inverse.sum()
     # df_group["pro"]=df_group["travel_time_bin"].apply(lambda x: (1/x)/tt_inverse.sum())
-    sel_df_group= df_group[df_group["travel_time"] <=40].reset_index()
+    sel_df_group= df_group[df_group["travel_time"] <=30].reset_index()
+    if sel_df_group.shape[0] ==0:
+        sel_df_group= df_group[df_group["travel_time"] <=40].reset_index()
     if sel_df_group.shape[0] ==0:
         sel_df_group= df_group[df_group["travel_time"] <=60].reset_index()
     if sel_df_group.shape[0] ==0:
-        sel_df_group= df_group[df_group["travel_time"] <=90].reset_index()
+        sel_df_group= df_group[df_group["travel_time"] <=90].reset_index()    
     if sel_df_group.shape[0] >0:    
         sel_df_group["travel_time_bin"]=sel_df_group["travel_time"].apply(lambda x: int(x/10+1)*10)
         tt_inverse=1/sel_df_group["travel_time_bin"].unique()
