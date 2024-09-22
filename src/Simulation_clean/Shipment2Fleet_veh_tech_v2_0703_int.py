@@ -2018,7 +2018,9 @@ def main(args=None):
     parser.add_argument("-sr", "--sample ratio", dest="sample_rate",
                         help="sampeing rate for light run 0-100", default=100, type=int)
     parser.add_argument("-dc", "--condition for daily demand generation", dest="daily_demand_creator",
-                        help="Y:create new one, N: use existing one", required=True, type=str)                                                                                                        
+                        help="Y:create new one, N: use existing one", required=True, type=str)
+    parser.add_argument("-bct", "--b2c type ", dest="b2c_type",
+                        help="all, goods, food, grocery",  default="all", type=str)                                                                                                          
     args = parser.parse_args()
     
     start_time=time.time()
@@ -2124,164 +2126,173 @@ def main(args=None):
             df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, index = False, header=True)    
         else: 
             df_hh_D_GrID= pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/B2C_daily_%s.csv' %sel_county, header=0, sep=',')        
- 
-        df_hh_D_GrID.loc[:,'veh_type_agg'] ="md"
-        df_hh_D_GrID.loc[:,'assigned_carrier']="no"
-        df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
-        # Assigned the carrirer to shipment!: 
-        ## This part is time consuming which is associated to the function "carrier_sel()"
-        print ("**** Complete aggregation and Starting carrier assignement ****")
-        print ("size of shipment:", df_hh_D_GrID.shape[0])
-        non_sel_seller=pd.DataFrame()
-        if args.run_type =="Test":
-            run_size=20
-        elif args.run_type =="RunSim":
-            run_size=df_hh_D_GrID.shape[0]
-        else: 
-            print ("Please put a correct run type")       
-        with alive_bar(run_size, force_tty=True) as bar:
-            for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
-                v_type=df_hh_D_GrID.loc[i,'veh_type_agg']
-                
-                cap_index = v_type+"_capacity"
-                time_index= v_type+"_time_cap"            
-                # find a carrier who can hand a shipment at row i 
-                sel_busID=carrier_sel(df_hh_D_GrID.loc[i,'MESOZONE'], df_hh_D_GrID.loc[i,'D_truckload'],
-                                    df_hh_D_GrID.loc[i,'tour_tt'],cap_index,time_index, dist_df, truckings,ship_type, 0)
-                # put the carrier into df
-                if sel_busID == "no":
-                    non_sel_seller=pd.concat([non_sel_seller,df_hh_D_GrID.iloc[[i]]], ignore_index=True).reset_index(drop=True)
-                else: 
-                    df_hh_D_GrID.loc[i,'assigned_carrier']=sel_busID
-                    # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
-                    trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
-                    truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - df_hh_D_GrID.loc[i,'D_truckload']
-                    truckings.loc[trucking_index,time_index] = truckings.loc[trucking_index,time_index] - df_hh_D_GrID.loc[i,'tour_tt']
-                bar()
-                
-        print ("**** Completed carrier assignement and Generating results ****")    
-        df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] !="no"].reset_index(drop=True)
-        df_hh_D_GrID=df_hh_D_GrID[~df_hh_D_GrID['MESOZONE'].isin(config.list_error_zone)]
-        df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(sel_county, args.run_type), index = False, header=True)
-        # vehicle type assign
-        def payload_cal (load, v_type):
-            if v_type=="md":
-                max_load= md_max_load
+        if args.b2c_type in ["all", "goods"]: 
+            df_hh_D_GrID.loc[:,'veh_type_agg'] ="md"
+            df_hh_D_GrID.loc[:,'assigned_carrier']="no"
+            df_hh_D_GrID=df_hh_D_GrID.reset_index(drop=True)
+            # Assigned the carrirer to shipment!: 
+            ## This part is time consuming which is associated to the function "carrier_sel()"
+            print ("**** Complete aggregation and Starting carrier assignement ****")
+            print ("size of shipment:", df_hh_D_GrID.shape[0])
+            non_sel_seller=pd.DataFrame()
+            if args.run_type =="Test":
+                run_size=20
+            elif args.run_type =="RunSim":
+                run_size=df_hh_D_GrID.shape[0]
             else: 
-                max_load= hd_max_load
-            return load/max_load                     
+                print ("Please put a correct run type")       
+            with alive_bar(run_size, force_tty=True) as bar:
+                for i in range(0,run_size): #***************** need to comment out and comment the line below *************************************
+                    v_type=df_hh_D_GrID.loc[i,'veh_type_agg']
+                    
+                    cap_index = v_type+"_capacity"
+                    time_index= v_type+"_time_cap"            
+                    # find a carrier who can hand a shipment at row i 
+                    sel_busID=carrier_sel(df_hh_D_GrID.loc[i,'MESOZONE'], df_hh_D_GrID.loc[i,'D_truckload'],
+                                        df_hh_D_GrID.loc[i,'tour_tt'],cap_index,time_index, dist_df, truckings,ship_type, 0)
+                    # put the carrier into df
+                    if sel_busID == "no":
+                        non_sel_seller=pd.concat([non_sel_seller,df_hh_D_GrID.iloc[[i]]], ignore_index=True).reset_index(drop=True)
+                    else: 
+                        df_hh_D_GrID.loc[i,'assigned_carrier']=sel_busID
+                        # Calculate the reduce the capacity and time capacity that can reflect after a row assignment
+                        trucking_index = truckings.index[truckings["BusID"]==sel_busID].values[0]
+                        truckings.loc[trucking_index,cap_index] = truckings.loc[trucking_index,cap_index] - df_hh_D_GrID.loc[i,'D_truckload']
+                        truckings.loc[trucking_index,time_index] = truckings.loc[trucking_index,time_index] - df_hh_D_GrID.loc[i,'tour_tt']
+                    bar()
+                    
+            print ("**** Completed carrier assignement and Generating results ****")    
+            df_hh_D_GrID=df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] !="no"].reset_index(drop=True)
+            df_hh_D_GrID=df_hh_D_GrID[~df_hh_D_GrID['MESOZONE'].isin(config.list_error_zone)]
+            df_hh_D_GrID.to_csv(fdir_in_out+'/Sim_outputs/temp_save/df_hh_D_GrID_carrier_assigned_county%s_%s.csv' %(sel_county, args.run_type), index = False, header=True)
+            # vehicle type assign
+            def payload_cal (load, v_type):
+                if v_type=="md":
+                    max_load= md_max_load
+                else: 
+                    max_load= hd_max_load
+                return load/max_load                     
 
-        df_hh_D_GrID['payload_rate']=df_hh_D_GrID.apply(lambda x: payload_cal(x['D_truckload'],x['veh_type_agg'] ), axis=1)
-        df_hh_D_GrID_new=pd.DataFrame()
-        for carr_id in df_hh_D_GrID['assigned_carrier'].unique():
-            temp = df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] == carr_id].reset_index()
-            temp =temp.sort_values(by=['veh_type_agg', 'tour_tt'])
-            temp["veh_type"]="u"
-            [[md_D_num,md_E_num, hdt_D_num, hdt_E_num, hdv_D_num, hdv_E_num, ev_class]]=truckings[truckings['BusID'] == carr_id]\
-                                                                                        [['Diesel Class 4-6 Vocational','Electric Class 4-6 Vocational',
-                                                                                        'Diesel Class 7&8 Tractor','Electric Class 7&8 Tractor',
-                                                                                        'Diesel Class 7&8 Vocational','Electric Class 7&8 Vocational',
-                                                                                        'EV_powertrain (if any)']].values.tolist()
-            if pd.isnull(ev_class):
-                ev_class="Battery Electric"   
-    
-            dic_firm_stock={"md_D_num":md_D_num,
-                            "md_E_num":md_E_num, 
-                            "hdt_D_num":hdt_D_num, 
-                            "hdt_E_num": hdt_E_num, 
-                            "hdv_D_num":hdv_D_num, 
-                            "hdv_E_num":hdv_E_num}
-            cum_time =60*(6+1)
-            cum_payload=1.1
-            v_type="md"
-            powerT="D"
-            for j in range(0, temp.shape[0]):
-                if (cum_time + temp['tour_tt'].iloc[j]  > 60*6) or  (cum_payload + temp['payload_rate'].iloc[j] >=1) or (v_type !=temp['veh_type_agg'].iloc[j]):
-                    cum_time =0
-                    cum_payload=0
-                    dic_firm_stock[v_type+"_"+powerT+"_num"] = int (dic_firm_stock[v_type+"_"+powerT+"_num"])
-                    v_type= temp['veh_type_agg'].iloc[j]
-                    D_num_firm = dic_firm_stock[v_type+"_D_num"]
-                    E_num_firm = dic_firm_stock[v_type+"_E_num"]
-                    if D_num_firm -temp['payload_rate'].iloc[j] <0:
-                        D_num_firm =0.1 
-                    if E_num_firm -temp['payload_rate'].iloc[j] <0:
-                        E_num_firm =0 
-                    if D_num_firm+E_num_firm -temp['payload_rate'].iloc[j] <0:
-                        D_num_firm=1
-                        E_num_firm=1                 
-                    powerT=util_powertrain(D_num_firm, E_num_firm, dic_energy, 50, dic_veh[v_type], ev_class, 0.5)
-                    dic_firm_stock[v_type+"_"+powerT+"_num"] = dic_firm_stock[v_type+"_"+powerT+"_num"]-temp['payload_rate'].iloc[j]
-                    if powerT == "D":
-                        p_lable="Diesel"
-                    else:
-                        p_lable=ev_class          
-                    temp["veh_type"].iloc[j]=v_type+"_"+powerT+"_"+p_lable
-                    cum_time =cum_time + temp['tour_tt'].iloc[j]
-                    cum_payload=cum_payload + temp['payload_rate'].iloc[j]
-                else:
-                    dic_firm_stock[v_type+"_"+powerT+"_num"] = dic_firm_stock[v_type+"_"+powerT+"_num"]-temp['payload_rate'].iloc[j]
-                    if powerT == "D":
-                        p_lable="Diesel"
-                    else:
-                        p_lable=ev_class          
-                    temp["veh_type"].iloc[j]=v_type+"_"+powerT+"_"+p_lable
-                    cum_time =cum_time + temp['tour_tt'].iloc[j]
-                    cum_payload=cum_payload + temp['payload_rate'].iloc[j]   
-            df_hh_D_GrID_new=pd.concat([df_hh_D_GrID_new,temp], ignore_index=True).reset_index(drop=True)
-        ########################## end if-caluse if needed ###################    
-        # x_y assignment
-        df_hh_D_GrID_new=df_hh_D_GrID_new.reset_index(drop=True)
-        df_hh_D_GrID_new['del_x']=0
-        df_hh_D_GrID_new['del_y']=0
-        print ("**xy allocation job size:", df_hh_D_GrID_new.shape[0])
-        with alive_bar(df_hh_D_GrID_new.shape[0], force_tty=True) as bar:
-            for i in range(0,df_hh_D_GrID_new.shape[0]):
-                [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==df_hh_D_GrID_new.loc[i,"MESOZONE"]])
-                df_hh_D_GrID_new.loc[i,'del_x']=x
-                df_hh_D_GrID_new.loc[i,'del_y']=y
-                bar()
-        df_hh_D_GrID_new.to_csv(fdir_in_out+'/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %sel_county, index = False, header=True)
+            df_hh_D_GrID['payload_rate']=df_hh_D_GrID.apply(lambda x: payload_cal(x['D_truckload'],x['veh_type_agg'] ), axis=1)
+            df_hh_D_GrID_new=pd.DataFrame()
+            for carr_id in df_hh_D_GrID['assigned_carrier'].unique():
+                temp = df_hh_D_GrID[df_hh_D_GrID['assigned_carrier'] == carr_id].reset_index()
+                temp =temp.sort_values(by=['veh_type_agg', 'tour_tt'])
+                temp["veh_type"]="u"
+                [[md_D_num,md_E_num, hdt_D_num, hdt_E_num, hdv_D_num, hdv_E_num, ev_class]]=truckings[truckings['BusID'] == carr_id]\
+                                                                                            [['Diesel Class 4-6 Vocational','Electric Class 4-6 Vocational',
+                                                                                            'Diesel Class 7&8 Tractor','Electric Class 7&8 Tractor',
+                                                                                            'Diesel Class 7&8 Vocational','Electric Class 7&8 Vocational',
+                                                                                            'EV_powertrain (if any)']].values.tolist()
+                if pd.isnull(ev_class):
+                    ev_class="Battery Electric"   
         
+                dic_firm_stock={"md_D_num":md_D_num,
+                                "md_E_num":md_E_num, 
+                                "hdt_D_num":hdt_D_num, 
+                                "hdt_E_num": hdt_E_num, 
+                                "hdv_D_num":hdv_D_num, 
+                                "hdv_E_num":hdv_E_num}
+                cum_time =60*(6+1)
+                cum_payload=1.1
+                v_type="md"
+                powerT="D"
+                for j in range(0, temp.shape[0]):
+                    if (cum_time + temp['tour_tt'].iloc[j]  > 60*6) or  (cum_payload + temp['payload_rate'].iloc[j] >=1) or (v_type !=temp['veh_type_agg'].iloc[j]):
+                        cum_time =0
+                        cum_payload=0
+                        dic_firm_stock[v_type+"_"+powerT+"_num"] = int (dic_firm_stock[v_type+"_"+powerT+"_num"])
+                        v_type= temp['veh_type_agg'].iloc[j]
+                        D_num_firm = dic_firm_stock[v_type+"_D_num"]
+                        E_num_firm = dic_firm_stock[v_type+"_E_num"]
+                        if D_num_firm -temp['payload_rate'].iloc[j] <0:
+                            D_num_firm =0.1 
+                        if E_num_firm -temp['payload_rate'].iloc[j] <0:
+                            E_num_firm =0 
+                        if D_num_firm+E_num_firm -temp['payload_rate'].iloc[j] <0:
+                            D_num_firm=1
+                            E_num_firm=1                 
+                        powerT=util_powertrain(D_num_firm, E_num_firm, dic_energy, 50, dic_veh[v_type], ev_class, 0.5)
+                        dic_firm_stock[v_type+"_"+powerT+"_num"] = dic_firm_stock[v_type+"_"+powerT+"_num"]-temp['payload_rate'].iloc[j]
+                        if powerT == "D":
+                            p_lable="Diesel"
+                        else:
+                            p_lable=ev_class          
+                        temp["veh_type"].iloc[j]=v_type+"_"+powerT+"_"+p_lable
+                        cum_time =cum_time + temp['tour_tt'].iloc[j]
+                        cum_payload=cum_payload + temp['payload_rate'].iloc[j]
+                    else:
+                        dic_firm_stock[v_type+"_"+powerT+"_num"] = dic_firm_stock[v_type+"_"+powerT+"_num"]-temp['payload_rate'].iloc[j]
+                        if powerT == "D":
+                            p_lable="Diesel"
+                        else:
+                            p_lable=ev_class          
+                        temp["veh_type"].iloc[j]=v_type+"_"+powerT+"_"+p_lable
+                        cum_time =cum_time + temp['tour_tt'].iloc[j]
+                        cum_payload=cum_payload + temp['payload_rate'].iloc[j]   
+                df_hh_D_GrID_new=pd.concat([df_hh_D_GrID_new,temp], ignore_index=True).reset_index(drop=True)
+            ########################## end if-caluse if needed ###################    
+            # x_y assignment
+            df_hh_D_GrID_new=df_hh_D_GrID_new.reset_index(drop=True)
+            df_hh_D_GrID_new['del_x']=0
+            df_hh_D_GrID_new['del_y']=0
+            print ("**xy allocation job size:", df_hh_D_GrID_new.shape[0])
+            with alive_bar(df_hh_D_GrID_new.shape[0], force_tty=True) as bar:
+                for i in range(0,df_hh_D_GrID_new.shape[0]):
+                    [x,y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==df_hh_D_GrID_new.loc[i,"MESOZONE"]])
+                    df_hh_D_GrID_new.loc[i,'del_x']=x
+                    df_hh_D_GrID_new.loc[i,'del_y']=y
+                    bar()
+            df_hh_D_GrID_new.to_csv(fdir_in_out+'/Sim_outputs/temp_save/xydf_hh_D_GrID_carrier_assigned_county%s.csv' %sel_county, index = False, header=True)
+            
 
-        payloads, carriers=b2c_create_output(df_hh_D_GrID_new,truckings_org,df_dpt_dist, ship_type)
-        if not file_exists(config.fdir_main_output + str(args.target_year)+"/"):
-            os.makedirs(config.fdir_main_output + str(args.target_year)+"/")
-        dir_out= config.fdir_main_output + str(args.target_year)+"/"   
-        payloads.to_csv (dir_out+config.fnm_B2C_payload+"_county{}_ship{}_s{}_y{}_sr{}.csv".format(sel_county, ship_direction,args.scenario, args.target_year,sample_ratio), index = False, header=True)
-        carriers.to_csv (dir_out+config.fnm_B2C_carrier+"_county{}_ship{}_s{}_y{}_sr{}.csv".format(sel_county, ship_direction,args.scenario, args.target_year,sample_ratio), index = False, header=True)
-        
+            payloads, carriers=b2c_create_output(df_hh_D_GrID_new,truckings_org,df_dpt_dist, ship_type)
+            if not file_exists(config.fdir_main_output + str(args.target_year)+"/"):
+                os.makedirs(config.fdir_main_output + str(args.target_year)+"/")
+            dir_out= config.fdir_main_output + str(args.target_year)+"/"   
+            payloads.to_csv (dir_out+config.fnm_B2C_payload+"_county{}_ship{}_s{}_y{}_sr{}.csv".format(sel_county, ship_direction,args.scenario, args.target_year,sample_ratio), index = False, header=True)
+            carriers.to_csv (dir_out+config.fnm_B2C_carrier+"_county{}_ship{}_s{}_y{}_sr{}.csv".format(sel_county, ship_direction,args.scenario, args.target_year,sample_ratio), index = False, header=True)
+            
 
-        print ("**** Completed generating B2C payload/carrier file ****")
+            print ("**** Completed generating B2C payload/carrier file ****")
 
 ############################################# on_demnad processing 
-        print ("**** Starting generating on-demand file ****")
-        fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
-        pro_df = gpd.read_file(fdir_geo+config.property_file)
-        pro_df= pro_df.to_crs(4269)
-        pro_df=pro_df.sjoin(CBGzone_df, how="inner",  predicate='intersects')
-        tt_df = pd.read_csv(fdir_geo+config.tt_file, compression='gzip', header=0, sep=',', quotechar='"')
-        # groc
-        if df_hh_groc.shape[0]>0:
-            df_input=df_hh_groc.sample(frac=sample_ratio/100).reset_index(drop=True)
-        else:
-            df_input=df_hh_groc
-        loc_df= pro_df[pro_df["Classified 0424"]=='grocery'].reset_index()
-        loc_group=  loc_df.groupby(['GEOID','MESOZONE'])['MESOZONE'].agg(num_store='count').reset_index()
-        goods_type="grocery"
-        payloads= on_demnad_output (df_input,CBGzone_df, loc_group, loc_df,tt_df,goods_type)    
-        payloads.to_csv (dir_out+config.fnm_B2C_payload+"{}_county{}_s{}_y{}_sr{}.csv".format(goods_type,sel_county,args.scenario, args.target_year,sample_ratio), index = False, header=True)
+        if args.b2c_type in ["all", "grocery"]: 
+            print ("**** Starting generating on-demand file ****")
+            fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
+            pro_df = gpd.read_file(fdir_geo+config.property_file)
+            pro_df= pro_df.to_crs(4269)
+            pro_df=pro_df.sjoin(CBGzone_df, how="inner",  predicate='intersects')
+            tt_df = pd.read_csv(fdir_geo+config.tt_file, compression='gzip', header=0, sep=',', quotechar='"')
+            # groc
+            if df_hh_groc.shape[0]>0:
+                df_input=df_hh_groc.sample(frac=sample_ratio/100).reset_index(drop=True)
+            else:
+                df_input=df_hh_groc
+            loc_df= pro_df[pro_df["Classified 0424"]=='grocery'].reset_index()
+            loc_group=  loc_df.groupby(['GEOID','MESOZONE'])['MESOZONE'].agg(num_store='count').reset_index()
+            goods_type="grocery"
+            payloads= on_demnad_output (df_input,CBGzone_df, loc_group, loc_df,tt_df,goods_type)    
+            payloads.to_csv (dir_out+config.fnm_B2C_payload+"{}_county{}_s{}_y{}_sr{}.csv".format(goods_type,sel_county,args.scenario, args.target_year,sample_ratio), index = False, header=True)
+            print ("**** completing generating food file ****")
         # food
-        if df_hh_food.shape[0]>0:
-            df_input=df_hh_food.sample(frac=sample_ratio/100).reset_index(drop=True)
-        else:
-            df_input=df_hh_food       
-        loc_df= pro_df[pro_df["Classified 0424"]=='Food'].reset_index()
-        loc_group=  loc_df.groupby(['GEOID','MESOZONE'])['MESOZONE'].agg(num_store='count').reset_index()
-        goods_type="food"
-        payloads= on_demnad_output (df_input,CBGzone_df, loc_group, loc_df,tt_df,goods_type)    
-        payloads.to_csv (dir_out+config.fnm_B2C_payload+"{}_county{}_s{}_y{}_sr{}.csv".format(goods_type,sel_county,args.scenario, args.target_year,sample_ratio), index = False, header=True)
-        print ("**** completing generating on-demand file ****")
+        if args.b2c_type in ["all", "food"]: 
+            print ("**** Starting generating food file ****")
+            fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
+            pro_df = gpd.read_file(fdir_geo+config.property_file)
+            pro_df= pro_df.to_crs(4269)
+            pro_df=pro_df.sjoin(CBGzone_df, how="inner",  predicate='intersects')
+            tt_df = pd.read_csv(fdir_geo+config.tt_file, compression='gzip', header=0, sep=',', quotechar='"')
+            if df_hh_food.shape[0]>0:
+                df_input=df_hh_food.sample(frac=sample_ratio/100).reset_index(drop=True)
+            else:
+                df_input=df_hh_food       
+            loc_df= pro_df[pro_df["Classified 0424"]=='Food'].reset_index()
+            loc_group=  loc_df.groupby(['GEOID','MESOZONE'])['MESOZONE'].agg(num_store='count').reset_index()
+            goods_type="food"
+            payloads= on_demnad_output (df_input,CBGzone_df, loc_group, loc_df,tt_df,goods_type)    
+            payloads.to_csv (dir_out+config.fnm_B2C_payload+"{}_county{}_s{}_y{}_sr{}.csv".format(goods_type,sel_county,args.scenario, args.target_year,sample_ratio), index = False, header=True)
+            print ("**** completing generating food file ****")
     elif args.ship_type == "B2B":    
         print ("**** Start processing daily B2B shipment")
         truckings_org= truckings.copy()
@@ -2324,6 +2335,8 @@ def main(args=None):
         truckings_org["BusID"]=truckings_org["BusID"].astype('int')
         FH_B2B["assigned_carrier"]=FH_B2B["assigned_carrier"].astype('int')
         # create payload and carriers
+        PV_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/PV_B2B_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
+        FH_B2B.to_csv(fdir_in_out+'/Sim_outputs/temp_save/FH_B2B_carrier_assigned_county%s_ship%s.csv' %(args.sel_county, args.ship_direction), index = False, header=True)
         payloads, carriers=b2b_create_output(PV_B2B,FH_B2B,truckings_org,df_dpt_dist, args.ship_type, ex_zone_list, firms, ex_zone)
         print ("**** Completed generating B2C payload/carrier file ****")
   
