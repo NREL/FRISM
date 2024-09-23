@@ -1,31 +1,27 @@
-state_CBSA = ["31080","40140","40900","41740","41860","41940"]
-study_CBSA= ["41860","41940"]
-study_region ="SF"
-state_id =6
+
+study_CBSA= ["38900","42660"]
+study_region ="ST"
+state_id =53
 msacat=1
 census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
 
 # Need to updated for SF 
-county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
-dist_file= 'BayArea_od_dist.csv'
-CBG_file= 'BayArea_freight.geojson'
-property_file = 'Property Type in SF Bay Area.geojson'
-tt_file="tt_df_cbg_v2.csv.gz"
+county_list=[61,33,53,35]
+dist_file= 'Seattle_od_dist.csv'
+CBG_file= 'Seattle_freight.geojson'
 
-on_demand_possilbe={1: [1,13, 85],
-                    13: [13,1,95,85],
-                    41: [41,75,13],
-                    55: [55,95,97],
-                    75: [75,81,41],
-                    81: [81,75,85],
-                    85: [85,81,1],
-                    95: [95,55,13],
-                    97: [97,55,41]}
+property_file = 'Property Type in SF Bay Area.geojson'
+tt_file="tt_df_cbg.csv.gz"
+
+on_demand_possilbe={61: [61,33],
+                    33: [33,61,35],
+                    53: [53,33,35],
+                    35: [35,33,53]}
 
 
 # input for B2C day sim
-b2c_delivery_frequency=20
-hh_aggregation_size=10
+b2c_delivery_frequency=18
+hh_aggregation_size=8
 # input for B2B day sim
 b2b_day_factor =0.17
 max_tour_for_b2b = 4
@@ -58,31 +54,69 @@ fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".f
 x_var_candidate_hh= ['HOUSEID',
                      'HH_HISP', 
                      'HOMEOWN',
-                     'HBPPOPDN',
+                     #'HBPPOPDN',
                      'HHFAMINC',
                      'HHSIZE',
                      'HHVEHCNT',
                      'HH_RACE',
-                     'WEBUSE17',
+                     #'WEBUSE17',
                      'LIF_CYC',
                      'WRKCOUNT',
-                     'HH_CBSA']
+                     #'HH_CBSA',
+                     'CENSUS_D',
+                     'WTHHFIN']
 x_var_candidate_per= ['HOUSEID', 
                     'DELIVER',
+                    "DELIV_FOOD",
+                    "DELIV_GOOD",
+                    "DELIV_GROC",
+                    "DELIV_PERS",
+                    "RIDESHARE22",
+                    "RET_AMZ",
+                    "RET_HOME",
+                    "RET_PUF",
+                    "RET_STORE",
                     'EDUC',
                     'HHFAMINC', 
                     'HHSIZE', 
                     'HHVEHCNT', 
-                    'HBPPOPDN', 
-                    'R_AGE_IMP',  
-                    'R_SEX_IMP', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
                     'R_HISP', 
                     'R_RACE', 
                     'SCHTYP',
                     'WORKER',
                     'WRKTRANS',
-                    'WRK_HOME',
-                    'HH_CBSA']
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+x_var_candidate_per_17= ['HOUSEID', 
+                    'DELIVER',
+                    'EDUC',
+                    'HHFAMINC', 
+                    'HHSIZE', 
+                    'HHVEHCNT', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
+                    'R_HISP', 
+                    'R_RACE', 
+                    'SCHTYP',
+                    'WORKER',
+                    'WRKTRANS',
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+
+
+
+
+
+
+
 
 selected_x_var_web=[
 "HHSIZE",

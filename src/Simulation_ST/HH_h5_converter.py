@@ -30,33 +30,35 @@ list(synth_per_au_18)
 
 # %%
 import h5py
-f = h5py.File("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/custom_mpo_53199100_model_data.h5", 'r')
+f = h5py.File("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/model_data_2018.h5", 'r')
 # %%
 list(f.keys())
-# # %%
-# f_2030=f['2030']
-# # %%
-# list(f_2030.keys())
-# f_2030_hh= f_2030['households']
-# # %%
-# list(f_2030_hh.keys())
-# # %%
-# f_2030_hh['block0_items']
-# # %%
-# hh=pd.read_hdf(f_2030_hh)
 # %%
-hh =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/custom_mpo_53199100_model_data.h5", key="households")
+f_2018=f['2018']
+# %%
+list(f_2018.keys())
+f_2018_hh= f_2018['households']
+# %%
+list(f_2030_hh.keys())
+# %%
+f_2030_hh['block0_items']
+# %%
+hh=pd.read_hdf(f_2030_hh)
+# %%
+hh =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/model_data_2018.h5", key="2018/households")
+hh=hh.reset_index()
 compression_opts = dict(method='zip',archive_name='households.csv')  
-hh.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/households.csv', index=True) 
+hh.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle_2018/households.csv', index=True) 
 # %% 
-per =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/custom_mpo_53199100_model_data.h5", key="persons")
+per =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/model_data_2018.h5", key="2018/persons")
+per=per.reset_index()
 compression_opts = dict(method='zip',archive_name='persons.csv')  
-per.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/persons.csv', index=True) 
+per.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle_2018/persons.csv', index=True) 
 
 #%%
-df =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/custom_mpo_53199100_model_data.h5", key="block_group_zone_geoms")
+df =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/model_data_2018.h5", key="block_group_zone_geoms")
 compression_opts = dict(method='zip',archive_name='block.csv')  
-df.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/block.csv', index=True)
+df.to_csv('../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle_2018/block.csv', index=True)
 
 #%%
 df =pd.read_hdf("../../../FRISM_input_output_ST/Sim_inputs/hh_pop/Seattle/custom_mpo_53199100_model_data.h5", key="travel_data")
