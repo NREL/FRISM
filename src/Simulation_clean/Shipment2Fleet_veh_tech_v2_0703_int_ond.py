@@ -790,15 +790,19 @@ def on_demnad_output (df_input_org,CBGzone_df, loc_group, loc_df,tt_df,goods_typ
         for i in range(0,df_input.shape[0]):
             dest_geoid= df_input["GEOID"].loc[i]
             dest_mesoid= CBGzone_df[CBGzone_df['GEOID']==dest_geoid]['MESOZONE'].values[0]
-            loc_group["travel_time"]=loc_group['GEOID'].apply(lambda x: tt_cal(x,dest_geoid, tt_df))
+            if loc_group.shape[0] >50:
+                sub_loc_group=loc_group.sample(n=50, weights='store_over_county').reset_index(drop=True)
+            else:
+                sub_loc_group=loc_group    
+            sub_loc_group["travel_time"]=sub_loc_group['GEOID'].apply(lambda x: tt_cal(x,dest_geoid, tt_df))
             for n_hh in range(0, df_input["n_households"].loc[i]):
 
                 [dest_x,dest_y]=random_points_in_polygon(CBGzone_df.geometry[CBGzone_df.MESOZONE==dest_mesoid])
-                org_geoid=assign_store(loc_group)
+                org_geoid=assign_store(sub_loc_group)
                 if org_geoid !=0:
                     selcted_loc_df = loc_df[loc_df["GEOID"]==org_geoid]
                     [[org_y,org_x]]=selcted_loc_df[["latitude", "longitude"]].sample(n=1).values.tolist()
-                    tt=loc_group[loc_group["GEOID"]==org_geoid]["travel_time"].values[0]
+                    tt=sub_loc_group[sub_loc_group["GEOID"]==org_geoid]["travel_time"].values[0]
                     org_mesoid= CBGzone_df[CBGzone_df['GEOID']==org_geoid]['MESOZONE'].values[0]
 
                     payloadId=goods_type+"_"+str(n)
@@ -2260,6 +2264,11 @@ def main(args=None):
             print ("**** Completed generating B2C payload/carrier file ****")
 
 ############################################# on_demnad processing 
+        def store_over_county(county, select_county):
+            if county == select_county:
+                return 1
+            else: return 0.4
+
         if args.b2c_type in ["all", "grocery"]: 
             print ("**** Starting generating on-demand file ****")
             fdir_geo= fdir_in_out+'/Sim_inputs/Geo_data/'
@@ -2275,6 +2284,7 @@ def main(args=None):
             loc_df= pro_df[pro_df["Classified 0424"]=='grocery'].reset_index()
             loc_group=  loc_df.groupby(['GEOID','MESOZONE','County'])['MESOZONE'].agg(num_store='count').reset_index()
             loc_group =loc_group[loc_group["County"].isin(config.on_demand_possilbe[sel_county])].reset_index()
+            loc_group["store_over_county"]=loc_group['County'].apply(lambda x: store_over_county(x,sel_county))
             goods_type="grocery"
             payloads= on_demnad_output (df_input_org,CBGzone_df, loc_group, loc_df,tt_df,goods_type)
             dir_out= config.fdir_main_output + str(args.target_year)+"/"      
@@ -2295,6 +2305,7 @@ def main(args=None):
             loc_df= pro_df[pro_df["Classified 0424"]=='Food'].reset_index()
             loc_group=  loc_df.groupby(['GEOID','MESOZONE','County'])['MESOZONE'].agg(num_store='count').reset_index()
             loc_group =loc_group[loc_group["County"].isin(config.on_demand_possilbe[sel_county])].reset_index()
+            loc_group["store_over_county"]=loc_group['County'].apply(lambda x: store_over_county(x,sel_county))
             goods_type="food"
             payloads= on_demnad_output (df_input_org,CBGzone_df, loc_group, loc_df,tt_df,goods_type)  
             dir_out= config.fdir_main_output + str(args.target_year)+"/"    

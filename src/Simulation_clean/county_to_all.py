@@ -54,8 +54,9 @@ for scenario in s_list:
 ########### SF ##############
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 target_year="2018"
-f_dir="../../../FRISM_input_output_SF/result_0710/Tour_plan/{}/".format(target_year)
-f_dir_2="../../../FRISM_input_output_SF/result_0710/Tour_plan/{}_all/".format(target_year)
+f_dir="../../../FRISM_input_output_SF/result_0922/Tour_plan/{}/".format(target_year)
+f_dir_1="../../../FRISM_input_output_SF/result_0922/Shipment2Fleet/{}/".format(target_year)
+f_dir_2="../../../FRISM_input_output_SF/result_0922/Tour_plan/{}_all/".format(target_year)
 s_list=["Base"]
 
 
@@ -93,6 +94,23 @@ for scenario in s_list:
         N_df_tour.to_csv(f_dir_2+"{0}_all_freight_tours_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         N_df_carrier.to_csv(f_dir_2+"{0}_all_carrier_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
         print ("{},{}:{}".format(ship_type,scenario,N_df_tour.shape[0]))  
+
+for scenario in s_list:
+    for ship_type in ["B2C"]:
+ 
+        tour_num=0
+        N_df_payload=pd.DataFrame()   
+        for count_num in county_list:
+            for good_type in ["grocery", "food"]:
+                try:
+                    df_payload = pd.read_csv(f_dir_1+"{0}_payload{1}_county{2}_s{3}_y{4}_sr10.csv".format(ship_type,good_type, count_num,scenario,target_year)).reset_index()
+                    df_payload["tourId"]=df_payload["tourId"].apply(lambda x: x+tour_num)
+                    tour_num=df_payload["tourId"].iloc[-1]+1
+                    N_df_payload=pd.concat([N_df_payload,df_payload], ignore_index=True).reset_index(drop=True)
+                except: print ("missing good type: {} for county{}".format (good_type,count_num))    
+
+        N_df_payload.to_csv(f_dir_2+"{0}_OnDemnad_payload_s{1}_y{2}.csv".format(ship_type,scenario,target_year), index = False, header=True)
+  
 
 
 

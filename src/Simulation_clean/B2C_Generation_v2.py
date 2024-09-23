@@ -432,11 +432,12 @@ df_per["DELIV_FOOD"]=df_per["DELIV_FOOD"].apply(lambda x: random.randrange(20,40
 df_per_final=df_per[["household_id","member_id",'block_id','GEOID',"County", "DELIV_GOOD","DELIV_GROC","DELIV_FOOD"]]
 df_per_final.to_csv("../../../FRISM_input_output_SF/Sim_outputs/Generation/per_del_2018.csv")
 #####
+# %%
 def b2c_good_select(delivery_f,fq_factor,growth_factor,commodity_type):
     growth_factor=growth_factor+(growth_factor/100)**6
     if commodity_type == "goods":   
         day_factor = random.randrange(fq_factor,31)
-    else: day_factor =30      
+    else: day_factor =50      
     pro=delivery_f/day_factor
     r= random.uniform(0,1)*(100/growth_factor)
     if r <= pro:
@@ -445,7 +446,7 @@ def b2c_good_select(delivery_f,fq_factor,growth_factor,commodity_type):
     else:
         select =0
         num_package=0
-    return [select, num_package]
+    return num_package
 
 
 def package_aggregation(num, commodity_type):
@@ -465,7 +466,54 @@ def package_aggregation(num, commodity_type):
         if num >= agg_package:
             return agg_package
         else: return num
+fq_factor=20
+df_per["online_goods_act"]= df_per["DELIV_GOOD"].apply(lambda x: b2c_good_select(x,fq_factor, 100,"goods"))
+df_per["online_grocery_act"]= df_per["DELIV_GROC"].apply(lambda x: b2c_good_select(x,fq_factor,100,"other"))
+df_per["online_food_act"]= df_per["DELIV_FOOD"].apply(lambda x: b2c_good_select(x,fq_factor,100,"other"))
+    
+# Need to process df_per
+# ## additing the code
+#
+# %%  
+loaded_model = joblib.load('instore_choice_goods.sav')
+df_per['pro_instore_choice_good']=loaded_model.predict(df_per)
+df_per['instore_choice_good']=df_per['pro_instore_choice_good'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0) 
 
+loaded_model = joblib.load('instore_choice_food.sav')
+df_per['pro_instore_choice_food']=loaded_model.predict(df_per)
+df_per['instore_choice_food']=df_per['pro_instore_choice_food'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
+
+loaded_model = joblib.load('instore_choice_grc.sav')
+df_per['pro_instore_choice_grc']=loaded_model.predict(df_per)
+df_per['instore_choice_grc']=df_per['pro_instore_choice_grc'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)  
+
+
+df_per=df_per.rename({'DELIV_GOOD':'daily_delivery_frequency_goods',
+                      'DELIV_GROC':'daily_delivery_frequency_grocery',
+                      'DELIV_FOOD':'daily_delivery_frequency_food',
+                      'pro_instore_choice_good':'probability_instore_choice_goods',
+                      'pro_instore_choice_grc':'probability_instore_choice_grocery',
+                      'pro_instore_choice_food':'probability_instore_choice_food'}, axis='columns')
+# %%
+df_per_for_merge= df_per[["household_id","member_id",'daily_delivery_frequency_goods','daily_delivery_frequency_grocery','daily_delivery_frequency_food',
+                          "probability_instore_choice_goods","probability_instore_choice_grocery","probability_instore_choice_food"]]
+
+
+synth_per=synth_per.merge(df_per_for_merge, on=["household_id","member_id"], how='left')
+syth_per=synth_per["daily_delivery_frequency_goods"].fillna(0, inplace=True)
+syth_per=synth_per["daily_delivery_frequency_grocery"].fillna(0, inplace=True)
+syth_per=synth_per["daily_delivery_frequency_food"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_goods"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_grocery"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_food"].fillna(0, inplace=True)
+
+synth_per[(synth_per["household_id"]==472)&(synth_per["member_id"]==10)][["probability_instore_choice_goods"]]
+
+# %%
+synth_per.to_csv("../../../FRISM_input_output_SF/Sim_outputs/Generation/persons_w_instore_prob.csv.gz", compression="gzip", index=False)
+# %%
+####################################Code for merge #######################################################################################
+# %%
 sel_county =1
 possilbe_delivey_days=30
 growth_factor =100
