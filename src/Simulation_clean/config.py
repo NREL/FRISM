@@ -12,6 +12,16 @@ CBG_file= 'BayArea_freight.geojson'
 property_file = 'Property Type in SF Bay Area.geojson'
 tt_file="tt_df_cbg_v2.csv.gz"
 
+on_demand_possilbe={1: [1,13, 85],
+                    13: [13,1,95,85],
+                    41: [41,75,13],
+                    55: [55,95,97],
+                    75: [75,81,41],
+                    81: [81,75,85],
+                    85: [85,81,1],
+                    95: [95,55,13],
+                    97: [97,55,41]}
+
 
 # input for B2C day sim
 b2c_delivery_frequency=20
