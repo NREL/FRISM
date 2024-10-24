@@ -27,6 +27,8 @@ def create_global_variable(md_max, hd_max, fdir, state,max_tour_for_b2b,sample_r
     global dic_veh
     global sample_ratio
     global bin_size
+    global com_group_lu
+    
     md_max_load= md_max
     hd_max_load= hd_max
     fdir_in_out = fdir
@@ -34,7 +36,7 @@ def create_global_variable(md_max, hd_max, fdir, state,max_tour_for_b2b,sample_r
     max_tour=max_tour_for_b2b
     bin_size=10
     sample_ratio=sample_ratio_input
-    
+    com_group_lu= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/commodity_group_for_vius.csv", header=0, sep=',')
     dic_veh={'md': "Class 4-6 Vocational",
     'hdt':"Class 7&8 Tractor",
     'hdv':"Class 7&8 Vocational"
@@ -60,7 +62,7 @@ def genral_input_files_processing(firm_file, port_file, warehouse_file, leasing_
     CBGzone_df["area"]=CBGzone_df['geometry'].area/(10**6)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
     ## Add county id from GEOID
-    CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if len(x)>=12 else 0)
+    CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if (len(x)>=12 and x[0:2]==str(state_id))  else 0)
     CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
     CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
     CBGzone_df= CBGzone_df.to_crs('EPSG:4269')
@@ -1001,7 +1003,7 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
         "hdv_E_num":0}                         
         PV_sel_ship=pd.DataFrame()
         for i in range(0,PV_sel.shape[0]):
-            v_type = b2b_veh_type_truckload_prior(PV_sel["SCTG_Group"].iloc[i],PV_sel["Distance"].iloc[i], PV_sel["D_truckload"].iloc[i], df_vius, dic_firm_stock, dic_leasing_stock)
+            v_type = b2b_veh_type_truckload_prior(PV_sel["Commodity_SCTG"].iloc[i],PV_sel["Distance"].iloc[i], PV_sel["D_truckload"].iloc[i], df_vius, dic_firm_stock, dic_leasing_stock)
             if v_type=="md":
                 max_load= md_max_load
             else: 
@@ -1112,7 +1114,7 @@ def b2b_input_files_processing(firms, leasings, truckings, dist_df, CBGzone_df, 
         for i in range(0,FH_sel.shape[0]):
             #v_type= b2b_veh_type_truckload_prior(FH_sel["SCTG_Group"].iloc[i],FH_sel["Distance"].iloc[i], FH_sel["D_truckload"].iloc[i], df_vius, dic_trucking_stock, dic_leasing_stock) # consindering prior
             temp=pd.concat([FH_sel.iloc[[i]]]*1, ignore_index=True)
-            v_type= b2b_veh_type_truckload(FH_sel["SCTG_Group"].iloc[i],FH_sel["Distance"].iloc[i], FH_sel["D_truckload"].iloc[i], df_vius)
+            v_type= b2b_veh_type_truckload(FH_sel["Commodity_SCTG"].iloc[i],FH_sel["Distance"].iloc[i], FH_sel["D_truckload"].iloc[i], df_vius)
             if v_type=="md":
                 max_load= md_max_load
             else: 
@@ -1678,8 +1680,8 @@ def sampling_int_ship(temp, sample_ratio, bin_size):
     df_sample=temp[temp['bundle_id'].isin(list_shipper_sample)].reset_index(drop=True)
 
     return df_sample
-def b2b_veh_type_truckload_prior(SCTG_Group,Distance, D_truckload, df_vius,dic_firm_stock, dic_leasing_stock):
-
+def b2b_veh_type_truckload_prior(commodity,Distance, D_truckload, df_vius,dic_firm_stock, dic_leasing_stock):
+    SCTG_Group =com_group_lu[com_group_lu["SCTG"]==commodity]["SCTG_Group"].values[0]
     md_num = dic_firm_stock["md_D_num"]  + dic_firm_stock["md_E_num"]
     hdt_num= dic_firm_stock["hdt_D_num"] + dic_firm_stock["hdt_E_num"]
     hdv_num= dic_firm_stock["hdv_D_num"] + dic_firm_stock["hdv_E_num"]
@@ -1709,9 +1711,9 @@ def b2b_veh_type_truckload_prior(SCTG_Group,Distance, D_truckload, df_vius,dic_f
         col_name='RO_GT500'
 
     
-    hdt_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT tractor')][col_name].values[0]
-    hdv_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT vocational')][col_name].values[0]
-    md_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='MDT vocational')][col_name].values[0]
+    hdt_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT tractor')][col_name].values[0]
+    hdv_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT vocational')][col_name].values[0]
+    md_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='MDT vocational')][col_name].values[0]
 
     md_pro  = md_prior*md_vius/(md_prior*md_vius+ hdt_prior*hdt_vius+hdv_prior*hdv_vius)
     hdt_pro = hdt_prior*hdt_vius/(md_prior*md_vius+ hdt_prior*hdt_vius+hdv_prior*hdv_vius)    
@@ -1736,7 +1738,8 @@ def b2b_veh_type_truckload_prior(SCTG_Group,Distance, D_truckload, df_vius,dic_f
         hd_trac_load =  0
         hd_voc_load = D_truckload   
     return  v_type
-def b2b_veh_type_truckload(SCTG_Group,Distance, D_truckload, df_vius):
+def b2b_veh_type_truckload(commodity,Distance, D_truckload, df_vius):
+    SCTG_Group =com_group_lu[com_group_lu["SCTG"]==commodity]["SCTG_Group"].values[0]
     md_prior=1
     hdt_prior=1
     hdv_prior=1  
@@ -1753,9 +1756,9 @@ def b2b_veh_type_truckload(SCTG_Group,Distance, D_truckload, df_vius):
         col_name='RO_GT500'
 
     
-    hdt_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT tractor')][col_name].values[0]
-    hdv_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT vocational')][col_name].values[0]
-    md_vius=df_vius[(df_vius["sctg"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='MDT vocational')][col_name].values[0]
+    hdt_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT tractor')][col_name].values[0]
+    hdv_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='HDT vocational')][col_name].values[0]
+    md_vius=df_vius[(df_vius["SCTG_VIUS_Group"]==SCTG_Group) & (df_vius['VEH_CLASS_SynthFirm']=='MDT vocational')][col_name].values[0]
 
     md_pro  = md_prior*md_vius/(md_prior*md_vius+ hdt_prior*hdt_vius+hdv_prior*hdv_vius)
     hdt_pro = hdt_prior*hdt_vius/(md_prior*md_vius+ hdt_prior*hdt_vius+hdv_prior*hdv_vius)    
@@ -2315,6 +2318,7 @@ def main(args=None):
         print ("**** Start processing daily B2B shipment")
         truckings_org= truckings.copy()
         df_vius= pd.read_csv(fdir_in_out+"/Model_carrier_op/VIUS/vehicle_proportion_by_sctg_dist.csv", header=0, sep=',')
+
         FH_B2B, PV_B2B, firms = b2b_input_files_processing(firms,leasings,truckings,dist_df, CBGzone_df, args.sel_county, args.ship_direction, 
         config.commodity_list, config.weight_theshold, config.list_error_zone,config.county_list,df_vius, config.b2b_day_factor, 
         args.target_year, args.scenario, args.daily_demand_creator)
