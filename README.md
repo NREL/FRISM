@@ -14,14 +14,13 @@ FRISM simulates day-to-day freight activities including end-consumer shopping, d
 
 ## The following are contained in this repository
 - Running Household E-commerce Generation Estimation for End-Consumer Behavior:
-    *   src/Simulation/HH_ecom_models.py
+    *   src/Simulation/HH_ecom_model.py
 - Running End-Consumer Behavior Module to simulate monthly delivery frequency:
     *   src/Simulation/B2C_Generation.py
-    *   src/Simulation/B2B_Generation.py
 - Running Distribution Channel to simulate B2B and B2C daily shipments and shipment-carrier matching
-    *   src/Simulation/Shipment2Fleet_veh_tech.py
+    *   src/Simulation/Shipment2Fleet.py
 - Running Carrier Operation to simulate tour-plan for each carrier:
-    *   src/Simulation/Carrier_Tour_Plan/VRP_OR-tools_Stops_veh_tech.py
+    *   src/Simulation/Carrier_Tour_Plan/VRP_OR-tools.py
 - Running the freight activity simulation:
     *   src/Simulation/Run_frism.py
 - List of inputs to run simulation: [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme)
@@ -41,7 +40,7 @@ conda activate frism
 cd src/Simulation
 python Run_frism.py [county number] [year] [scenario name] [sampling rate] [Y or N]
 ```
-**Y** for the last input parameter means there will be generation of new shipments in the [Shipment2Fleet_veh_tech.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Shipment2Fleet_veh_tech.py) script, while **N** means no generation of new shipment in the *Shipment2Fleet_veh_tech.py* script.
+**Y** for the last input parameter means there will be generation of new shipments in the [Shipment2Fleet_veh_tech.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Shipment2Fleet_veh_tech.py) script, while **N** means no generation of new shipment in the *Shipment2Fleet.py* script.
 
 An example of the above command that use the data in the 'Example_Data' folder is:
 ```linux
