@@ -22,9 +22,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # %%
-fdir_input= "../../../B2C_Data/ATUS/2022/"
+fdir_input_atus= "../../../B2C_Data/ATUS/2022/"
 
-df=pd.read_csv(fdir_input+"atus_df_model_2022.csv")
+df=pd.read_csv(fdir_input_atus+"atus_df_model_2022.csv")
 df['shopping']= df.apply(lambda x: 0 if x['choice_goods']+ x['choice_grocery']+ x['choice_food'] ==9 else 1, axis=1)
 # selected_var=['choice_instore_goods', 'choice_online_goods',
 #        'choice_instore_grocery', 'choice_online_grocery',

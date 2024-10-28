@@ -4,6 +4,12 @@ study_region ="ST"
 state_id =53
 msacat=1
 census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
+year=2018
+hh_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/households.csv".format(study_region,year)
+per_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/persons.csv".format(study_region,year)
+fdir_geo = "../../../FRISM_input_output_{}/Sim_inputs/Geo_data/".format(study_region)
+out_file_dir= "../../../FRISM_input_output_{}/Sim_outputs/Generation/".format(study_region)
+urban_county_list=[61,33,53,35]
 
 # Need to updated for SF 
 county_list=[61,33,53,35]

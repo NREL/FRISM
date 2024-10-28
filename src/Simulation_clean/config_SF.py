@@ -5,6 +5,13 @@ state_id =6
 msacat=1
 census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
 
+year=2018
+hh_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/households.csv".format(study_region,year)
+per_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/persons.csv".format(study_region,year)
+fdir_geo = "../../../FRISM_input_output_{}/Sim_inputs/Geo_data/".format(study_region)
+out_file_dir= "../../../FRISM_input_output_{}/Sim_outputs/Generation/".format(study_region)
+urban_county_list=[1,75,81,85]
+
 # Need to updated for SF 
 county_list=[1, 13, 41, 55, 75, 81, 85, 95, 97]
 dist_file= 'BayArea_od_dist.csv'
@@ -22,12 +29,11 @@ on_demand_possilbe={1: [1,13, 85],
                     95: [95,55,13],
                     97: [97,55,41]}
 
-
 # input for B2C day sim
-b2c_delivery_frequency=20
+b2c_delivery_frequency=25
 hh_aggregation_size=10
 # input for B2B day sim
-b2b_day_factor =0.17
+b2b_day_factor =0.154
 max_tour_for_b2b = 4
 fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
 # input for B2B/Geo_data
@@ -38,8 +44,8 @@ commodity_list= ["1", "2", "3", "4", "5"]
 ## this should be updated 
 list_error_zone=[] # this should be updated
 weight_theshold=50000
-md_cap=10000*0.8
-hd_cap=45000*0.8
+md_cap=12000#10000*0.8 old version
+hd_cap=50000#45000*0.8 old version
 # https://www.technogroupusa.com/size-and-weight-limit-laws/ 
 
 # output data structure
@@ -58,31 +64,69 @@ fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".f
 x_var_candidate_hh= ['HOUSEID',
                      'HH_HISP', 
                      'HOMEOWN',
-                     'HBPPOPDN',
+                     #'HBPPOPDN',
                      'HHFAMINC',
                      'HHSIZE',
                      'HHVEHCNT',
                      'HH_RACE',
-                     'WEBUSE17',
+                     #'WEBUSE17',
                      'LIF_CYC',
                      'WRKCOUNT',
-                     'HH_CBSA']
+                     #'HH_CBSA',
+                     'CENSUS_D',
+                     'WTHHFIN']
 x_var_candidate_per= ['HOUSEID', 
                     'DELIVER',
+                    "DELIV_FOOD",
+                    "DELIV_GOOD",
+                    "DELIV_GROC",
+                    "DELIV_PERS",
+                    "RIDESHARE22",
+                    "RET_AMZ",
+                    "RET_HOME",
+                    "RET_PUF",
+                    "RET_STORE",
                     'EDUC',
                     'HHFAMINC', 
                     'HHSIZE', 
                     'HHVEHCNT', 
-                    'HBPPOPDN', 
-                    'R_AGE_IMP',  
-                    'R_SEX_IMP', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
                     'R_HISP', 
                     'R_RACE', 
                     'SCHTYP',
                     'WORKER',
                     'WRKTRANS',
-                    'WRK_HOME',
-                    'HH_CBSA']
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+x_var_candidate_per_17= ['HOUSEID', 
+                    'DELIVER',
+                    'EDUC',
+                    'HHFAMINC', 
+                    'HHSIZE', 
+                    'HHVEHCNT', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
+                    'R_HISP', 
+                    'R_RACE', 
+                    'SCHTYP',
+                    'WORKER',
+                    'WRKTRANS',
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+
+
+
+
+
+
+
 
 selected_x_var_web=[
 "HHSIZE",

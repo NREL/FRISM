@@ -17,8 +17,8 @@ import shutil
 #%%
 county_list=[61,33,53,35]
 target_year="2018"
-f_dir="../../../FRISM_input_output_ST/result_0924/Tour_plan/{}/".format(target_year)
-f_dir_2="../../../FRISM_input_output_ST/result_0924/Tour_plan/{}_all/".format(target_year)
+f_dir="../../../FRISM_input_output_ST/result_1027/Tour_plan/{}/".format(target_year)
+f_dir_2="../../../FRISM_input_output_ST/result_1027/Tour_plan/{}_all/".format(target_year)
 s_list=["Base"]
 #s_list=["HOP_highp2", "HOP_highp6","Ref_highp2", "Ref_highp6"]
 #s_list=["Dmd_G"]

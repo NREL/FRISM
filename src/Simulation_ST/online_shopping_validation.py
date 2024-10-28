@@ -342,171 +342,99 @@ synth_per = pd.read_csv(per_file, header=0, sep=',')
 df_hh = input_files_processing_hh(hh_file)
 df_per= input_files_processing_per(df_hh, per_file)
 
+study_region="ST"
+fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
+df_per_final = pd.read_csv(fdir_in_out+'/Sim_outputs/Generation/per_del_2018.csv', header=0, sep=',')
 
-fdir_geo = config.fdir_geo 
-CBG_file = config.CBG_file
-state_id=config.state_id
-CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
-CBGzone_df= CBGzone_df.to_crs({'proj': 'cea'})
-CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
-## Add county id from GEOID
-CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if (len(x)>=12 and x[0:2]==str(state_id))  else 0)
-CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
-CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
-CBGzone_df=CBGzone_df[CBGzone_df["County"]!=0]
-CBGzone_df= CBGzone_df.to_crs('EPSG:4269')
+fdir_input= "../../../B2C_Data/NHTS_22/"
+df_per_obs=pd.read_csv(fdir_input+"nhts_df_model_2022.csv")
+df_per_obs["DELIV_GOOD"]= df_per_obs["DELIV_GOOD"].apply(lambda x: 0 if x<0 else x)
+df_per_obs["DELIV_FOOD"]= df_per_obs["DELIV_FOOD"].apply(lambda x: 0 if x<0 else x)
+df_per_obs["DELIV_GROC"]= df_per_obs["DELIV_GROC"].apply(lambda x: 0 if x<0 else x)
+# %%
+df_per_final= df_per_final.merge(df_per[["household_id", "income_cls"]], on="household_id", how="left")
+# %%
+df_per_final["DELIV_GOOD"]= df_per_final["DELIV_GOOD"].apply(lambda x: int(x))
+df_per_final["DELIV_FOOD"]= df_per_final["DELIV_FOOD"].apply(lambda x: int(x))
+df_per_final["DELIV_GROC"]= df_per_final["DELIV_GROC"].apply(lambda x:int(x))
+
+df_per_final["DELIV_GOOD"]= df_per_final["DELIV_GOOD"].apply(lambda x: random.randint(1, 10) if x>6 and x <10 else x)
+df_per_final["DELIV_FOOD"]= df_per_final["DELIV_FOOD"].apply(lambda x: random.randint(1, 5) if x>3 and x <5 else x)
+df_per_final["DELIV_GROC"]= df_per_final["DELIV_GROC"].apply(lambda x:random.randint(1, 5) if x>3 and x <5 else x)
 
 # %%
-CBGzone_df=CBGzone_df[CBGzone_df["County"].isin(config.county_list)]
-CBGzone_df.head()
-df_per['GEOID'] =df_per['block_id'].apply(lambda x: np.floor(x/1000))
-df_per= df_per.merge(CBGzone_df[["GEOID", "County"]], on='GEOID', how='left')
-def urban(county, urban_counties):
-    if county in urban_counties:
-        return 1
-    else: return 0    
 
-df_per['URBRUR']=df_per["County"].apply(lambda x: urban(x,config.urban_county_list))
-# df_hh = input_files_processing_hh(args.hh_file)
-# df_per= input_files_processing_per(df_hh, args.per_file)
-# %%
-loaded_model = joblib.load('online_choice_good.sav')
-df_per['pro_online_choice_good']=loaded_model.predict(df_per)
-df_per['online_choice_good']=df_per['pro_online_choice_good'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0) 
-
-loaded_model = joblib.load('online_choice_food.sav')
-df_per['pro_online_choice_food']=loaded_model.predict(df_per)
-df_per['online_choice_food']=df_per['pro_online_choice_food'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
-
-loaded_model = joblib.load('online_choice_grc.sav')
-df_per['pro_online_choice_grc']=loaded_model.predict(df_per)
-df_per['online_choice_grc']=df_per['pro_online_choice_grc'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
-
-sel_df_per= df_per[df_per['online_choice_good']==1].reset_index()
-selected_x_var_per= ['R_AGE','HHSIZE', 'WORKER',
-                    "EDUC_1",'EDUC_2',
-                    'income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5',"URBRUR",
-                    ]
-sel_df_per_temp=sel_df_per[selected_x_var_per]
-
-loaded_model = joblib.load('freq_good.sav')
-sel_df_per['DELIV_GOOD']=loaded_model.predict(sel_df_per_temp)
-sel_df_per['DELIV_GOOD']=sel_df_per['DELIV_GOOD'].apply(lambda x: round(x))
-df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_GOOD']], on=['household_id','member_id'], how='left')
-df_per["DELIV_GOOD"].fillna(0, inplace=True)
-#df_per["DELIV_GROC"]=df_per["DELIV_GROC"].apply(lambda x: random.randrange(40,70) if x>=40 else x)
-#plt.hist(df_per["DELIV_GOOD"], color ="blue", bins = int(df_per["DELIV_GOOD"].max()))
-# adding update the adjustment of frequency 
-######
-# %%
-sel_df_per= df_per[df_per['online_choice_grc']==1].reset_index()
-selected_x_var_per= ['R_AGE','HHSIZE','WORKER',
-                    'DELIV_GOOD',"URBRUR",
-                    'income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5']
-sel_df_per_temp=sel_df_per[selected_x_var_per]
-
-loaded_model = joblib.load('freq_grc.sav')
-sel_df_per['DELIV_GROC']=loaded_model.predict(sel_df_per_temp)
-sel_df_per['DELIV_GROC']=sel_df_per['DELIV_GROC'].apply(lambda x: round(x))
-df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_GROC']], on=['household_id','member_id'], how='left')
-df_per["DELIV_GROC"].fillna(0, inplace=True)
-df_per["DELIV_GROC"]=df_per["DELIV_GROC"].apply(lambda x: random.randrange(20,40) if x>=20 else x)
-#plt.hist(df_per["DELIV_GROC"], color ="blue", bins = int(df_per["DELIV_GROC"].max()))
-
-# adding update the adjustment of frequency 
-# %%
-sel_df_per= df_per[df_per['online_choice_food']==1].reset_index()
-selected_x_var_per= ['R_AGE','HHSIZE','WORKER','R_SEX_IMP',
-                    'DELIV_GROC','URBRUR','income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5',
-                    "URBRUR"]
-sel_df_per_temp=sel_df_per[selected_x_var_per]
-loaded_model = joblib.load('freq_food.sav')
-sel_df_per['DELIV_FOOD']=loaded_model.predict(sel_df_per_temp)
-sel_df_per['DELIV_FOOD']=sel_df_per['DELIV_FOOD'].apply(lambda x: round(x))
-df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_FOOD']], on=['household_id','member_id'], how='left')
-df_per["DELIV_FOOD"].fillna(0, inplace=True)
-df_per["DELIV_FOOD"]=df_per["DELIV_FOOD"].apply(lambda x: random.randrange(20,40) if x>=20 else x)
-#plt.hist(df_per["DELIV_FOOD"], color ="blue", bins = int(df_per["DELIV_FOOD"].max()))
-
-df_per_final=df_per[["household_id","member_id",'block_id','GEOID',"County", "DELIV_GOOD","DELIV_GROC","DELIV_FOOD"]]
-df_per_final.to_csv(config.out_file_dir+"per_del_2018.csv")
-#####
-# %%
-def b2c_good_select(delivery_f,fq_factor,growth_factor,commodity_type):
-    growth_factor=growth_factor+(growth_factor/100)**6
-    if commodity_type == "goods":   
-        day_factor = random.randrange(fq_factor,31)
-    else: day_factor =50      
-    pro=delivery_f/day_factor
-    r= random.uniform(0,1)*(100/growth_factor)
-    if r <= pro:
-        select =1
-        num_package=max(1,round(pro))
-    else:
-        select =0
-        num_package=0
-    return num_package
-
-
-def package_aggregation(num, commodity_type):
-    if commodity_type == "goods":
-        if num >4:  
-            agg_package = random.randrange(3,5)
-            if num >= agg_package:
-                return agg_package
-            else: return num
-        else:
-            agg_package = random.randrange(1,5)
-            if num >= agg_package:
-                return agg_package
-            else: return num
-    else:            
-        agg_package = random.randrange(1,4)
-        if num >= agg_package:
-            return agg_package
-        else: return num
-
-df_per["online_goods_act"]= df_per["DELIV_GOOD"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency, 100,"goods"))
-df_per["online_grocery_act"]= df_per["DELIV_GROC"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency,100,"other"))
-df_per["online_food_act"]= df_per["DELIV_FOOD"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency,100,"other"))
+list_income=[0,1,2,3,4,5]
+dic_income={0: "income <$25k",
+            1: "income $25k-$50k",
+            2: "income $50k-75k",
+            3: "income $75k-100k",
+            4: "income $100k-150k",
+            5: "income >$150k"}
     
-# Need to process df_per
-# ## additing the code
-#
-# %%  
-loaded_model = joblib.load('instore_choice_goods.sav')
-df_per['pro_instore_choice_good']=loaded_model.predict(df_per)
-df_per['instore_choice_good']=df_per['pro_instore_choice_good'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0) 
-
-loaded_model = joblib.load('instore_choice_food.sav')
-df_per['pro_instore_choice_food']=loaded_model.predict(df_per)
-df_per['instore_choice_food']=df_per['pro_instore_choice_food'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
-
-loaded_model = joblib.load('instore_choice_grc.sav')
-df_per['pro_instore_choice_grc']=loaded_model.predict(df_per)
-df_per['instore_choice_grc']=df_per['pro_instore_choice_grc'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)  
-
-
-df_per=df_per.rename({'DELIV_GOOD':'daily_delivery_frequency_goods',
-                      'DELIV_GROC':'daily_delivery_frequency_grocery',
-                      'DELIV_FOOD':'daily_delivery_frequency_food',
-                      'pro_instore_choice_good':'probability_instore_choice_goods',
-                      'pro_instore_choice_grc':'probability_instore_choice_grocery',
-                      'pro_instore_choice_food':'probability_instore_choice_food'}, axis='columns')
-# %%
-df_per_for_merge= df_per[["household_id","member_id",'daily_delivery_frequency_goods','daily_delivery_frequency_grocery','daily_delivery_frequency_food',
-                          "probability_instore_choice_goods","probability_instore_choice_grocery","probability_instore_choice_food"]]
-
-
-synth_per=synth_per.merge(df_per_for_merge, on=["household_id","member_id"], how='left')
-syth_per=synth_per["daily_delivery_frequency_goods"].fillna(0, inplace=True)
-syth_per=synth_per["daily_delivery_frequency_grocery"].fillna(0, inplace=True)
-syth_per=synth_per["daily_delivery_frequency_food"].fillna(0, inplace=True)
-syth_per=synth_per["probability_instore_choice_goods"].fillna(0, inplace=True)
-syth_per=synth_per["probability_instore_choice_grocery"].fillna(0, inplace=True)
-syth_per=synth_per["probability_instore_choice_food"].fillna(0, inplace=True)
-
-synth_per[(synth_per["household_id"]==472)&(synth_per["member_id"]==10)][["probability_instore_choice_goods"]]
+for ic_nm in list_income:
+    plt.figure(figsize = (8,6))
+    #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+    plt.hist(df_per_obs[(df_per_obs["income_cls"]==ic_nm) & (df_per_obs['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="blue", density=True, bins=60, alpha = 0.3, label="observed", weights=df_per_obs["WTPERFIN"])
+    plt.hist(df_per_final[(df_per_final["income_cls"]==ic_nm)& (df_per_final['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="red", density=True, bins=60, alpha = 0.3, label="modeled")
+    plt.title("Density of Delivery Frequency in {0}".format(dic_income[ic_nm]))
+    plt.legend(loc="upper right")
+    plt.savefig('../../../FRISM_input_output_ST/Sim_outputs/Generation/B2C_delivery_val_{0}.png'.format(ic_nm))
 
 # %%
-synth_per.to_csv(config.out_file_dir+"persons_w_instore_prob.csv.gz", compression="gzip", index=False)
+
+list_income=[0,1,2,3,4,5]
+dic_income={0: "income <$25k",
+            1: "income $25k-$50k",
+            2: "income $50k-75k",
+            3: "income $75k-100k",
+            4: "income $100k-150k",
+            5: "income >$150k"}
+    
+for ic_nm in list_income:
+    plt.figure(figsize = (8,6))
+    #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+    #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+    plt.hist(df_per_obs[(df_per_obs["income_cls"]==ic_nm) & (df_per_obs['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="blue", density=True, bins=60, alpha = 0.3, label="observed", weights=df_per_obs[(df_per_obs["income_cls"]==ic_nm) & (df_per_obs['DELIV_GOOD']<=60)]['WTPERFIN'])
+    plt.hist(df_per_final[(df_per_final["income_cls"]==ic_nm)& (df_per_final['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="red", density=True, bins=60, alpha = 0.3, label="modeled")
+    plt.title("Density of Delivery Frequency in {0}".format(dic_income[ic_nm]))
+    plt.legend(loc="upper right")
+    plt.savefig('../../../FRISM_input_output_ST/Sim_outputs/Generation/B2C_delivery_val_{0}.png'.format(ic_nm))
+
+
+# %%
+plt.figure(figsize = (8,6))
+#plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+plt.hist(df_per_obs[(df_per_obs['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="blue", density=True, bins=df_per_obs[(df_per_obs['DELIV_GOOD']<=60)]['DELIV_GOOD'].max(), alpha = 0.3, label="observed", weights=df_per_obs[(df_per_obs['DELIV_GOOD']<=60)]['WTPERFIN'])
+plt.hist(df_per_final[(df_per_final['DELIV_GOOD']<=60)]['DELIV_GOOD'], color ="red", density=True, bins=df_per_final[(df_per_final['DELIV_GOOD']<=60)]['DELIV_GOOD'].max(), alpha = 0.3, label="modeled")
+plt.title("Density of Delivery Frequency")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_ST/Sim_outputs/Generation/B2C_delivery_val_all.png')
+
+# %%
+plt.figure(figsize = (8,6))
+#plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+plt.hist(df_per_obs[(df_per_obs['DELIV_FOOD']<=60)]['DELIV_FOOD'], color ="blue", density=True, bins=df_per_obs[(df_per_obs['DELIV_FOOD']<=60)]['DELIV_FOOD'].max(), alpha = 0.3, label="observed", weights=df_per_obs[(df_per_obs['DELIV_FOOD']<=60)]['WTPERFIN'])
+plt.hist(df_per_final[(df_per_final['DELIV_FOOD']<=60)]['DELIV_FOOD'], color ="red", density=True, bins=df_per_final[(df_per_final['DELIV_FOOD']<=60)]['DELIV_FOOD'].max(), alpha = 0.3, label="modeled")
+plt.title("Density of Delivery Frequency")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_ST/Sim_outputs/Generation/B2C_food_val_all.png')
+# %%
+plt.figure(figsize = (8,6))
+#plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
+#plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
+plt.hist(df_per_obs[(df_per_obs['DELIV_GROC']<=60)]['DELIV_GROC'], color ="blue", density=True, bins=df_per_obs[(df_per_obs['DELIV_GROC']<=60)]['DELIV_GROC'].max(), alpha = 0.3, label="observed", weights=df_per_obs[(df_per_obs['DELIV_GROC']<=60)]['WTPERFIN'])
+plt.hist(df_per_final[(df_per_final['DELIV_GROC']<=60)]['DELIV_GROC'], color ="red", density=True, bins=df_per_final[(df_per_final['DELIV_GROC']<=60)]['DELIV_GROC'].max(), alpha = 0.3, label="modeled")
+plt.title("Density of Delivery Frequency")
+plt.legend(loc="upper right")
+plt.savefig('../../../FRISM_input_output_ST/Sim_outputs/Generation/B2C_grovery_val_all.png')
+
+

@@ -1,12 +1,11 @@
 # %%
-from tkinter import X
 import pandas as pd
 import numpy as np
 import joblib
 from argparse import ArgumentParser
-import config_SF as config
+import config 
 import random
-
+import geopandas as gpd
 import statsmodels.api as sm
 from sklearn.linear_model import LogisticRegression
 import seaborn as sns
@@ -36,14 +35,15 @@ def input_files_processing_hh(household_file):
                         "cars":'HHVEHCNT',                  
                         "race_of_head": 'HH_RACE',       
                         "workers": 'WRKCOUNT',
-                        "tenure": 'HOMEOWN'}  , axis='columns')
+                        "tenure": 'HOMEOWN',
+                        "hh_children": "CHILD"}  , axis='columns')
 
     # Process variables using function         
     synth_hh['income_est']= synth_hh['income']/100000
     synth_hh['income_cls']= synth_hh['income'].apply(income_num2group)
     synth_hh['HH_RACE']=synth_hh['HH_RACE'].apply(race_class_synth)
     synth_hh['HOMEOWN']=synth_hh['HOMEOWN'].apply(home_class)
-
+    synth_hh['CHILD']=synth_hh['CHILD'].apply(child_class)
     # list of variables that have class
     ## Need to update!!, if functions change used in "Process variables using function"  
     Class_vars= ['HH_RACE','HOMEOWN','income_cls'] 
@@ -87,7 +87,7 @@ def input_files_processing_per(df_hh, person_file):
     # Covert variable names to ones used in the model
     # Those are only variables that we can get from Synth pop (need to check any update?)
     ## Thus, for the simulation, we need to use the following variable for model estimation, which is a limitation.   
-    synth_per = synth_per.rename({"age": 'R_AGE_IMP',       
+    synth_per = synth_per.rename({"age": 'R_AGE',       
                         "edu":'EDUC',         
                         "race_id": 'R_RACE',         
                         "sex": 'R_SEX_IMP',       
@@ -99,17 +99,17 @@ def input_files_processing_per(df_hh, person_file):
     # Add household info      
     synth_per = synth_per.merge(synth_hh, on='household_id', how='inner')
     # Select records with age>16 with assumption that person>16 years old can do online shopping
-    synth_per = synth_per[synth_per['R_AGE_IMP']>=16]           
+    synth_per = synth_per[synth_per['R_AGE']>=16]           
 
     # Process variables using function         
     synth_per['EDUC']=synth_per['EDUC'].apply(edu_class_synth)
-    synth_per['R_AGE_IMP']=synth_per['R_AGE_IMP'].apply(age_est)
+    synth_per['R_AGE_C']=synth_per['R_AGE'].apply(age_est)
     synth_per['R_RACE']=synth_per['R_RACE'].apply(race_class_synth)
     synth_per['R_SEX_IMP']=synth_per['R_SEX_IMP'].apply(sex_class)     
 
     # list of variables that have class
     ## Need to update!!, if functions change used in "Process variables using function"  
-    Class_vars= ['EDUC','SCHTYP','WRK_HOME', 'WORKER','R_AGE_IMP','R_RACE', 'R_SEX_IMP', 'WEBUSE17'] 
+    Class_vars= ['EDUC','SCHTYP','WRK_HOME', 'WORKER','R_AGE_C','R_RACE', 'R_SEX_IMP'] 
 
     # Create class variables that has more than two classes
     cat_vars=[]
@@ -120,105 +120,22 @@ def input_files_processing_per(df_hh, person_file):
         cat_list='var'+'_'+var
         cat_list = pd.get_dummies(synth_per[var], prefix=var)
         synth_per=synth_per.join(cat_list)
-    data_vars=synth_per.columns.values.tolist()
-    #to_keep=[i for i in data_vars if i not in cat_vars]
-    #synth_per=synth_per[to_keep]
     return synth_per
 
-
-# Covert income group to estimated value: Synth household/population have values not group
-## NHTS code:
-### 01=Less than $10,000
-### 02=$10,000 to $14,999
-### 03=$15,000 to $24,999
-### 04=$25,000 to $34,999
-### 05=$35,000 to $49,999
-### 06=$50,000 to $74,999
-### 07=$75,000 to $99,999
-### 08=$100,000 to $124,999
-### 09=$125,000 to $149,999
-### 10=$150,000 to $199,999
-### 11=$200,000 or more
-def income_est(HHFAMINC):
-    if HHFAMINC == 1:
-        est_income= np.random.randint(0,10000)
-    elif HHFAMINC == 2:
-        est_income= np.random.randint(10000,14999)
-    elif HHFAMINC == 3:
-        est_income= np.random.randint(15000,24999)
-    elif HHFAMINC == 4:
-        est_income= np.random.randint(25000,34999)
-    elif HHFAMINC == 5:
-        est_income= np.random.randint(35000,49999)
-    elif HHFAMINC == 6:
-        est_income= np.random.randint(50000,74999)
-    elif HHFAMINC == 7:
-        est_income= np.random.randint(75000,99999)
-    elif HHFAMINC == 8:
-        est_income= np.random.randint(100000,124999)
-    elif HHFAMINC == 9:
-        est_income= np.random.randint(125000,149999)
-    elif HHFAMINC == 10:
-        est_income= np.random.randint(150000,199999)
-    elif HHFAMINC == 11:
-        est_income= np.random.randint(200000,500000)
-    return est_income/100000
-# Aggregate income gorup
-def income_group(HHFAMINC):
-    if HHFAMINC in [1,2,3,4]: # 35000
-        return 0
-    elif HHFAMINC in [4,5,6]: # 35000~75000
-        return 1
-    elif HHFAMINC in [7,8]: # 75000~125000
-        return 2
-    elif HHFAMINC in [9,10,11]: # 125000~
-        return 3    
 # Aggregate income gorup from the number for synthfirm
 def income_num2group(HHFAMINC):
-    if HHFAMINC < 35000:
-        return 0
-    elif HHFAMINC >= 35000 and HHFAMINC <75000:
-        return 1
-    elif HHFAMINC >=75000 and HHFAMINC <125000:
-        return 2
-    elif HHFAMINC >=125000:
-        return 3         
-
-# Convert web use class to three classes
-## NHTS code:
-### 01=Daily
-### 02=A few times a week
-### 03=A few times a month
-### 04=A few times a year
-### 05=Never
-## Model Variable: 0:never use, 1: frequent use, 2: often use 
-def web_class(WEBUSE17):
-    if WEBUSE17 in [1]: 
-        return 1 # frequenct use (more than a few time a week)
-    elif WEBUSE17 in [2,3,4]:
-        return 2 # often use (more than a few times a year)
-    else:
-        return 0 # (never)
-
-# Convert race class to four classes
-## NHTS code:
-### 01=White
-### 02=Black or African American
-### 03=Asian
-### 04=American Indian or Alaska Native
-### 05=Native Hawaiian or other Pacific Islander
-### 06=Multiple responses selected
-### 97=Some other race
-## Model Variable: 1:white, 2:black, 3: asian; 0:others
-def race_class(HH_RACE):
-    if HH_RACE == 1: 
-        return 1 # white
-    elif HH_RACE == 2:
-        return 2 # black
-    elif HH_RACE == 3:
-        return 3 # Asian
-    else:
-        return 0 # others
+    if HHFAMINC < 25000: # 25k
+        return int(0)
+    elif HHFAMINC >= 25000 and HHFAMINC < 50000: # 25~50k
+        return int (1)
+    elif HHFAMINC >= 50000 and HHFAMINC < 75000: # 50~75k 
+        return int(2)
+    elif HHFAMINC >= 75000 and HHFAMINC < 100000: # 75~100k  
+        return int(3)
+    elif HHFAMINC >= 100000 and HHFAMINC < 150000: # 100~150k  
+        return int(4) 
+    elif HHFAMINC >= 150000: # 150~k 
+        return int(5)         
 
 def race_class_synth(HH_RACE):
     if HH_RACE == 1: 
@@ -229,31 +146,12 @@ def race_class_synth(HH_RACE):
         return 3 # Asian
     else:
         return 0 # others
-
-
-# Convert house ownership type to two classes
-## NHTS code:
-### 01=Own
-### 02=Rent
-### 97=Some other arrangement
-## Model Variable: 0: others, 1: own
+    
 def home_class(HOMEOWN):
     if HOMEOWN == 1: 
         return 1
     else:
         return 0
-
-
-# Convert "Hispanic status of household respondent" to two classes
-## NHTS code:
-### 01=Yes
-### 02=No
-## Model Variable: 0: non_his, 1: hispenic
-def hisp_class(HH_HISP):
-    if HH_HISP == 1: 
-        return 1
-    else:
-        return 0 
 
 # Convert "Life Cycle classification" to two classes 
 ## NHTS code:
@@ -268,15 +166,13 @@ def hisp_class(HH_HISP):
 ### 09=one adult, retired, no children
 ### 10=2+ adults, retired, no children
 ## Model Variable: 0: adult only, 1: retired without kids, 2:single parent with kid, 3: parent with kid 
-def child_class(LIF_CYC):
-    if LIF_CYC in [1,2]: 
-        return 0 # adult only
-    elif LIF_CYC in [9,10]:
-        return 1 # retired 
-    elif LIF_CYC in [3,5,7]:
-        return 2 # single parent
-    elif LIF_CYC in [4,6,8]:
-        return 3 # two parent
+
+    
+def child_class(child):
+    if child=="yes": 
+        return 1 # adult only
+    elif child=="no":
+        return 0  
 
 # Convert education to four classes (person)
 ## NHTS code:
@@ -292,10 +188,9 @@ def edu_class(EDUC):
         return 0
     elif EDUC in [2]:
         return 1
-    elif EDUC in [3,4]:
+    elif EDUC in [3,4,5]:
         return 2    
-    elif EDUC in [5]:
-        return 3   
+
 
 # Convert student status to two classes (person)
 ## NHTS code
@@ -335,14 +230,16 @@ def work_class(WORKER):
 ## NHTS code
 ## Model Variable
 def age_est(R_AGE_IMP):
-    if R_AGE_IMP  <20 :
+    if R_AGE_IMP  <18 :
         return 0
-    elif R_AGE_IMP  >=20 and R_AGE_IMP  <40:
+    elif R_AGE_IMP  >=18 and R_AGE_IMP  <25:
         return 1
-    elif R_AGE_IMP  >=40 and R_AGE_IMP  <60:
+    elif R_AGE_IMP  >=25 and R_AGE_IMP  <50:
         return 2
-    elif R_AGE_IMP  >=60:
+    elif R_AGE_IMP  >=50 and R_AGE_IMP  <65:
         return 3
+    elif R_AGE_IMP  >=65:
+        return 4 
 # Convert sex to two classes (person)
 ## NHTS code
 ### 01=Male
@@ -432,97 +329,183 @@ def onlineshop_calibration(income_cl, online_choice):
                 return 0
         else:
             return online_choice                   
-
-def main(args=None):
-    # read input files
-    parser = ArgumentParser()
-    parser.add_argument("-hf", "--household_file", dest="hh_file",
-                        help="household file in csv format", required=True, type=str)
-    parser.add_argument("-pf", "--person_file", dest="per_file",
-                        help="person file in csv format", required=True, type=str)  
-    parser.add_argument("-yr", "--year", dest="yr",
-                        help="four digit year YYYY", required=True, type=str)                                           
-    args = parser.parse_args()
+# %%
 
     # Read and process synth household
-    df_hh = input_files_processing_hh(args.hh_file)
+hh_file= config.hh_file
+per_file= config.per_file
 
-    # Run webuse_model 
-    ## Define x variables which come from config.py  
-    sim_X = df_hh[config.selected_x_var_web]
-    loaded_model = joblib.load('webuse_model.sav')
-    df_hh['WEBUSE17']=loaded_model.predict(sim_X)
-    ## Process for validation and save it
-    val_hh=df_hh.groupby(['income_cls','WEBUSE17'])['income_cls'].agg(num_hh='count').reset_index()
-    val_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_webuse_by_income_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
-    ## Save df_hh for further validation
-    df_hh.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_hh_synth_{}.csv'.format(config.study_region,config.study_region,args.yr), index = False, header=True)
-    print ("** Completed simulated webuse on household **")
+synth_hh = pd.read_csv(hh_file, header=0, sep=',')
+synth_per = pd.read_csv(per_file, header=0, sep=',')
+
+df_hh = input_files_processing_hh(hh_file)
+df_per= input_files_processing_per(df_hh, per_file)
+
+
+fdir_geo = config.fdir_geo 
+CBG_file = config.CBG_file
+state_id=config.state_id
+CBGzone_df = gpd.read_file(fdir_geo+CBG_file) # file include, GEOID(12digit), MESOZONE, area
+CBGzone_df= CBGzone_df.to_crs({'proj': 'cea'})
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str)
+## Add county id from GEOID
+CBGzone_df["County"]=CBGzone_df["GEOID"].apply(lambda x: x[2:5] if (len(x)>=12 and x[0:2]==str(state_id))  else 0)
+CBGzone_df["County"]=CBGzone_df["County"].astype(str).astype(int)
+CBGzone_df["GEOID"]=CBGzone_df["GEOID"].astype(str).astype(int)
+CBGzone_df=CBGzone_df[CBGzone_df["County"]!=0]
+CBGzone_df= CBGzone_df.to_crs('EPSG:4269')
+
+# %%
+CBGzone_df=CBGzone_df[CBGzone_df["County"].isin(config.county_list)]
+CBGzone_df.head()
+df_per['GEOID'] =df_per['block_id'].apply(lambda x: np.floor(x/1000))
+df_per= df_per.merge(CBGzone_df[["GEOID", "County"]], on='GEOID', how='left')
+def urban(county, urban_counties):
+    if county in urban_counties:
+        return 1
+    else: return 0    
+
+df_per['URBRUR']=df_per["County"].apply(lambda x: urban(x,config.urban_county_list))
+# df_hh = input_files_processing_hh(args.hh_file)
+# df_per= input_files_processing_per(df_hh, args.per_file)
+# %%
+loaded_model = joblib.load('online_choice_good.sav')
+df_per['pro_online_choice_good']=loaded_model.predict(df_per)
+df_per['online_choice_good']=df_per['pro_online_choice_good'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0) 
+
+loaded_model = joblib.load('online_choice_food.sav')
+df_per['pro_online_choice_food']=loaded_model.predict(df_per)
+df_per['online_choice_food']=df_per['pro_online_choice_food'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
+
+loaded_model = joblib.load('online_choice_grc.sav')
+df_per['pro_online_choice_grc']=loaded_model.predict(df_per)
+df_per['online_choice_grc']=df_per['pro_online_choice_grc'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
+
+sel_df_per= df_per[df_per['online_choice_good']==1].reset_index()
+selected_x_var_per= ['R_AGE','HHSIZE', 'WORKER',
+                    "EDUC_1",'EDUC_2',
+                    'income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5',"URBRUR",
+                    ]
+sel_df_per_temp=sel_df_per[selected_x_var_per]
+
+loaded_model = joblib.load('freq_good.sav')
+sel_df_per['DELIV_GOOD']=loaded_model.predict(sel_df_per_temp)
+sel_df_per['DELIV_GOOD']=sel_df_per['DELIV_GOOD'].apply(lambda x: round(x))
+df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_GOOD']], on=['household_id','member_id'], how='left')
+df_per["DELIV_GOOD"].fillna(0, inplace=True)
+#df_per["DELIV_GROC"]=df_per["DELIV_GROC"].apply(lambda x: random.randrange(40,70) if x>=40 else x)
+#plt.hist(df_per["DELIV_GOOD"], color ="blue", bins = int(df_per["DELIV_GOOD"].max()))
+# adding update the adjustment of frequency 
+######
+# %%
+sel_df_per= df_per[df_per['online_choice_grc']==1].reset_index()
+selected_x_var_per= ['R_AGE','HHSIZE','WORKER',
+                    'DELIV_GOOD',"URBRUR",
+                    'income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5']
+sel_df_per_temp=sel_df_per[selected_x_var_per]
+
+loaded_model = joblib.load('freq_grc.sav')
+sel_df_per['DELIV_GROC']=loaded_model.predict(sel_df_per_temp)
+sel_df_per['DELIV_GROC']=sel_df_per['DELIV_GROC'].apply(lambda x: round(x))
+df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_GROC']], on=['household_id','member_id'], how='left')
+df_per["DELIV_GROC"].fillna(0, inplace=True)
+df_per["DELIV_GROC"]=df_per["DELIV_GROC"].apply(lambda x: random.randrange(20,40) if x>=20 else x)
+#plt.hist(df_per["DELIV_GROC"], color ="blue", bins = int(df_per["DELIV_GROC"].max()))
+
+# adding update the adjustment of frequency 
+# %%
+sel_df_per= df_per[df_per['online_choice_food']==1].reset_index()
+selected_x_var_per= ['R_AGE','HHSIZE','WORKER','R_SEX_IMP',
+                    'DELIV_GROC','URBRUR','income_cls_1', 'income_cls_2', 'income_cls_3', 'income_cls_4','income_cls_5',
+                    "URBRUR"]
+sel_df_per_temp=sel_df_per[selected_x_var_per]
+loaded_model = joblib.load('freq_food.sav')
+sel_df_per['DELIV_FOOD']=loaded_model.predict(sel_df_per_temp)
+sel_df_per['DELIV_FOOD']=sel_df_per['DELIV_FOOD'].apply(lambda x: round(x))
+df_per=df_per.merge(sel_df_per[['household_id','member_id', 'DELIV_FOOD']], on=['household_id','member_id'], how='left')
+df_per["DELIV_FOOD"].fillna(0, inplace=True)
+df_per["DELIV_FOOD"]=df_per["DELIV_FOOD"].apply(lambda x: random.randrange(20,40) if x>=20 else x)
+#plt.hist(df_per["DELIV_FOOD"], color ="blue", bins = int(df_per["DELIV_FOOD"].max()))
+
+df_per_final=df_per[["household_id","member_id",'block_id','GEOID',"County", "DELIV_GOOD","DELIV_GROC","DELIV_FOOD"]]
+df_per_final.to_csv(config.out_file_dir+"per_del_2018.csv")
+#####
+# %%
+def b2c_good_select(delivery_f,fq_factor,growth_factor,commodity_type):
+    growth_factor=growth_factor+(growth_factor/100)**6
+    if commodity_type == "goods":   
+        day_factor = random.randrange(fq_factor,31)
+    else: day_factor =50      
+    pro=delivery_f/day_factor
+    r= random.uniform(0,1)*(100/growth_factor)
+    if r <= pro:
+        select =1
+        num_package=max(1,round(pro))
+    else:
+        select =0
+        num_package=0
+    return num_package
+
+
+def package_aggregation(num, commodity_type):
+    if commodity_type == "goods":
+        if num >4:  
+            agg_package = random.randrange(3,5)
+            if num >= agg_package:
+                return agg_package
+            else: return num
+        else:
+            agg_package = random.randrange(1,5)
+            if num >= agg_package:
+                return agg_package
+            else: return num
+    else:            
+        agg_package = random.randrange(1,4)
+        if num >= agg_package:
+            return agg_package
+        else: return num
+
+df_per["online_goods_act"]= df_per["DELIV_GOOD"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency, 100,"goods"))
+df_per["online_grocery_act"]= df_per["DELIV_GROC"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency,100,"other"))
+df_per["online_food_act"]= df_per["DELIV_FOOD"].apply(lambda x: b2c_good_select(x,config.b2c_delivery_frequency,100,"other"))
     
-    # Read and process synth household
-    df_per= input_files_processing_per(df_hh, args.per_file)
-    
-    # Run online_shop_model 
-    ## Define x variables which come from config.py  
-    sim_X = df_per[config.selected_x_var_online]
-    loaded_model = joblib.load('online_shop_model.sav')
-    df_per['onlineshop']=loaded_model.predict(sim_X)
-    df_per['onlineshop']=df_per.apply(lambda x: onlineshop_calibration(x['income_cls'], x['onlineshop']), axis=1) #*******************
-    ## Process for validation and save it
-    val_per=df_per.groupby(['income_cls','onlineshop'])['income_cls'].agg(num_hh='count').reset_index()
-    val_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_online_by_income_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
-    print ("** Completed simulated online on individual **")
+# Need to process df_per
+# ## additing the code
+#
+# %%  
+loaded_model = joblib.load('instore_choice_goods.sav')
+df_per['pro_instore_choice_good']=loaded_model.predict(df_per)
+df_per['instore_choice_good']=df_per['pro_instore_choice_good'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0) 
 
-    #Run delivery frequency model
-    ## Define x variables which come from config.py
-    sim_X = df_per[config.selected_x_var_delivery]
-    loaded_model = joblib.load('delivery_freq_model.sav')
-    df_per['delivery_f']=loaded_model.predict(sim_X)
-    ## post proseesing in delivery frequency
-    df_per['delivery_f'] = df_per.apply(lambda x: delivery_process(x['onlineshop'], x['delivery_f'], x['income_cls']), axis=1) #**********************
-    ## Process for validation and save it
-    sns.displot(df_per['delivery_f'])
-    plt.savefig('../../../FRISM_input_output_{}/Sim_outputs/Generation/Delivery plot_simulated_{}.png'.format(config.study_region, args.yr))
-    ## Save df_per for further validation
-    df_per.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/{}_per_synth_{}.csv'.format(config.study_region,config.study_region, args.yr), index = False, header=True)
+loaded_model = joblib.load('instore_choice_food.sav')
+df_per['pro_instore_choice_food']=loaded_model.predict(df_per)
+df_per['instore_choice_food']=df_per['pro_instore_choice_food'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)     
 
-    # Aggregate delivery at household level
-    df_per_hh=df_per.groupby(['household_id'])['delivery_f'].agg(delivery_f='sum').reset_index()
-    df_hh_model=df_hh.merge(df_per_hh, on='household_id', how='left')
-    df_hh_model.to_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del_{}.csv'.format(config.study_region, args.yr), index = False, header=True)
-    print ("** Completed simulated monthly delivery frequency on hosehold **")
-    
-    ############################# Only for base year ###### 
-    if int(args.yr) < 2020: 
-        print ("** Plot observed and simulatated by income group")
-        df_hh_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_hh.csv'.format(config.study_region,config.study_region))
-        df_per_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_per.csv'.format(config.study_region,config.study_region))
-        df_per_obs_hh=df_per_obs.groupby(['HOUSEID'])['DELIVER'].agg(delivery_f='sum').reset_index()
-        df_hh_obs=df_hh_obs.merge(df_per_obs_hh, on='HOUSEID', how='left')
-
-        #df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(config.study_region))
+loaded_model = joblib.load('instore_choice_grc.sav')
+df_per['pro_instore_choice_grc']=loaded_model.predict(df_per)
+df_per['instore_choice_grc']=df_per['pro_instore_choice_grc'].apply(lambda x: 1 if random.uniform(0, 1) < x else 0)  
 
 
-        df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
-        df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
+df_per=df_per.rename({'DELIV_GOOD':'daily_delivery_frequency_goods',
+                      'DELIV_GROC':'daily_delivery_frequency_grocery',
+                      'DELIV_FOOD':'daily_delivery_frequency_food',
+                      'pro_instore_choice_good':'probability_instore_choice_goods',
+                      'pro_instore_choice_grc':'probability_instore_choice_grocery',
+                      'pro_instore_choice_food':'probability_instore_choice_food'}, axis='columns')
+# %%
+df_per_for_merge= df_per[["household_id","member_id",'daily_delivery_frequency_goods','daily_delivery_frequency_grocery','daily_delivery_frequency_food',
+                          "probability_instore_choice_goods","probability_instore_choice_grocery","probability_instore_choice_food"]]
 
 
-        list_income=["income_cls_0","income_cls_1","income_cls_2","income_cls_3"]
-        dic_income={"income_cls_0": "income <$35k",
-                    "income_cls_1": "income $35k-$75k",
-                    "income_cls_2": "income $75k-125k",
-                    "income_cls_3": "income >$125k"}
-            
-        for ic_nm in list_income:
-            plt.figure(figsize = (8,6))
-            #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
-            #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
-            #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
-            plt.hist(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="observed")
-            plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="modeled")
-            plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], config.study_region))
-            plt.legend(loc="upper right")
-            plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(config.study_region, ic_nm))
+synth_per=synth_per.merge(df_per_for_merge, on=["household_id","member_id"], how='left')
+syth_per=synth_per["daily_delivery_frequency_goods"].fillna(0, inplace=True)
+syth_per=synth_per["daily_delivery_frequency_grocery"].fillna(0, inplace=True)
+syth_per=synth_per["daily_delivery_frequency_food"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_goods"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_grocery"].fillna(0, inplace=True)
+syth_per=synth_per["probability_instore_choice_food"].fillna(0, inplace=True)
 
-if __name__ == "__main__":
-    main()
+synth_per[(synth_per["household_id"]==472)&(synth_per["member_id"]==10)][["probability_instore_choice_goods"]]
+
+# %%
+synth_per.to_csv(config.out_file_dir+"persons_w_instore_prob.csv.gz", compression="gzip", index=False)

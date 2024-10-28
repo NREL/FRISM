@@ -4,13 +4,19 @@ study_region ="ST"
 state_id =53
 msacat=1
 census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
+year=2018
+hh_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/households.csv".format(study_region,year)
+per_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/persons.csv".format(study_region,year)
+fdir_geo = "../../../FRISM_input_output_{}/Sim_inputs/Geo_data/".format(study_region)
+out_file_dir= "../../../FRISM_input_output_{}/Sim_outputs/Generation/".format(study_region)
+urban_county_list=[61,33,53,35]
 
 # Need to updated for SF 
 county_list=[61,33,53,35]
 dist_file= 'Seattle_od_dist.csv'
 CBG_file= 'Seattle_freight.geojson'
 
-property_file = 'Property Type in SF Bay Area.geojson'
+property_file = 'Property Type in Seattle.geojson'
 tt_file="tt_df_cbg.csv.gz"
 
 on_demand_possilbe={61: [61,33],
@@ -20,10 +26,10 @@ on_demand_possilbe={61: [61,33],
 
 
 # input for B2C day sim
-b2c_delivery_frequency=18
-hh_aggregation_size=8
+b2c_delivery_frequency=25
+hh_aggregation_size=10
 # input for B2B day sim
-b2b_day_factor =0.17
+b2b_day_factor =0.165
 max_tour_for_b2b = 4
 fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
 # input for B2B/Geo_data
@@ -34,8 +40,8 @@ commodity_list= ["1", "2", "3", "4", "5"]
 ## this should be updated 
 list_error_zone=[] # this should be updated
 weight_theshold=50000
-md_cap=10000*0.8
-hd_cap=45000*0.8
+md_cap=12000#10000*0.8 old version
+hd_cap=50000#45000*0.8 old version
 # https://www.technogroupusa.com/size-and-weight-limit-laws/ 
 
 # output data structure

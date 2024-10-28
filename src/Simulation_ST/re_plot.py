@@ -12,62 +12,12 @@ from sklearn.linear_model import LogisticRegression
 import seaborn as sns
 import matplotlib.pyplot as plt 
 # %%
-study_region="SF"
-
-df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(study_region))
-
-
-df_hh_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_hh.csv'.format(study_region,study_region))
-df_per_obs=pd.read_csv('../../../FRISM_input_output_{}/Model_inputs/NHTS/{}_per.csv'.format(study_region,study_region))
-df_per_obs_hh=df_per_obs.groupby(['HOUSEID'])['DELIVER'].agg(delivery_f='sum').reset_index()
-df_hh_obs=df_hh_obs.merge(df_per_obs_hh, on='HOUSEID', how='left')
-
-#df_hh_model=pd.read_csv('../../../FRISM_input_output_{}/Sim_outputs/Generation/households_del.csv'.format(study_region))
-
-
-df_hh_obs['delivery_f'] =df_hh_obs['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
-df_hh_model['delivery_f'] =df_hh_model['delivery_f'].apply(lambda x: 0 if np.isnan(x) else int(x))
-
-
-list_income=["income_cls_0","Income_cls_1","income_cls_2","income_cls_3"]
-dic_income={"income_cls_0": "INCOME <$35k",
-            "income_cls_1": "INCOME $35k-$75k",
-            "income_cls_2": "INCOME $75k-125k",
-            "income_cls_3": "INCOME >$125k"}
-    
-# for ic_nm in list_income:
-#     plt.figure(figsize = (8,6))
-#     #plt.hist(df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[df_hh_obs[ic_nm]==1]['delivery_f'].max(), alpha = 0.3, label="observed")
-#     #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1) & (df_hh_model['delivery_f']<=30)]['delivery_f'], color ="red", density=True, bins=80, alpha = 0.3, label="modeled")
-#     #plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)]['delivery_f'].max(), alpha = 0.3, label="modeled")
-#     plt.hist(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'], color ="blue", density=True, bins=df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="Observed")
-#     plt.hist(df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'], color ="red", density=True, bins=df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max(), alpha = 0.3, label="Modeled")
-#     plt.title("Density of Delivery Frequency in {0}, {1}".format(dic_income[ic_nm], study_region))
-#     plt.legend(loc="upper right")
-#     plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(study_region, ic_nm))
-
-for ic_nm in list_income:
-    plt.figure(figsize = (8,6))
-        # creating a dictionary
-    font = {'size': 12}
-    
-    # using rc function
-    plt.rc('font', **font)
-    binsize=max(df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].max(), df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].max())
-    x= df_hh_obs[(df_hh_obs[ic_nm]==1) & (df_hh_obs['delivery_f']<=60)]['delivery_f'].to_numpy()
-    y= df_hh_model[(df_hh_model[ic_nm]==1)& (df_hh_model['delivery_f']<=60)]['delivery_f'].to_numpy()
-    plt.hist([x,y], bins=binsize, color=['dodgerblue','darkorange'], label=["OBSERVED", "MODELED"], density=True)     
-    plt.title("DENSITY OF DELIVERY FREQUENCY IN {0}, {1}".format(dic_income[ic_nm], study_region), fontsize=15)
-    plt.legend(loc="upper right")
-    plt.xlabel('NUMBER OF DELIVERY')
-    plt.ylabel('DENSITY')
-    plt.savefig('../../../FRISM_input_output_{0}/Sim_outputs/Generation/B2C_delivery_val_{1}.png'.format(study_region, ic_nm))
 
 # %% 
 
 # %%
 ## Result data
-f_dir="../../../FRISM_input_output_ST/result_0423/Tour_plan/2018_all/"
+f_dir="../../../FRISM_input_output_ST/result_1027/Tour_plan/2018_all/"
 #f_dir="../../../Results_from_HPC_v5/Tour_plan/"
 
 MD_df_b2c=pd.DataFrame()
@@ -228,16 +178,17 @@ tour_length_B2C = MD_df_b2c.groupby(['tourId'])['tourId'].agg(Trip="count").rese
 tour_length_B2B = df_payload.groupby(['tourId'])['tourId'].agg(Trip="count").reset_index()
 tour_length_B2B["tourId"]=tour_length_B2B["tourId"].apply(lambda x: x+1040)
 tour_length_all = pd.concat([tour_length_B2C,tour_length_B2B], ignore_index=True).reset_index(drop=True)
-tour_length_all["Trip"]=tour_length_all["Trip"].apply(lambda x: x-1)
-sim_rate = tour_length_all.groupby(["Trip"])['Trip'].agg(num="count").reset_index()
-sim_rate=sim_rate[sim_rate["Trip"]<=20]
+tour_length_all["Trips"]=tour_length_all["Trip"].apply(lambda x: x-1)
+sim_rate = tour_length_all.groupby(["Trips"])['Trips'].agg(num="count").reset_index()
+sim_rate=sim_rate[sim_rate["Trips"]<=20]
 sim_rate["stop_rate"] = sim_rate['num']/sim_rate['num'].sum()
 
 # %%
 observed= pd.read_csv("/Users/kjeong/KJ_NREL_Work/1_Work/1_2_SMART_2_0/Model_development/FRISM_input_output_SF/Sim_inputs/Tour_constraint/all.csv")
 O=observed['Rate'].to_numpy()
+sim_rate= observed.merge(sim_rate, on="Trips", how="left")
 S=sim_rate["stop_rate"].to_numpy()
-r=sim_rate["Trip"].to_numpy()
+r=observed["Trips"].to_numpy()
 width=0.5
 
 plt.bar (r, O, color= "dodgerblue", width=width, label="OBSERVED")
