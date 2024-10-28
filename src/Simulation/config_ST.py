@@ -1,38 +1,128 @@
 
-state_CBSA = ["12420","19100","26420","41700"]
-study_CBSA= ["12420"] # "41700" =San Antonio-New Braunfels, TX
-study_region ="AT"
-state_id =48
+study_CBSA= ["38900","42660"]
+study_region ="ST"
+state_id =53
 msacat=1
-census_r=3 # 1: northeast, 2: midwest, 3:south, 4:west
+census_r=4 # 1: northeast, 2: midwest, 3:south, 4:west
+year=2018
+hh_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/households.csv".format(study_region,year)
+per_file= "../../../FRISM_input_output_{0}/Sim_inputs/hh_pop/{1}/persons.csv".format(study_region,year)
+fdir_geo = "../../../FRISM_input_output_{}/Sim_inputs/Geo_data/".format(study_region)
+out_file_dir= "../../../FRISM_input_output_{}/Sim_outputs/Generation/".format(study_region)
+urban_county_list=[61,33,53,35]
+
+# Need to updated for SF 
+county_list=[61,33,53,35]
+dist_file= 'Seattle_od_dist.csv'
+CBG_file= 'Seattle_freight.geojson'
+
+property_file = 'Property Type in Seattle.geojson'
+tt_file="tt_df_cbg.csv.gz"
+
+on_demand_possilbe={61: [61,33],
+                    33: [33,61,35],
+                    53: [53,33,35],
+                    35: [35,33,53]}
+
+
+# input for B2C day sim
+b2c_delivery_frequency=25
+hh_aggregation_size=10
+# input for B2B day sim
+b2b_day_factor =0.165
+max_tour_for_b2b = 4
+fdir_in_out= "../../../FRISM_input_output_{}".format(study_region)
+# input for B2B/Geo_data
+
+
+##ship_direction = 'out' # ['out','in', 'all']
+commodity_list= ["1", "2", "3", "4", "5"]
+## this should be updated 
+list_error_zone=[] # this should be updated
+weight_theshold=50000
+md_cap=12000#10000*0.8 old version
+hd_cap=50000#45000*0.8 old version
+# https://www.technogroupusa.com/size-and-weight-limit-laws/ 
+
+# output data structure
+fnm_B2C_payload="B2C_payload"
+fnm_B2C_carrier="B2C_carrier"
+fnm_B2B_payload="B2B_payload"
+fnm_B2B_carrier="B2B_carrier"
+fnm_vtype="vehicle_types"
+fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
+fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(study_region)
+
+#ship_direction = 'out' # ['out','in', 'all']
+
+### fixed variable list for B2C model
+
 x_var_candidate_hh= ['HOUSEID',
                      'HH_HISP', 
                      'HOMEOWN',
-                     'HBPPOPDN',
+                     #'HBPPOPDN',
                      'HHFAMINC',
                      'HHSIZE',
                      'HHVEHCNT',
                      'HH_RACE',
-                     'WEBUSE17',
+                     #'WEBUSE17',
                      'LIF_CYC',
                      'WRKCOUNT',
-                     'HH_CBSA']
+                     #'HH_CBSA',
+                     'CENSUS_D',
+                     'WTHHFIN']
 x_var_candidate_per= ['HOUSEID', 
                     'DELIVER',
+                    "DELIV_FOOD",
+                    "DELIV_GOOD",
+                    "DELIV_GROC",
+                    "DELIV_PERS",
+                    "RIDESHARE22",
+                    "RET_AMZ",
+                    "RET_HOME",
+                    "RET_PUF",
+                    "RET_STORE",
                     'EDUC',
                     'HHFAMINC', 
                     'HHSIZE', 
                     'HHVEHCNT', 
-                    'HBPPOPDN', 
-                    'R_AGE_IMP',  
-                    'R_SEX_IMP', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
                     'R_HISP', 
                     'R_RACE', 
                     'SCHTYP',
                     'WORKER',
                     'WRKTRANS',
-                    'WRK_HOME',
-                    'HH_CBSA']
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+x_var_candidate_per_17= ['HOUSEID', 
+                    'DELIVER',
+                    'EDUC',
+                    'HHFAMINC', 
+                    'HHSIZE', 
+                    'HHVEHCNT', 
+                    #'HBPPOPDN', 
+                    'R_AGE',  
+                    'R_SEX', 
+                    'R_HISP', 
+                    'R_RACE', 
+                    'SCHTYP',
+                    'WORKER',
+                    'WRKTRANS',
+                    #'WRK_HOME',
+                    #'HH_CBSA'
+                    'CENSUS_D']
+
+
+
+
+
+
+
+
 
 selected_x_var_web=[
 "HHSIZE",
@@ -114,38 +204,6 @@ selected_x_var_delivery=[
 #"WEBUSE17_1"#,
 #"WEBUSE17_2"    
 ]
-
-# input for B2C day sim
-b2c_delivery_frequency=18
-hh_aggregation_size=8
-# input for B2B day sim
-b2b_day_factor =0.175
-max_tour_for_b2b = 4
-fdir_in_out= "../../../FRISM_input_output_AT"
-# input for B2B/Geo_data
-
-dist_file= 'Austin_od_dist.csv'
-CBG_file= 'Austin_freight.geojson'
-##ship_direction = 'out' # ['out','in', 'all']
-commodity_list= ["1", "2", "3", "4", "5"]
-county_list=[453, 491, 209, 55, 21, 53] ## this should be updated 
-list_error_zone=[] # this should be updated
-weight_theshold=50000
-md_cap=10000*0.8
-hd_cap=45000*0.8
-# https://www.technogroupusa.com/size-and-weight-limit-laws/ 
-
-# output data structure
-fnm_B2C_payload="B2C_payload"
-fnm_B2C_carrier="B2C_carrier"
-fnm_B2B_payload="B2B_payload"
-fnm_B2B_carrier="B2B_carrier"
-fnm_vtype="vehicle_types"
-fdir_main_output= "../../../FRISM_input_output_{}/Sim_outputs/Shipment2Fleet/".format(study_region)
-fdir_main_output_tour= "../../../FRISM_input_output_{}/Sim_outputs/Tour_plan/".format(study_region)
-
-#ship_direction = 'out' # ['out','in', 'all']
-
 
 """
 # HH sf_2010 variables vs 2018 data
