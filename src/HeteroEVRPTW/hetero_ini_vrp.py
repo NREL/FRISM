@@ -93,9 +93,6 @@ def create_data_model(num_customers, num_stations):
             print("\nDistance Matrix:")
             for row in data['distance_matrix']:
                 print(row)
-    
-    
-
     return data
 
 # Solve the VRP problem
@@ -175,6 +172,7 @@ def solve_initial_vrp(data,num_customers=None):
     else:
         return None, None, None
 
+
 # # Generate data and solve for 10 customers 5 charging stations
 # data = create_data_model(10, 5)
 # manager, routing, solution = solve_initial_vrp(data)
@@ -182,18 +180,76 @@ def solve_initial_vrp(data,num_customers=None):
 # if solution:
 #     # Extract and display solution details
 #     results = []
+#     ev_routes = []
+#     ice_routes = []
+
 #     for vehicle_id in range(data['num_vehicles']):
 #         index = routing.Start(vehicle_id)
 #         route = []
-#         while not routing.IsEnd(index):
-#             route.append(manager.IndexToNode(index))
-#             index = solution.Value(routing.NextVar(index))
-#         route.append(manager.IndexToNode(index))
-        
-#         # Get the vehicle type ('EV' or 'ICE') based on the vehicle_id
-#         vehicle_type = data['vehicle_type_list'][vehicle_id]
-#         results.append((vehicle_type, route))  # Append vehicle type and route
+#         cumulative_time = 0  # Initialize cumulative time for the route
+#         breakdown = []  # Step-by-step time details for the route
 
-#     print(results)
+#         while not routing.IsEnd(index):
+#             from_node = manager.IndexToNode(index)
+#             to_node_index = solution.Value(routing.NextVar(index))
+#             to_node = manager.IndexToNode(to_node_index)
+#             vehicle_type = data['vehicle_type_list'][vehicle_id]
+            
+#             # Calculate travel time
+#             travel_time = data['distance_matrix'][from_node][to_node]
+
+#             # Add service time for the current node
+#             service_time = 0
+#             if from_node != data['depot'] and from_node not in data['charging_stations']:
+#                 service_time = data['service_times'][from_node] * data['vehicle_factors'][vehicle_type]
+
+#             # Update cumulative time
+#             cumulative_time += travel_time + service_time
+#             breakdown.append(
+#                 f"From {from_node} to {to_node}: Travel time = {travel_time}, "
+#                 f"Service time at {from_node} = {service_time}, "
+#                 f"Cumulative time = {cumulative_time}"
+#             )
+
+#             route.append(from_node)
+#             index = to_node_index
+
+#         # Add the depot as the last node in the route
+#         route.append(manager.IndexToNode(index))
+
+#         # Append the final node details
+#         breakdown.append(
+#             f"Returning to depot {data['depot']}: Travel time = "
+#             f"{data['distance_matrix'][route[-2]][route[-1]]}, Total time = {cumulative_time}"
+#         )
+
+#         # Filter out empty or depot-only routes
+#         if len(route) > 2 or (len(route) == 2 and route[0] != route[1]):
+#             if vehicle_type == 'EV':
+#                 ev_routes.append((route, cumulative_time, breakdown))
+#             elif vehicle_type == 'ICE':
+#                 ice_routes.append((route, cumulative_time, breakdown))
+
+#         results.append((vehicle_type, route, cumulative_time, breakdown))
+
+#     # Print EV and ICE routes separately
+#     print("\nFinal EV Routes:")
+#     for route, total_time, breakdown in ev_routes:
+#         print(f"Route: {route}, Total Time: {total_time}")
+#         for step in breakdown:
+#             print(step)
+
+#     print("\nFinal ICE Routes:")
+#     for route, total_time, breakdown in ice_routes:
+#         print(f"Route: {route}, Total Time: {total_time}")
+#         for step in breakdown:
+#             print(step)
+
+#     print("\nAll Routes with Vehicle Types and Times:")
+#     for vehicle_type, route, total_time, breakdown in results:
+#         print(f"Vehicle Type: {vehicle_type}, Route: {route}, Total Time: {total_time}")
+#         for step in breakdown:
+#             print(step)
+
 # else:
 #     print("No solution found.")

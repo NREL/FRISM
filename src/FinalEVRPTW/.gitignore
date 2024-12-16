@@ -1,0 +1,35 @@
+.history/
+data/
+results/
+
+# IDE Configuration files/directories
+.vscode
+.idea
+.gdb
+
+*.zip
+.ipynb_checkpoints
+*.csv
+*.svg
+*.png
+*.swp
+*.xlsx
+*.xml
+*.pdf
+*.txt
+*.prj
+*.docx
+*.aprx
+*.atbx
+*.pyc
+*.bak
+*.xml
+
+# LaTeX side-effect files
+*.aux
+*.log
+*.out
+
+# not include output of scripts after running
+*.pyc
+__pycache__/
