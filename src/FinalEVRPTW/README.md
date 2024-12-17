@@ -63,7 +63,7 @@ The operators are:
 
 ## **To Run the Model**
 1. Clone the repo  
-2. Have **_Required libraries:_** be installed in your environment
+2. Have **_Required libraries:_** be installed in your environment. Simply **_pip install [library_name]_** should work in python enviroment.
 3. Navigate either ETRPTW or hetero_ETRPTW folder
 4. In scripts folder, **_main.py_** scripts, you need to specify the problem size i.e. num_customers as per your requirements : Remember larger problem size, larger the solution execution time would be.
 5. Corresponding dataset generated and final routing results with figures can be located at **_data_** and **_results_** folder.
