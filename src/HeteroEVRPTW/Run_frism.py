@@ -101,7 +101,7 @@ Running Carrier Operation to simulate tour-plan for each carrier
 # # 4. Carrier opration Module Run
 # print (co_module_text)
 # B2C
-os.system("python VRP_OR-tools.py \
+os.system("python VRP_with_EVs.py \
     -cy {2} \
         -t ../../Example_Data/Sim_inputs/Geo_data/tt_df_cbg.csv.gz \
             -d ../../Example_Data/Sim_inputs/Geo_data/Austin_od_dist.csv \
