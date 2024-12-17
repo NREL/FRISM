@@ -45,7 +45,7 @@ The operators are:
 
 **Google OR-Tools**: For initial VRP solution.  
 
-**Charging Station Insertion Algorithm**: Ensures routes are feasible under battery and time window constraints.  
+**Charging Station Insertion & Feasibility Check Algorithm**: Ensures routes are feasible under battery and time window constraints.  
 
 **Variable Neighborhood Search (VNS)**: Optimizes total cost using neighborhood and local search operators.  
 
