@@ -1,0 +1,7 @@
+,Name,Num_Trips_per_Tour,Prob,Cum_Prob
+0,interm_food,3,0.125,0.125
+1,interm_food,4,0.125,0.25
+2,interm_food,5,0.25,0.5
+3,interm_food,6,0.25,0.75
+4,interm_food,8,0.125,0.875
+5,interm_food,9,0.125,1.0
