@@ -87,7 +87,7 @@ def get_geoId(zone, CBGzone_df):
 
 
 def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carrier_id,
-                     CBGzone_df, tt_df, dist_df, veh, commodity, ship_index, path_stops):
+                     CBGzone_df, tt_df, dist_df, veh, commodity, ship_index, path_stops, depot_x_y):
     """Create the data model for the vehicle routing problem.
 
     Args:
@@ -117,6 +117,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
         data = {}
         data['time_matrix'] = []
         data['loc_zones'] = []    # zones corresponding to locations
+        data['loc_x_y'] = []
         data['payload_ids'] = []
         data['stop_durations'] = []
 
@@ -127,6 +128,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
         # Adding time 0 for the depot and location for depot
         time_l.append(0)
         data['loc_zones'].append(depot_loc)
+        data['loc_x_y'].append(depot_x_y)
         depot_service_time = float(c_prob.loc[c_prob['carrier_id'] == carrier_id]['depot_time_before'].values[0])
         data['stop_durations'].append(depot_service_time)
 
@@ -154,6 +156,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             if prob_type == 'delivery':
                 temp_zone = (int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0])) # find zone
                 data['loc_zones'].append(copy(temp_zone))     # saving zone
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]), 
+                                        float(df_prob.loc[df_prob['payload_id'] == i]['del_y'].values[0])))
                 data['geo_ids'].append(get_geoId(temp_zone, CBGzone_df))
 
                 # Adding time window
@@ -173,6 +177,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             elif prob_type =='pickup':
                 temp_zone = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find zone
                 data['loc_zones'].append(copy(temp_zone))   # saving zone
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]), 
+                                        float(df_prob.loc[df_prob['payload_id'] == i]['pu_y'].values[0])))
                 data['geo_ids'].append(get_geoId(temp_zone, CBGzone_df))
 
                 # Adding time window
@@ -192,6 +198,10 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
                 temp_zone_d = int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0]) # find delivery zone
                 temp_zone_p = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find pickup zone
                 # Adding pickup and delivery zone to data frame
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]), 
+                                        float(df_prob.loc[df_prob['payload_id'] == i]['pu_y'].values[0])))
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]), 
+                                        float(df_prob.loc[df_prob['payload_id'] == i]['del_y'].values[0])))
                 data['loc_zones'].append(copy(temp_zone_p))
                 data['loc_zones'].append(copy(temp_zone_d))
                 data['geo_ids'].append(get_geoId(temp_zone_p, CBGzone_df))
@@ -1086,6 +1096,8 @@ def main(args=None):
 
                         # Depot location
                         depot_loc = c_prob.loc[c_prob['carrier_id'] == carr_id]['depot_zone'].values[0]
+                        depot_x_y = (c_prob.loc[c_prob['carrier_id'] == carr_id]['c_x'].values[0],
+                                     c_prob.loc[c_prob['carrier_id'] == carr_id]['c_y'].values[0])
 
                         print('\n')
                         print('Solvign problem for carrier ', carr_id, ' with prob type', prob_type, ' and veh type ', veh,
@@ -1098,7 +1110,7 @@ def main(args=None):
                         # c_prob.to_csv('Carrier_Tour_Plan/test_data/c_prob_pickup_delivery.csv', index=False)
 
                         data = create_data_model(df_prob, depot_loc, prob_type, v_df, vc_prob, c_prob, carr_id,
-                                                CBGzone_df, tt_df, dist_df, veh, comm, index, path_stops)
+                                                CBGzone_df, tt_df, dist_df, veh, comm, index, path_stops, depot_x_y)
                         #print('the model: \\n')
                         #print(data)
                         # Now solving the problem
@@ -1115,6 +1127,7 @@ def main(args=None):
 
                             if len(ev_routes) > 0:
                                 print("Add charging stations functionality")
+                                print(data)
 
     run_time = time() - b_time
 

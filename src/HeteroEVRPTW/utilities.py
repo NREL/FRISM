@@ -1,3 +1,7 @@
+# Author: Megh KC
+# ELECTRIC AND HETEROGENEOUS MIXED FLEET VARIANT OF FRISM
+
+
 def flatten_route(route):
     """Flattens any nested lists in the route."""
     flat_route = []

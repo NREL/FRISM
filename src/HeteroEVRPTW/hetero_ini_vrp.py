@@ -1,3 +1,7 @@
+# Author: Megh KC
+# ELECTRIC AND HETEROGENEOUS MIXED FLEET VARIANT OF FRISM
+
+
 # Import necessary modules for the test
 import random
 import numpy as np

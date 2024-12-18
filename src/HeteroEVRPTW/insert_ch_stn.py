@@ -1,3 +1,6 @@
+# Author: Megh KC
+# ELECTRIC AND HETEROGENEOUS MIXED FLEET VARIANT OF FRISM
+
 from utilities import calculate_route_cost, calculate_total_cost, is_route_feasible, flatten_route
 
 
