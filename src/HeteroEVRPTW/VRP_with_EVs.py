@@ -4,11 +4,11 @@
 
 """
 
-from hetero_ini_vrp import create_data_model,solve_initial_vrp
+
 from insert_ch_stn import insert_charging_stations,insert_charging_stations_single_route,find_accessible_charging_station
 from VNS import variable_neighborhood_search
-from print_plot import print_solution_routes, plot_solution_routes
-
+from map_extend_data import adapt_to_dataset_structure, extend_data_with_charging_stations
+from vns_ev_for_adapted_data import process_routes_with_charging_and_vns
 
 import pandas as pd
 import geopandas as gp
@@ -1127,19 +1127,35 @@ def main(args=None):
                             print('model was formulated correctly')
                             ev_routes, ice_routes = form_solve(data, tour_df, carr_id, carrier_df, payload_df,
                                                     prob_type, count_num, ship_type, c_prob, df_prob, max_time, index, comm, error_list)
-
+                            # Filter out invalid routes (e.g., [0, 0])
+                            ev_routes = [route for route in ev_routes if len(route) > 2 or (len(route) == 2 and route[0] != route[1])]
+                            ice_routes = [route for route in ice_routes if len(route) > 2 or (len(route) == 2 and route[0] != route[1])]
                             print('EV routes: ', ev_routes)
                             print('ICE routes: ', ice_routes)
 
-                            if len(ev_routes) > 0:
-                                print(data)
-                                print("\n************************************")
-                                print("************************************")
-                                print("\nAdd charging stations functionality\n")
-                                print("************************************")
-                                print("************************************\n")
+                            print(data)
+                            print("\n************************************")
+                            print("Add charging stations functionality")
+                            print("************************************\n")
+
+                            # Adapt the data for EV routing
+                            extended_results, charging_station_indices = extend_data_with_charging_stations(data)
+                            data = adapt_to_dataset_structure(extended_results)
+
+                            # Print the adapted data for verification
+                            print("\nAdapted Data for EVRP with Charging Stations:")
+                            for key, value in data.items():
+                                print(f"{key}: {value}")
+                                
+                            # Process EV and ICE routes
+                            final_routes = process_routes_with_charging_and_vns(data, ev_routes, ice_routes)
+
+                            print("\nFinal Combined Heterogeneous Routes (ICE + Optimized EV):")
+                            for route in final_routes:
+                                print(route)
 
     run_time = time() - b_time
+    print('code Run Time is:',run_time)
 
 
 if __name__ == "__main__":
