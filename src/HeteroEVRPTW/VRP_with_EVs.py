@@ -1,8 +1,14 @@
-# Authors: Juliette Ugirumurera and Kyungsoo Jeong
+# Authors: Megh KC, Juliette Ugirumurera and Kyungsoo Jeong
 
-"""Run to generate vehicles' tour plans considering timing and load constraints.
+"""Run to generate vehicles' tour plans considering EV, their timings, battery & charging constraints.
 
 """
+
+from hetero_ini_vrp import create_data_model,solve_initial_vrp
+from insert_ch_stn import insert_charging_stations,insert_charging_stations_single_route,find_accessible_charging_station
+from VNS import variable_neighborhood_search
+from print_plot import print_solution_routes, plot_solution_routes
+
 
 import pandas as pd
 import geopandas as gp
@@ -1114,7 +1120,12 @@ def main(args=None):
                             print('ICE routes: ', ice_routes)
 
                             if len(ev_routes) > 0:
-                                print("Add charging stations functionality")
+                                print(data)
+                                print("\n************************************")
+                                print("************************************")
+                                print("\nAdd charging stations functionality\n")
+                                print("************************************")
+                                print("************************************\n")
 
     run_time = time() - b_time
 
