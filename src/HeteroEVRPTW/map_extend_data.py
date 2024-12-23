@@ -2,6 +2,14 @@ import random
 import math
 import numpy as np
 
+# For data adaptation from previous FRISM implementation results, I made the following
+# 1. We have depot location 0 and customer location in (x,y) format. We have corresponding travel time matrci as well.
+# 2. I assumed the charging locations from a set of customer locations (50% of custmer number in network if 6 customers, 3 charging station locations will be added)
+# 3. As we have travel time from each depot ot customer node to other customer nodes, we can map the travel time for each edges from existing travel time matrix. Now, added charging locations allow us to have effective travel time matrix
+# 4. from th  mapping. For example, we have depot 0, customers 1-6. Then, we will assume 3 charging stations selecting randomly to be located in the location of 1-6 customers. Now, we will have depot+6 customers+3 charging stations.
+# 5. Newly transformed travel time matrix of (10*10 will be created instead of existing 7*7 travel time matrix). Here, accurate travel times will be passed.
+# 6. demands, time windows, stop durations, EV capacity, Battery capacity and charging rates are added to make new EV compatible dataset.
+
 def extend_data_with_charging_stations(previous_results):
     # Extract the original data
     time_matrix = previous_results['time_matrix']

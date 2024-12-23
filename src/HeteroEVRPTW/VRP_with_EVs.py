@@ -1133,7 +1133,10 @@ def main(args=None):
                             print('EV routes: ', ev_routes)
                             print('ICE routes: ', ice_routes)
 
+                            # Print data resulting from previous FRISM model results
                             print(data)
+                            
+                            # Start solving for ETRPTW
                             print("\n************************************")
                             print("Add charging stations functionality")
                             print("************************************\n")
