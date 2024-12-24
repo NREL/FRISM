@@ -1134,28 +1134,28 @@ def main(args=None):
                             print('ICE routes: ', ice_routes)
 
                             # Print data resulting from previous FRISM model results
-                            print(data)
+                            print('modified Data:\n',data)
                             
-                            # Start solving for ETRPTW
-                            print("\n************************************")
-                            print("Add charging stations functionality")
-                            print("************************************\n")
+    # Start solving for ETRPTW
+    print("\n************************************")
+    print("Add charging stations functionality")
+    print("************************************\n")
 
-                            # Adapt the data for EV routing
-                            extended_results, charging_station_indices = extend_data_with_charging_stations(data)
-                            data = adapt_to_dataset_structure(extended_results)
+    # Adapt the data for EV routing
+    extended_results, charging_station_indices = extend_data_with_charging_stations(data)
+    data = adapt_to_dataset_structure(extended_results)
 
-                            # Print the adapted data for verification
-                            print("\nAdapted Data for EVRP with Charging Stations:")
-                            for key, value in data.items():
-                                print(f"{key}: {value}")
+    # Print the adapted data for verification
+    print("\nAdapted Data for EVRP with Charging Stations:")
+    for key, value in data.items():
+        print(f"{key}: {value}")
                                 
-                            # Process EV and ICE routes
-                            final_routes = process_routes_with_charging_and_vns(data, ev_routes, ice_routes)
+    # Process EV and ICE routes
+    final_routes = process_routes_with_charging_and_vns(data, ev_routes, ice_routes)
 
-                            print("\nFinal Combined Heterogeneous Routes (ICE + Optimized EV):")
-                            for route in final_routes:
-                                print(route)
+    print("\nFinal Combined Heterogeneous Routes (ICE + Optimized EV):")
+    for route in final_routes:
+        print(route)
 
     run_time = time() - b_time
     print('code Run Time is:',run_time)
