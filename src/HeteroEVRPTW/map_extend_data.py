@@ -17,7 +17,7 @@ def extend_data_with_charging_stations(previous_results):
     stop_durations = previous_results['stop_durations']
     time_windows = previous_results['time_windows']
     demands = previous_results['demands']
-    
+
     # Number of customers
     num_customers = len(loc_x_y) - 1  # Exclude depot
     charging_station_count = num_customers // 2  # Half of the customers
@@ -105,6 +105,3 @@ def adapt_to_dataset_structure(previous_results):
 # print("Adapted Dataset:")
 # for key, value in adapted_data.items():
 #     print(f"{key}: {value}")
-
-
-

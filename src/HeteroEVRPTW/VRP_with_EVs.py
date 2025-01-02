@@ -162,7 +162,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             if prob_type == 'delivery':
                 temp_zone = (int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0])) # find zone
                 data['loc_zones'].append(copy(temp_zone))     # saving zone
-                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]), 
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]),
                                         float(df_prob.loc[df_prob['payload_id'] == i]['del_y'].values[0])))
                 data['geo_ids'].append(get_geoId(temp_zone, CBGzone_df))
 
@@ -183,7 +183,7 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
             elif prob_type =='pickup':
                 temp_zone = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find zone
                 data['loc_zones'].append(copy(temp_zone))   # saving zone
-                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]), 
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]),
                                         float(df_prob.loc[df_prob['payload_id'] == i]['pu_y'].values[0])))
                 data['geo_ids'].append(get_geoId(temp_zone, CBGzone_df))
 
@@ -204,9 +204,9 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
                 temp_zone_d = int(df_prob.loc[df_prob['payload_id'] == i]['del_zone'].values[0]) # find delivery zone
                 temp_zone_p = int(df_prob.loc[df_prob['payload_id'] == i]['pu_zone'].values[0]) # find pickup zone
                 # Adding pickup and delivery zone to data frame
-                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]), 
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['pu_x'].values[0]),
                                         float(df_prob.loc[df_prob['payload_id'] == i]['pu_y'].values[0])))
-                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]), 
+                data['loc_x_y'].append((float(df_prob.loc[df_prob['payload_id'] == i]['del_x'].values[0]),
                                         float(df_prob.loc[df_prob['payload_id'] == i]['del_y'].values[0])))
                 data['loc_zones'].append(copy(temp_zone_p))
                 data['loc_zones'].append(copy(temp_zone_d))
@@ -999,8 +999,8 @@ def main(args=None):
     # The commodity will decide the limit on number of stops per vehicle:
     # randomly select stops limits and fix slack stop limits to maximum stops possible per commodity
     print('number of carriers is: ', len(p_df['carrier_id'].unique()))
-    # for carr_id in p_df['carrier_id'].unique():
-    for carr_id in ['B2C_2879885.0']:
+    for carr_id in p_df['carrier_id'].unique():
+    # for carr_id in ['B2C_2879885.0']:
         # Initialize parameters used for probelm setting
         # try:
         comm = -1
@@ -1133,29 +1133,30 @@ def main(args=None):
                             print('EV routes: ', ev_routes)
                             print('ICE routes: ', ice_routes)
 
-                            # Print data resulting from previous FRISM model results
-                            print('modified Data:\n',data)
-                            
-    # Start solving for ETRPTW
-    print("\n************************************")
-    print("Add charging stations functionality")
-    print("************************************\n")
+                            # # Print data resulting from previous FRISM model results
+                            # print('modified Data:\n',data)
 
-    # Adapt the data for EV routing
-    extended_results, charging_station_indices = extend_data_with_charging_stations(data)
-    data = adapt_to_dataset_structure(extended_results)
+                            if len(ev_routes) > 0:
+                                # Start solving for ETRPTW
+                                print("\n************************************")
+                                print("Add charging stations functionality")
+                                print("************************************\n")
 
-    # Print the adapted data for verification
-    print("\nAdapted Data for EVRP with Charging Stations:")
-    for key, value in data.items():
-        print(f"{key}: {value}")
-                                
-    # Process EV and ICE routes
-    final_routes = process_routes_with_charging_and_vns(data, ev_routes, ice_routes)
+                                # Adapt the data for EV routing
+                                extended_results, charging_station_indices = extend_data_with_charging_stations(data)
+                                data = adapt_to_dataset_structure(extended_results)
 
-    print("\nFinal Combined Heterogeneous Routes (ICE + Optimized EV):")
-    for route in final_routes:
-        print(route)
+                                # Print the adapted data for verification
+                                print("\nAdapted Data for EVRP with Charging Stations:")
+                                for key, value in data.items():
+                                    print(f"{key}: {value}")
+
+                                # Process EV and ICE routes
+                                final_routes = process_routes_with_charging_and_vns(data, ev_routes, ice_routes)
+
+                                print("\nFinal Combined Heterogeneous Routes (ICE + Optimized EV):")
+                                for route in final_routes:
+                                    print(route)
 
     run_time = time() - b_time
     print('code Run Time is:',run_time)

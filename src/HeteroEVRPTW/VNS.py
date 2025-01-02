@@ -2,7 +2,7 @@
 # ELECTRIC AND HETEROGENEOUS MIXED FLEET VARIANT OF FRISM
 
 
-import random 
+import random
 import time
 from utilities import calculate_route_cost,calculate_total_cost, is_route_feasible
 from hetero_ini_vrp import create_data_model
@@ -280,7 +280,7 @@ def intra_route_2opt_swap(data, routes, remaining_customers):
 
         for i in range(len(customer_indices) - 1):
             for j in range(i + 1, len(customer_indices)):
-                if customer_indices[j] - customer_indices[i] == 1: 
+                if customer_indices[j] - customer_indices[i] == 1:
                     continue  # Skip adjacent nodes
 
                 # Perform 2-opt swap on customer nodes
