@@ -1,0 +1,3 @@
+veh_pwrtrn_types ,D,G,BE,H2,PD,PG
+fixed_cost_dict,65,65,65,65,63,55
+cost_per_unit_time_dict,0.75,0.75,0.63,0.63,0.63,0.63

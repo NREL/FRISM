@@ -1,0 +1,8 @@
+key,value
+county,35
+year,2018
+scenario,Base
+sample_rate,100
+EV_savings,0.3
+EV_battery_capacity,500
+soc_threshold,0.3

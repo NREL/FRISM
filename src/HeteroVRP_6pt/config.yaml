@@ -1,0 +1,50 @@
+# ===============================
+# Simulation Input Configuration
+# ===============================
+
+# ---- General Settings ----
+county: 35            # County ID (integer)
+year: 2018            # Data year
+scenario: "Base"      # Scenario name (e.g., Base, HighEV, etc.)
+sample_rate: 100      # Sampling percentage for tasks/shipments
+
+# Percentage of service-time savings for EVs (0.3 → 30%)
+EV_savings: 0.3
+
+# ---- Vehicle Powertrain Types ----
+# Allowed vehicle codes:
+# D = Diesel
+# G = Gasoline
+# BE = Battery Electric
+# H2 = Hydrogen Fuel Cell
+# PD = PHEV Diesel
+# PG = PHEV Gasoline
+veh_pwrtrn_types:
+  - D
+  - G
+  - BE
+  - H2
+  - PD
+  - PG
+
+# ---- Fixed Cost Per Vehicle Type ($ per day or assignment) ----
+fixed_cost_dict:
+  Diesel: 40
+  Gasoline: 55
+  Battery Electric: 10
+  H2 Fuel Cell: 65
+  PHEV Diesel: 63
+  PHEV Gasoline: 55
+
+# ---- Operating Cost Per Unit Time ($ per hour or minute) ----
+cost_per_unit_time_dict:
+  Diesel: 0.75
+  Gasoline: 0.53
+  Battery Electric: 0.13
+  H2 Fuel Cell: 0.63
+  PHEV Diesel: 0.63
+  PHEV Gasoline: 0.63
+
+# ---- EV Battery Parameters ----
+EV_battery_capacity: 200   # kWh
+soc_threshold: 0.3         # Minimum SOC allowed before charging (30%)
