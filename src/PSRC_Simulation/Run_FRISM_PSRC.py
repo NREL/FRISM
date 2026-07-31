@@ -70,7 +70,7 @@ for ship_type in ["B2B","B2C" ]:
 - Outputs: payload, carrier, tour files in "Tour_plan/2018_all" folder 
 """
 
-os.system(f"python tour_postprocessing.py \
+os.system(f"python sim_tour_postprocessing.py \
         -sn {scenario} \
             -yt {year} \
                 -sr {sample_rate} \
