@@ -13,17 +13,25 @@ Alicia Birky: <Alicia.Birky@nrel.gov>
 FRISM simulates day-to-day freight activities including end-consumer shopping, distribution channel, and carrier operation with e-commerce dynamics between passenger and freight travel. It outputs an assignment of different shipments to carriers and tour plans of the carriers' vehicles to transport shipments from their origins to their destinations. This software is associated with NREL software record SWR-24-40.
 
 ## The following are contained in this repository
-- Running Household E-commerce Generation Estimation for End-Consumer Behavior:
-    *   src/Simulation/HH_ecom_model.py
-- Running End-Consumer Behavior Module to simulate monthly delivery frequency:
-    *   src/Simulation/B2C_Generation.py
-- Running Distribution Channel to simulate B2B and B2C daily shipments and shipment-carrier matching
-    *   src/Simulation/Shipment2Fleet.py
+- Generate folder structure, input variables and input parameters across FRISM simulation  
+    *   src/PSRC_Simulation/create_input_variable.py
+- Running B2B Distribution channel:
+    *   src/PSRC_Simulation/sim_b2b_shipment2fleet.py
+- Running B2C Distribution channel:
+    *   src/PSRC_Simulation/sim_b2c_shipment2fleet.py
 - Running Carrier Operation to simulate tour-plan for each carrier:
-    *   src/Simulation/Carrier_Tour_Plan/VRP_OR-tools.py
-- Running the freight activity simulation:
-    *   src/Simulation/Run_frism.py
-- List of inputs to run simulation: [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme)
+    *   src/PSRC_Simulation/sim_tour_plan_generation.py 
+- Aggregating tour plans and converting to trip table:
+    *   src/PSRC_Simulation/tour_postprocessing.py
+- Functions used for B2B/B2C Distribution channel:
+    *   src/PSRC_Simulation/frism_utility_distributionchannel.py
+- Functions used for B2B/B2C Carrier Operation:
+    *   src/PSRC_Simulation/frism_utility_tourplan.py
+- Processing shipment and network inputs for Distribution channel:
+    *   src/PSRC_Simulation/frism_pop_shipment.py
+- Processing vehicle operational pattern inputs for Distribution channel:
+    *   src/PSRC_Simulation/frism_vehicle_pattern.py      
+
 
 ## Installation Instructions
 ### Setup conda environment
