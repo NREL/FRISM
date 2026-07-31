@@ -48,6 +48,4 @@ conda activate frism
 cd src/Simulation
 python Run_FRISM_PSRC.py
 ```
-**Y** for the last input parameter means there will be generation of new shipments in the [Shipment2Fleet_veh_tech.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Shipment2Fleet_veh_tech.py) script, while **N** means no generation of new shipment in the *Shipment2Fleet.py* script.
-
 
