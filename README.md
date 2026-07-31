@@ -43,7 +43,7 @@ conda env create -f environment.yml
 ```linux
 conda activate frism
 ```
-3. To run the code, first specify the input parameters for all the modules in the [Run_frism.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Run_frism.py) script as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme). Then run the following:
+3. To run the code, first specify the input parameters for all the modules in the [create_input_variable.py](https://github.com/NatLabRockies/FRISM/blob/PSRC_application/src/PSRC_Simulation/create_input_variable.py) and [Run_FRISM_PSRC.py](https://github.com/NatLabRockies/FRISM/blob/PSRC_application/src/PSRC_Simulation/Run_FRISM_PSRC.py) script. Then run the following:
 ```linux
 cd src/Simulation
 python Run_FRISM_PSRC.py
