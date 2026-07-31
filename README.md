@@ -38,14 +38,8 @@ conda activate frism
 3. To run the code, first specify the input parameters for all the modules in the [Run_frism.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Run_frism.py) script as per this [README.md](https://github.com/NREL/FRISM/tree/open-source/src#readme). Then run the following:
 ```linux
 cd src/Simulation
-python Run_frism.py [county number] [year] [scenario name] [sampling rate] [Y or N]
+python Run_FRISM_PSRC.py
 ```
 **Y** for the last input parameter means there will be generation of new shipments in the [Shipment2Fleet_veh_tech.py](https://github.com/NREL/FRISM/blob/open-source/src/Simulation/Shipment2Fleet_veh_tech.py) script, while **N** means no generation of new shipment in the *Shipment2Fleet.py* script.
 
-An example of the above command that use the data in the 'Example_Data' folder is:
-```linux
-cd src/Simulation
-python Run_frism.py 21 2030 high 10 Y
-```
 
-The output of the above simulation will be saved in a **FRISM_input_output_AT/** at the same directory level as the repository folder. The tour plans results from the vehicle routing algorithm will be under **FRISM_input_output_AT/Sim_outputs/Tour_plan/[year]**.
