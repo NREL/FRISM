@@ -56,7 +56,7 @@ for ship_type in ["B2B","B2C" ]:
     for c_num in [33,35,53,61]:
         ship_type ="B2B"
         study_region= "ST"
-        os.system(f"python tour_plan_generation.py \
+        os.system(f"python sim_tour_plan_generation.py \
                 -sn {scenario} \
                     -yt {year} \
                         -st {ship_type} \
@@ -70,7 +70,7 @@ for ship_type in ["B2B","B2C" ]:
 - Outputs: payload, carrier, tour files in "Tour_plan/2018_all" folder 
 """
 
-os.system(f"python sim_tour_postprocessing.py \
+os.system(f"python tour_postprocessing.py \
         -sn {scenario} \
             -yt {year} \
                 -sr {sample_rate} \
