@@ -207,3 +207,6 @@ def main(args=None):
         payloads_out=b2c_ondemand_distribution_channel(daily_shipment.df_hh_d_groc_sample, network.ondemand_loc, network.od_distance, network.zone, sel_county, goods_type)
         payloads_out.to_csv (input_variables["frism_data_folder"]+input_variables["sub_folder_ship_output"]+f"{year}/{goods_type}_county{sel_county}_s{scenario}_y{year}_sr{sample_ratio}.csv")
 
+if __name__ == "__main__":
+    main()
+
