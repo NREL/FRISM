@@ -18,12 +18,13 @@ os.system("python create_input_variable.py")
 - User can split this run by county for parallel run  
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
 """
+ship_type="B2B"
 for c_num in [33,35,53,61]:
     print (f"B2B shipment to fleet for county{c_num}")
     os.system(f"python sim_b2b_shipment2fleet.py \
               -sn {scenario} \
                 -yt {year} \
-                    -st {"B2B"} \
+                    -st {ship_type} \
                         -ct {c_num} \
                             -sr {sample_rate} \
                                 -sa {study_region} \
@@ -35,12 +36,13 @@ for c_num in [33,35,53,61]:
 - User can split this run by county for parallel run  
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
 """
+ship_type="B2C"
 for c_num in [33,35,53,61]:
     print (f"B2C shipment to fleet for county{c_num}")
     os.system(f"python sim_b2b_shipment2fleet.py \
               -sn {scenario} \
                 -yt {year} \
-                    -st {"B2C"} \
+                    -st {ship_type} \
                         -ct {c_num} \
                             -sr {sample_rate} \
                                 -sa {study_region} \
