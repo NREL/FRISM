@@ -9,7 +9,7 @@ import os
 from alive_progress import alive_bar
 import time
 from shapely.geometry import Point
-from frism_utility_general import random_points_in_polygon
+from frism_utility_distributionchannel import random_points_in_polygon
 import glob
 # %%
 
