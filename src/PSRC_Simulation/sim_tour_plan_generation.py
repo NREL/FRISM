@@ -95,9 +95,9 @@ def main(args=None):
 
         path_stops = fdir_in_out+ input_variables["sub_folder_tour_constraint"]      # path to file containing maximum stops per commodity for internal trips
         travel_file= fdir_in_out+input_variables["sub_folder_network"]+input_variables["network_travel_skim"]
-        carrier_file = fdir_in_out+input_variables["sub_folder_ship_output"]+ f"/{year}/{ship_type}_carrier_county{count_num}_s{scenario}_y{year}_sr{sample_ratio}.csv"
-        payload_file = fdir_in_out+input_variables["sub_folder_ship_output"]+ f"/{year}/{ship_type}_payload_county{count_num}_s{scenario}_y{year}_sr{sample_ratio}.csv"
-        vehicleType_file = fdir_in_out+input_variables["sub_folder_ship_output"]+f"/{year}/vehicle_types_s{scenario}_y{year}.csv" 
+        carrier_file = fdir_in_out+input_variables["sub_folder_ship_output"]+ f"{year}/{ship_type}_carrier_county{count_num}_s{scenario}_y{year}_sr{sample_ratio}.csv"
+        payload_file = fdir_in_out+input_variables["sub_folder_ship_output"]+ f"{year}/{ship_type}_payload_county{count_num}_s{scenario}_y{year}_sr{sample_ratio}.csv"
+        vehicleType_file = fdir_in_out+input_variables["sub_folder_ship_output"]+f"{year}/vehicle_types_s{scenario}_y{year}.csv" 
 
         # add a try/catch here in case processing files fails
         tt_df, dist_df, c_df, p_df, v_df, vc_df = input_files_processing(travel_file, carrier_file, payload_file, vehicleType_file)
