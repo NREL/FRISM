@@ -197,4 +197,7 @@ def main(args=None):
     payloads_out.to_csv(input_variables["frism_data_folder"]+input_variables["sub_folder_ship_output"]+f"{year}/{ship_type}_payload_county{sel_county}_s{scenario}_y{year}_sr{sample_ratio}.csv")
     vehicle_types.to_csv(input_variables["frism_data_folder"]+input_variables["sub_folder_ship_output"]+f"{year}/vehicle_types_s{scenario}_y{year}.csv")
 
+if __name__ == "__main__":
+    main()
+
 
