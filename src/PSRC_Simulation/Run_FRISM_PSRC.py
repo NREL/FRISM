@@ -54,8 +54,7 @@ for c_num in [33,35,53,61]:
 """
 for ship_type in ["B2B","B2C" ]:
     for c_num in [33,35,53,61]:
-        ship_type ="B2B"
-        study_region= "ST"
+        print (f"{ship_type} tour generation for {c_num}")
         os.system(f"python sim_tour_plan_generation.py \
                 -sn {scenario} \
                     -yt {year} \
