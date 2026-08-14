@@ -111,14 +111,14 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
         data['demands'] = []
         if commodity != 2 and ship_index =='internal':
             data['stops'] = []  # parameter to keep track of number of stops per node
-            data['stops'].append(0.0) # No stop counted for depot
+            data['stops'].append(0) # No stop counted for depot
 
             data['vehicle_max_stops'] = []
             data['vehicle_slack_stops'] = []
 
         # if problem is delivery, we start with full laod at depot
         # if problem is pickup, we start with empty load
-        data['demands'].append(0.0) # Adding demand for depot
+        data['demands'].append(0) # Adding demand for depot
 
         # data['geo_ids'] = []
         # data['geo_ids'].append(get_geoId(depot_loc, CBGzone_df))
@@ -136,8 +136,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
                 data['payload_ids'].append(copy(i))
 
-                demand = math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0])
-                data['demands'].append(copy(demand))
+                demand = int(math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0]))
+                data['demands'].append(demand)
                 if commodity != 2 and ship_index =='internal': data['stops'].append(1)  # stop for this demand location
 
                 service_time = float(df_prob.loc[df_prob['payload_id'] == i]['del_stop_duration'].values[0])
@@ -155,8 +155,8 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
 
                 data['payload_ids'].append(copy(i))
 
-                demand = math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0])
-                data['demands'].append(copy(demand))
+                demand = int(math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0]))
+                data['demands'].append(demand)
                 if commodity != 2 and ship_index =='internal': data['stops'].append(1) 
 
                 service_time = float(df_prob.loc[df_prob['payload_id'] == i]['pu_stop_duration'].values[0])
@@ -181,9 +181,9 @@ def create_data_model(df_prob, depot_loc, prob_type, v_df, f_prob, c_prob, carri
                 data['payload_ids'].append(copy(i))
                 data['payload_ids'].append(copy(i))
 
-                demand = math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0])
-                data['demands'].append(copy(demand))
-                data['demands'].append(copy(-1 * demand))
+                demand = int(math.ceil(df_prob.loc[df_prob['payload_id'] == i]['weight'].values[0]))
+                data['demands'].append(demand)
+                data['demands'].append(-demand)
                 if commodity != 2 and ship_index =='internal':
                     data['stops'].append(1)  # Add stop for pickup
                     data['stops'].append(1)  # Add stop for delivery
