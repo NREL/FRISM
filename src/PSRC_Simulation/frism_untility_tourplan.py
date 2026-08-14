@@ -21,7 +21,6 @@ import numpy as np
 from argparse import ArgumentParser
 from shapely.geometry import Point
 import random
-import config
 import pickle
 import h5py
 

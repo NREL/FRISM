@@ -18,17 +18,17 @@ os.system("python create_input_variable.py")
 - User can split this run by county for parallel run  
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
 """
-ship_type="B2B"
-for c_num in [33,35,53,61]:
-    print (f"B2B shipment to fleet for county{c_num}")
-    os.system(f"python sim_b2b_shipment2fleet.py \
-              -sn {scenario} \
-                -yt {year} \
-                    -st {ship_type} \
-                        -ct {c_num} \
-                            -sr {sample_rate} \
-                                -sa {study_region} \
-                                    -va {vehicle_choice_calibration}")
+# ship_type="B2B"
+# for c_num in [35]: # [33,35,53,61]
+#     print (f"B2B shipment to fleet for county{c_num}")
+#     os.system(f"python sim_b2b_shipment2fleet.py \
+#               -sn {scenario} \
+#                 -yt {year} \
+#                     -st {ship_type} \
+#                         -ct {c_num} \
+#                             -sr {sample_rate} \
+#                                 -sa {study_region} \
+#                                     -va {vehicle_choice_calibration}")
 
 """ Step 3: B2C shipment to fleet
 - 1. Process personal monthly B2C demand and covert them to daily shipments
@@ -37,9 +37,9 @@ for c_num in [33,35,53,61]:
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
 """
 ship_type="B2C"
-for c_num in [33,35,53,61]:
+for c_num in [35]: # [33,35,53,61]
     print (f"B2C shipment to fleet for county{c_num}")
-    os.system(f"python sim_b2b_shipment2fleet.py \
+    os.system(f"python sim_b2c_shipment2fleet.py \
               -sn {scenario} \
                 -yt {year} \
                     -st {ship_type} \
@@ -48,14 +48,14 @@ for c_num in [33,35,53,61]:
                                 -sa {study_region} \
                                     -va {vehicle_choice_calibration}")
 
-""" Step 4: B2B and B2C tour generation
-- 1. Process payload and carrier file 
-- 2. Generate tour plan  
-- User can split this run by county for parallel run  
-- Outputs: payload, carrier, tour files in "Tour_plan" folder 
-"""
+# """ Step 4: B2B and B2C tour generation
+# - 1. Process payload and carrier file 
+# - 2. Generate tour plan  
+# - User can split this run by county for parallel run  
+# - Outputs: payload, carrier, tour files in "Tour_plan" folder 
+# """
 for ship_type in ["B2B","B2C" ]:
-    for c_num in [33,35,53,61]:
+    for c_num in [35]: # [33,35,53,61]
         print (f"{ship_type} tour generation for {c_num}")
         os.system(f"python sim_tour_plan_generation.py \
                 -sn {scenario} \
@@ -71,12 +71,12 @@ for ship_type in ["B2B","B2C" ]:
 - Outputs: payload, carrier, tour files in "Tour_plan/2018_all" folder 
 """
 
-os.system(f"python tour_postprocessing.py \
-        -sn {scenario} \
-            -yt {year} \
-                -sr {sample_rate} \
-                    -sa {study_region} \
-                        -tm Yes")
+# os.system(f"python tour_postprocessing.py \
+#         -sn {scenario} \
+#             -yt {year} \
+#                 -sr {sample_rate} \
+#                     -sa {study_region} \
+#                         -tm Yes")
 
 print ("Completed running modules you selected")
 

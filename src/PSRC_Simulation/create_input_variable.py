@@ -14,7 +14,7 @@ input_variables= {
     "vehicle_type": ['ld1', 'ld3', 'mdv', 'hdt','hdv'],
     "fuel_type": ["Diesel", "Gasoline", "Electric"], 
     # folders
-    "frism_data_folder": "../../../FRISM_input_output_{}".format(study_region),
+    "frism_data_folder": "../../../PSRC_data_share/FRISM_input_output_{}".format(study_region),
     "sub_folder_synthfirm_population": "/Sim_inputs/Synth_firm_pop/",
     "sub_folder_network": "/Sim_inputs/Geo_data/",
     "sub_folder_veh": "/Sim_inputs/Veh_operations/",
