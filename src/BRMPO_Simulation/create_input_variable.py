@@ -1,0 +1,82 @@
+
+# %%
+import json
+
+## regional specific variables
+study_region= "BO"
+input_variables= {
+    "state_code": 25,
+    "state_abbr": "MA",
+    "county_list": [25001, 25003,25005,25007,25009,25011, 25013, 25015,25017, 25019,
+                    25021,25023, 25025,25027,33015,33011, 44001, 44003,44005,44007,44009],
+    "b2b_annual_to_day_factor":365,
+    "b2c_day_factor":50,
+    "b2c_hosehold_aggregation": 8,  
+    "vehicle_type": ['ld1', 'ld3', 'mdv', 'hdt','hdv'],
+    "fuel_type": ["Diesel", "Gasoline", "Electric"], 
+    # folders
+    "frism_data_folder": "../../../FRISM_input_output_{}".format(study_region),
+    "sub_folder_synthfirm_population": "/Sim_inputs/Synth_firm_pop/",
+    "sub_folder_network": "/Sim_inputs/Geo_data/",
+    "sub_folder_veh": "/Sim_inputs/Veh_operations/",
+    "sub_folder_b2b_demand": "/Sim_inputs/Synth_firm_results/",
+    "sub_folder_b2c_demand": "/Sim_inputs/B2C_demand_results/",
+    "sub_folder_tour_constraint": "/Sim_inputs/Tour_constraint/",
+    "sub_folder_ship_output": "/Sim_outputs/Shipment2Fleet/" ,
+    "sub_folder_tour_output": "/Sim_outputs/Tour_plan/",
+    
+    # files
+    "zone_file": "Boston_freight.geojson",
+    "od_distance_file":"Boston_od_dist.csv",
+    "extnernal_zone_file": "brmpo_external.csv",
+    "vius_file": "vehicle_proportion_by_sctg_dist_v3.csv",
+    "ondemand_file":"Property Type in PSRC.geojson",
+    "local_taz_file":"CTPS_TAZ_2023.geojson",
+    "local_external_zone_file": "CTPS_TAZ_Active_External_2023.geojson",
+    "network_travel_skim": "truck_skims_md.omx"  
+}
+
+## general vaiables, which is related to SynthFirm Input:  https://ops.fhwa.dot.gov/publications/fhwahop20011/chap12.htm
+dic_veh={'ld1': {"synthfirm_name":"Class 1&2A Vocational", "veh_capacity": 6000, "speed": 65, "veh_weight": 2000 },
+         'ld3': {"synthfirm_name":"Class 2B&3 Vocational", "veh_capacity": 15000, "speed": 65, "veh_weight": 4000},
+    'mdv': {"synthfirm_name":"Class 4-6 Vocational","veh_capacity": 22000, "speed":55, "veh_weight": 8000 },
+    'hdt':{"synthfirm_name":"Class 7&8 Tractor","veh_capacity": 65000, "speed": 50, "veh_weight": 13000},
+    'hdv':{"synthfirm_name":"Class 7&8 Vocational","veh_capacity": 50000, "speed": 50, "veh_weight": 13000}
+}
+"""
+dic_crosswalk_TDA_class
+key: TDA file Class 
+value: synthfirm Class
+"""
+dic_crosswalk_TDA_class={"Class 3 Pickup and Van": "Class 1&2A Vocational",
+"Class 3 Vocational": "Class 2B&3 Vocational",
+"Class 4-6 Vocational": "Class 4-6 Vocational",
+"Class 7&8 Day Cab Tractors": "Class 7&8 Tractor",
+"Class 7&8 Sleeper Tractors": "Class 7&8 Tractor",
+"Class 7&8 Vocational": "Class 7&8 Vocational"
+}
+"""
+dic_crosswalk_TDA_Powertrain
+key: TDA file Powertrain
+value: synthfirm Powertain
+"""
+dic_crosswalk_TDA_Powertrain={"Diesel CI": "Diesel", 
+                              "Gasoline SI": "Gasoline",
+                              "Battery Electric": "Battery Electric",
+                            "H2 Fuel Cell": "H2 Fuel Cell" , 
+                            "PHEV Diesel": "PHEV",
+                            "PHEV Gasoline": "PHEV"
+}
+
+# Merge all dictiornay
+dic_input_all={"input_variables": input_variables,
+           "dic_veh":dic_veh,
+           "dic_crosswalk_TDA_class": dic_crosswalk_TDA_class,
+           "dic_crosswalk_TDA_Powertrain": dic_crosswalk_TDA_Powertrain}
+
+filename = "input_setting_{}.json".format(study_region) 
+
+with open(filename, 'w') as file:
+    json.dump(dic_input_all, file)
+
+# %%
