@@ -5,12 +5,22 @@ year=2018
 sample_rate=10 # [sample_rate =X] means X percent of shipments for daily shipment. 100 means all shipments from daily shipments generated. For test, use 10%, but 100% for full trip table
 study_region= "ST"
 vehicle_choice_calibration=0.1 # more weight on medium duty and heavy duty vocational truck
-""" Step 1: Input setting
+""" Step 0: Input setting
 - Generate folder structure, variables, etc. which are defined in create_input_variable.py
 - Users need to change the setting if needed 
 - Outputs: input_setting_{study_region}.json 
 """
 os.system("python create_input_variable.py")
+
+""" Step 1: B2C Demand Generation
+- 1. Generate individuals' monthly online delivery frequency using synthetic population 
+- 2. B2C demand models are applied
+- Outputs: per_del_{year}.csv in B2C_demand_results   
+"""
+os.system(f"python sim_b2c_generation.py -sn {scenario} \
+          -yt {year} \
+            -sa {study_region} \
+              -pt daysim")
 
 """ Step 2: B2B shipment to fleet
 - 1. Process SynthFirm Annual Demand and covert them to daily shipments
@@ -18,24 +28,24 @@ os.system("python create_input_variable.py")
 - User can split this run by county for parallel run  
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
 """
-# ship_type="B2B"
-# for c_num in [35]: # [33,35,53,61]
-#     print (f"B2B shipment to fleet for county{c_num}")
-#     os.system(f"python sim_b2b_shipment2fleet.py \
-#               -sn {scenario} \
-#                 -yt {year} \
-#                     -st {ship_type} \
-#                         -ct {c_num} \
-#                             -sr {sample_rate} \
-#                                 -sa {study_region} \
-#                                     -va {vehicle_choice_calibration}")
+ship_type="B2B"
+for c_num in [35]: # [33,35,53,61]
+    print (f"B2B shipment to fleet for county{c_num}")
+    os.system(f"python sim_b2b_shipment2fleet.py \
+              -sn {scenario} \
+                -yt {year} \
+                    -st {ship_type} \
+                        -ct {c_num} \
+                            -sr {sample_rate} \
+                                -sa {study_region} \
+                                    -va {vehicle_choice_calibration}")
 
 """ Step 3: B2C shipment to fleet
 - 1. Process personal monthly B2C demand and covert them to daily shipments
 - 2. Shipments to Carrier with vehicle assignment 
 - User can split this run by county for parallel run  
 - Outputs: payload and carrier files in "Shipment2Fleet" folder 
-"""
+# """
 ship_type="B2C"
 for c_num in [33,35,53,61]: # [33,35,53,61]
     print (f"B2C shipment to fleet for county{c_num}")

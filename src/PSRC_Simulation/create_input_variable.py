@@ -23,6 +23,10 @@ input_variables= {
     "sub_folder_tour_constraint": "/Sim_inputs/Tour_constraint/",
     "sub_folder_ship_output": "/Sim_outputs/Shipment2Fleet/" ,
     "sub_folder_tour_output": "/Sim_outputs/Tour_plan/",
+    "sub_folder_synth_pop": "/Sim_inputs/hh_pop/",
+    "sub_folder_b2c_model": "/Sim_inputs/B2C_models/",
+    "urban_county_list": [61,33],
+
     
     # files
     "zone_file": "Seattle_freight.geojson",
@@ -32,7 +36,9 @@ input_variables= {
     "ondemand_file":"Property Type in PSRC.geojson",
     "local_taz_file":"psrc_taz_2010.geojson",
     "local_external_zone_file": "externals/externals.shp",
-    "network_travel_skim": "7to8.h5"  
+    "network_travel_skim": "7to8.h5",
+    "daysim_population_file": "hh_and_persons.h5",
+    "parcel_geography_file": "parcel_2018_geography.csv"    
 }
 
 ## general vaiables, which is related to SynthFirm Input:  https://ops.fhwa.dot.gov/publications/fhwahop20011/chap12.htm
