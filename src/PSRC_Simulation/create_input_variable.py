@@ -38,7 +38,7 @@ input_variables= {
     "local_external_zone_file": "externals/externals.shp",
     "network_travel_skim": "7to8.h5",
     "daysim_population_file": "hh_and_persons.h5",
-    "parcel_geography_file": "parcel_2018_geography.csv"    
+    "parcel_geography_file": "parcel_to_cbg2010.csv"    
 }
 
 ## general vaiables, which is related to SynthFirm Input:  https://ops.fhwa.dot.gov/publications/fhwahop20011/chap12.htm
